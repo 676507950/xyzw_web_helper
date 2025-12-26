@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <div class="status-card club-warrank">
+  <div class="status-card club-warrank">
       <div class="card-header">
         <img src="/icons/Ob7pyorzmHiJcbab2c25af264d0758b527bc1b61cc3b.png" alt="队伍图标" class="status-icon">
         <div class="status-info">
@@ -215,7 +214,7 @@
           </n-grid>
         </template>
       </n-modal>
-    </div>
+  </div>
 </template>
 
 <script setup>
