@@ -33,59 +33,28 @@
       </div>
 
       <div v-if="memberData" class="member-card">
-        <div class="member-header">
-          <div class="member-stats-inline">
-            <div class="member-info">
-              <n-avatar round :size="60" :src="memberData.headImg" />
-            </div>
-            <div class="inline-container">
-                <n-input v-model:value="targetId" type="text" placeholder="切磋对手ID" class="inputOrSelectWidth" />
-                <n-button size="small" :disabled="loading1" @click="getTargetInfo">
-                    <template #icon>
-                        <n-icon>
-                            <Refresh />
-                        </n-icon>
-                    </template>查询
-                </n-button>
-                <n-select v-model:value="fightNum" :options="options" class="inputOrSelectWidth" />
-                <n-button size="small" :disabled="loading1 || !targetId" @click="fightPVPRefresh">
-                    <template #icon>
-                        <n-icon>
-                            <Refresh />
-                        </n-icon>
-                    </template>切磋
-                </n-button>
-                <n-button type="primary" size="small" :disabled="!memberData || loading1" @click="handleExport1">
-                    <template #icon>
-                        <n-icon>
-                            <Copy />
-                        </n-icon>
-                    </template>导出</n-button>
-            </div>
 
             <div class="battle-records-content">
                 <div ref="exportDom" class="content">
                     <div v-if="memberData" class="member-card"  >
                         <div class="member-header">
-                            <div class="member-stats-inline">
-                                <div class="member-info">
-                                    <n-avatar round :size="60" :src="memberData.headImg" />
-                                </div>
-                                <div class="member-right">
-                                    <div class="member-row">
+                            <div class="player-info-section">
+                                <n-avatar round :size="60" :src="memberData.headImg" />
+                                <div class="player-details">
+                                    <div class="info-row">
                                         <span>游戏名: {{ memberData.name }}</span>
                                         <span>区服: {{ memberData.serverName }}</span>
                                     </div>
-                                    <div class="member-row">
+                                    <div class="info-row">
                                         <span>战力: {{ memberData.power }}</span>
                                         <span>当前阵容红数/孔数: <span style="color: red;font-weight: bolder;">{{ memberData.red }}</span>/<span
                                                 style="color: green;font-weight: bolder;">{{ memberData.hole }}</span></span>
                                     </div>
-                                    <div class="member-row">
+                                    <div class="info-row">
                                         <span>俱乐部名: {{ memberData.legionName }}</span>
                                         <span>俱乐部历史最高战力: {{ memberData.MaxPower }}</span>
                                     </div>
-                                    <div class="member-row">
+                                    <div class="info-row">
                                         <span>俱乐部当前红数: {{ memberData.legionRed }}</span>
                                         <span>俱乐部历史最高红数: {{ memberData.legionMaxRed }}</span>
                                     </div>
@@ -778,44 +747,53 @@ onMounted(() => {
         }
     }
 
-    .member-header {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        background-color: rgb(241, 241, 241, 0.5);
-        border-radius: 15px;
-        min-height: 120px;
-        max-height: 120px;
-    }
-
   .member-header {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
+    flex-direction: column;
+    gap: var(--spacing-md);
     background-color: rgb(241, 241, 241, 0.5);
     border-radius: 15px;
-    min-height: 120px;
-    /* max-height: 120px; Removed fixed height */
+    padding: var(--spacing-md);
+  }
+
+  .player-info-section {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
     padding: var(--spacing-sm);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .player-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    flex: 1;
+  }
+
+  .info-row {
+    display: flex;
+    gap: var(--spacing-md);
+    font-size: 14px;
+    color: #333;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
 
   .member-info {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-sm);
-    min-width: 120px;
-    max-width: 120px;
-    min-height: 120px;
-    /* max-height: 120px; */
-    flex-shrink: 0;
+    gap: var(--spacing-md);
+    width: 100%;
   }
 
   .member-right {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    /* max-height: 120px; */
+    gap: var(--spacing-xs);
+    flex: 1;
   }
 
   .member-row {
@@ -832,12 +810,12 @@ onMounted(() => {
 
   .member-stats-inline {
     display: flex;
-    gap: var(--spacing-xs);
-    align-items: center;
+    gap: var(--spacing-md);
+    align-items: flex-start;
     flex: 1;
     flex-wrap: wrap;
-    /* Allow wrapping */
-    justify-content: center;
+    justify-content: flex-start;
+    width: 100%;
   }
 
 
@@ -867,8 +845,16 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-sm);
-    min-width: 128px;
+    gap: 4px;
+    min-width: 140px;
+    padding: var(--spacing-sm);
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(79, 75, 75, 0.2);
+    }
   }
 
   @media (max-width: 768px) {
@@ -882,26 +868,8 @@ onMounted(() => {
     }
 
     .hero-item {
-      min-width: 80px;
-      width: 45%;
-    }
-
-    .hero-item:hover {
-        background-color: #4f4b4b36;
-        cursor: pointer;
-        border-radius: 5px;
-    }
-
-    .hero-circle {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: var(--bg-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      min-width: 120px;
+      width: 48%;
     }
   }
 
@@ -929,12 +897,13 @@ onMounted(() => {
   }
 
   .hero-name {
-    font-size: 12px;
-    color: var(--text-secondary);
+    font-size: 13px;
+    color: var(--text-primary);
     text-align: center;
-    min-width: 90px;
-    max-width: 140px;
+    width: 100%;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
 }
