@@ -1462,7 +1462,8 @@ const batchOpenBox = async () => {
         await tokenStore.sendMessageWithPromise(tokenId, 'item_openbox', { itemId: boxType, number: remainder }, 5000)
         addLog({ time: new Date().toLocaleTimeString(), message: `开箱进度: ${totalCount}/${totalCount}`, type: 'info' })
       }
-
+	  await tokenStore.sendMessageWithPromise(tokenId, 'item_batchclaimboxpointreward')
+	  await new Promise(r => setTimeout(r, 500))
       await tokenStore.sendMessage(tokenId, 'role_getroleinfo')
       tokenStatus.value[tokenId] = 'completed'
       addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 开箱完成 ===`, type: 'success' })
