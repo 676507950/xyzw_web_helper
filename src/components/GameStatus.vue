@@ -57,7 +57,8 @@
 
         <!-- 消耗活动进度（提取组件） -->
         <ConsumptionProgressCard v-if="activeSection === 'tools'" />
-		
+        <!-- 武将升级助手（提取组件） -->
+        <HeroUpgradeCard v-if="activeSection === 'tools'" />
 
         <!-- 俱乐部排位（暂时隐藏） -->
         <div class="status-card legion-match" v-if="ENABLE_LEGION_MATCH && activeSection === 'club'">
@@ -160,6 +161,7 @@ import GoldClubList from "./cards/GoldRankListPageCard.vue";
 import FightPvp from "./cards/FightPvp.vue";
 import FightHelperCard from "./cards/FightHelperCard.vue";
 import DreamHelperCard from "./cards/DreamHelperCard.vue";
+import HeroUpgradeCard from "./cards/HeroUpgradeCard.vue";
 import ConsumptionProgressCard from "./cards/ConsumptionProgressCard.vue";
 import TowerStatus from "./Tower/TowerStatus.vue";
 import WeirdTowerStatus from "./Tower/WeirdTowerStatus.vue";
@@ -555,6 +557,7 @@ onUnmounted(() => {
     margin: 0 var(--spacing-sm) var(--spacing-md) var(--spacing-sm);
     grid-column: 1 / -1;
     border-bottom: 1px solid var(--border-light);
+    overflow: auto;
 }
 
 .section-tabs :deep(.n-tabs-pane-wrapper) {

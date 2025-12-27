@@ -7,6 +7,18 @@
             </div>
         </div>
 
+        <div class="item-header">
+          <div class="item-values">
+            <div class="current">黄金道具数量:{{ ActivityGoldItem }}</div>
+            <div class="current">普通道具数量:{{ ActivityItem }}</div>
+          </div>
+        </div>
+        <div class="setting-item">
+          <span class="label">使用数量:</span>
+          <n-input-number v-model:value="Activitynumber" :min="1" :step="1" size="small" />
+          <a-button type="primary" size="small" :disabled="state.isRunning" @click="OpenActivityItem">打开普通道具</a-button>          
+        </div>
+
         <div class="card-content">
             <div v-if="!hasActivityData" class="empty-state">暂无活动数据</div>
             <div v-else class="progress-list">
@@ -38,11 +50,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, watchEffect } from "vue";
+import { useMessage } from "naive-ui";
 import { useTokenStore } from "@/stores/tokenStore";
 
 const tokenStore = useTokenStore();
-
+const message = useMessage();
 // 获取活动数据
 const fetchActivityData = () => {
     if (tokenStore.selectedToken) {
@@ -61,6 +74,11 @@ watch(
     }
 );
 
+const state = ref({
+    isRunning: false,
+});
+
+const Activitynumber = ref(4);
 // 消耗任务ID定义
 const ConsumptionTaskID = {
     招募: 1,
@@ -194,7 +212,9 @@ const missionTypes = {
 };
 // 消耗活动的ID (仅作参考，实际逻辑会自动查找)
 const ACTIVITY_ID = 2512261;
-
+const roleInfo = computed(() => tokenStore.gameData?.roleInfo || null);
+const ActivityItem = computed(() => roleInfo.value?.role?.items?.[5261]?.quantity || 0);
+const ActivityGoldItem = computed(() => roleInfo.value?.role?.items?.[5262]?.quantity || 0);
 const commonActivityInfo = computed(() => {
     const data = tokenStore.gameData?.commonActivityInfo;
     // 尝试获取活动列表对象，兼容可能的层级结构
@@ -214,6 +234,20 @@ const hasActivityData = computed(() => {
         });
     });
 });
+
+const OpenActivityItem = async () => {
+    if (!tokenStore.selectedToken) {
+        message.warning("请先选择Token");
+        return;
+    }
+    const tokenId = tokenStore.selectedToken.id;
+    state.value.isRunning = true;
+    message.info("道具开启中");
+    await tokenStore.sendMessageWithPromise(tokenId, "item_openpack", { itemId: 5261, index: 0, number: Activitynumber.value });
+    await tokenStore.sendMessage(tokenId, "role_getroleinfo");
+    message.success("道具开启完毕");
+    state.value.isRunning = false;
+};
 
 const progressList = computed(() => {
     if (!commonActivityInfo.value) return [];
@@ -329,6 +363,30 @@ const progressList = computed(() => {
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+.settings {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  
+  .n-input-number { width: 80px; }
+
+  .label { 
+        color: var(--primary-color); 
+        font-weight: 600; 
+        font-size: var(--font-size-sm);
+    }
+}
+.status-row {
+  display: flex;
+  gap: var(--spacing-lg);
 }
 
 .item-header {

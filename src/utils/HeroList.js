@@ -1,6 +1,6 @@
 
 //英雄字典
-const HERO_DICT = {
+export const HERO_DICT = {
     101: { name: "司马懿", type: "魏国", avatar: "/team/simayi.png" },
     102: { name: "郭嘉", type: "魏国", avatar: "/team/guojia.png" },
     103: { name: "关羽", type: "蜀国", avatar: "/team/guanyu.png" },
@@ -91,15 +91,16 @@ const FishMap = {
     1208:{name:"龙鱼·青囊"},
     1209:{name:"龙鱼·洛神"},
     1210:{name:"龙鱼·机神"},
-    1211:{name:"龙鱼·麒麟"},
+    1211:{name:"龙鱼·霸王"},
     1212:{name:"龙鱼·蚀骨"},
     1213:{name:"龙鱼·坚盾"},
-    1214:{name:"龙鱼·古锭"},
-    1215:{name:"龙鱼·义从"},
-    1216:{name:"龙鱼·恶来"},
-    1217:{name:"龙鱼·龙胆"},
-    1218:{name:"龙鱼·国色"},
-    1219:{name:"龙鱼·天公"},
+    1214:{name:"龙鱼·麒麟"},
+    1215:{name:"龙鱼·古锭"},
+    1216:{name:"龙鱼·义从"},
+    1217:{name:"龙鱼·恶来"},
+    1218:{name:"龙鱼·龙胆"},
+    1219:{name:"龙鱼·国色"},
+    1220:{name:"龙鱼·天公"},
 
     1301:{name:"月尾"},
     1302:{name:"焰神"},

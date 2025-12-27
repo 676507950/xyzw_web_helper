@@ -122,6 +122,7 @@ export function registerDefaultCommands(reg) {
     .register("hero_recruit", { byClub: false, recruitNumber: 1, recruitType: 3 })
     .register("item_openbox", { itemId: 2001, number: 10 })
     .register("item_batchclaimboxpointreward")
+	.register("item_openpack")
 
     // 竞技场
     .register("arena_startarea")
@@ -840,6 +841,7 @@ export class XyzwWebSocketClient {
       'fight_starttowerresp': 'fight_starttower',
       'evotowerinforesp': 'evotower_getinfo',
       'evotower_fightresp': 'evotower_fight',
+	  'item_openpackresp': 'item_openpack',
       // 咸王宝库
       'matchteam_getroleteaminforesp': 'matchteam_getroleteaminfo',
       'bosstower_getinforesp': 'bosstower_getinfo',

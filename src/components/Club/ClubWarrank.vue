@@ -24,6 +24,9 @@
                     <template #icon>
                         <n-icon><Copy /></n-icon>
                     </template>导出</n-button>
+              <n-button type="info" size="small" :disabled="!battleRecords1 || loading1" @click="hcSort">
+                <template #icon>
+                </template>红淬排序</n-button>
             </div>
 
 
@@ -210,18 +213,17 @@ const fetchBattleRecordsByDate = val => {
                         );
                         const redQuenchCounts = [];
                         const HolyBeastNum = [];
-                        for (const [memberId, memberData] of Object.entries(detail?.legionData?.members)) {
+                        for (const [roleId, memberData] of Object.entries(detail?.legionData?.members)) {
                             if (memberData.custom?.red_quench_cnt !== undefined) {
                                 redQuenchCounts.push(memberData.custom.red_quench_cnt + "红");
                             }
-                        }
-                        const tempRoleInfo = await tokenStore.sendMessageWithPromise(tokenId, 'rank_getroleinfo',
-                          {
-                              bottleType: 0,
-                              includeBottleTeam: false,
-                              isSearch: false,
-                              roleId: memberId
-                          }, 5000)
+                          const tempRoleInfo = await tokenStore.sendMessageWithPromise(tokenId, 'rank_getroleinfo',
+                              {
+                                bottleType: 0,
+                                includeBottleTeam: false,
+                                isSearch: false,
+                                roleId: roleId
+                              }, 5000)
                           let holyBeast = 0;
                           for (const [heroId, heroData] of Object.entries(tempRoleInfo?.roleInfo?.heroes)) {
                             if(heroData.hB?.active !== undefined){
@@ -229,7 +231,7 @@ const fetchBattleRecordsByDate = val => {
                             }
                           }
                           HolyBeastNum.push(holyBeast)
-
+                        }
 
                         return {
                             ...club,
@@ -290,7 +292,7 @@ const fetchBattleRecordsByDate = val => {
                     );
                     const redQuenchCounts = [];
                     const HolyBeastNum = [];
-                    for (const [memberId, memberData] of Object.entries(detail?.legionData?.members)) {
+                    for (const [roleId, memberData] of Object.entries(detail?.legionData?.members)) {
                         if (memberData.custom?.red_quench_cnt !== undefined) {
                             redQuenchCounts.push(memberData.custom.red_quench_cnt + "红");
                         }
@@ -300,7 +302,7 @@ const fetchBattleRecordsByDate = val => {
                               bottleType: 0,
                               includeBottleTeam: false,
                               isSearch: false,
-                              roleId: memberId
+                              roleId: roleId
                           }, 5000)
                           let holyBeast = 0;
                           for (const [heroId, heroData] of Object.entries(tempRoleInfo?.roleInfo?.heroes)) {
@@ -373,7 +375,10 @@ const handleExport1 = async () => {
     message.error('导出失败，请重试')
   }
 }
-
+const hcSort = async () =>{
+  // battleRecords1.legionRankList 按照 redQuench 降序
+  battleRecords1.value.legionRankList.sort((a, b) => b.redQuench - a.redQuench)
+}
 
 const exportToImage = async () => {
     // 校验：确保DOM已正确绑定
@@ -523,9 +528,20 @@ onMounted(() => {
   align-items: center;
   flex: 1;
 }
-.details-button {
-  flex-shrink: 0;
-  margin-left: auto;
+
+@media (max-width: 768px) {
+  .member-stats-inline {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: flex-start;
+    flex: 1;
+    flex-direction: column;
+    .tipsgg {
+      background: rgba(194, 166, 248, 0.1);
+      color: #AE86F9;
+      white-space:normal
+    }
+  }
 }
 
 .stat-inline {

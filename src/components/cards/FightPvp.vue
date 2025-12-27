@@ -23,7 +23,7 @@
             </n-icon>
           </template>切磋
         </n-button>
-        <n-button type="primary" size="small" :disabled="!topranklist || loading1" @click="handleExport1">
+        <n-button type="primary" size="small" :disabled="!fightResult || loading1" @click="handleExport1">
           <template #icon>
             <n-icon>
               <Copy />
@@ -79,7 +79,7 @@
           <div v-if="loading1" class="loading-state">
             <n-spin size="large">
               <template #description>
-                正在加载俱乐部数据...
+                正在加载切磋数据...
               </template>
             </n-spin>
           </div>
@@ -182,7 +182,7 @@
           </n-descriptions-item>
         </n-descriptions>
         <template #footer>
-          <n-grid :x-gap="12" :y-gap="8" :cols="2">
+          <n-grid :x-gap="8" :y-gap="8" :cols="1">
             <n-gi>
               武器：
               <div v-for="item in Object.values(Object.values(heroModealTemp?.equipment || {})[0]?.quenches || {})" :key="item.id"
@@ -511,7 +511,7 @@ const fetchfightPVP = async () => {
       resultCount
     };
     fightResult.value = teamData;
-    message.success('俱乐部数据加载成功');
+    message.success('切磋数据加载成功');
     return teamData;
 
   } catch (error) {
@@ -711,6 +711,19 @@ onMounted(() => {
     width: 20%;
   }
 
+  @media (max-width:768px){
+    .inputOrSelectWidth {
+      width: 50%;
+    }
+  }
+  
+  .inline-container{
+    display: flex;
+    flex-wrap: wrap;
+    justify-items: flex-start;
+    align-items: center;
+  }
+
     .member-card {
         background: var(--bg-secondary);
         border: 1px solid var(--border-light);
@@ -809,8 +822,7 @@ onMounted(() => {
     align-items: flex-start;
     flex: 1;
     flex-wrap: wrap;
-    justify-content: flex-start;
-    width: 100%;
+    justify-content: center;
   }
 
 
@@ -899,6 +911,7 @@ onMounted(() => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
   }
 
 }

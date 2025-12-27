@@ -45,6 +45,9 @@
         <n-button size="small" @click="openHelperModal('box')" :disabled="isRunning || selectedTokens.length === 0">
           批量开箱
         </n-button>
+        <n-button size="small" @click="batchClaimBoxPointReward" :disabled="isRunning || selectedTokens.length === 0">
+          领取宝箱积分
+        </n-button>
         <n-button size="small" @click="openHelperModal('fish')" :disabled="isRunning || selectedTokens.length === 0">
           批量钓鱼
         </n-button>
@@ -1418,6 +1421,53 @@ const startBatch = async () => {
 }
 
 // --- 批量助手函数 ---
+const batchClaimBoxPointReward = async () => {
+  if (selectedTokens.value.length === 0) return
+
+  isRunning.value = true
+  shouldStop.value = false
+  logs.value = []
+
+  selectedTokens.value.forEach(id => {
+    tokenStatus.value[id] = 'waiting'
+  })
+
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break
+
+    currentRunningTokenId.value = tokenId
+    tokenStatus.value[tokenId] = 'running'
+    currentProgress.value = 0
+
+    const token = tokens.value.find(t => t.id === tokenId)
+
+    try {
+      addLog({ time: new Date().toLocaleTimeString(), message: `=== 开始领取宝箱积分: ${token.name} ===`, type: 'info' })
+
+      await ensureConnection(tokenId)
+
+      await tokenStore.sendMessageWithPromise(tokenId, 'item_batchclaimboxpointreward', {}, 5000)
+      addLog({ time: new Date().toLocaleTimeString(), message: `宝箱积分领取成功`, type: 'success' })
+
+      await tokenStore.sendMessage(tokenId, 'role_getroleinfo')
+      tokenStatus.value[tokenId] = 'completed'
+      addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 领取完成 ===`, type: 'success' })
+
+    } catch (error) {
+      console.error(error)
+      tokenStatus.value[tokenId] = 'failed'
+      addLog({ time: new Date().toLocaleTimeString(), message: `领取失败: ${error.message}`, type: 'error' })
+    }
+
+    currentProgress.value = 100
+    await new Promise(r => setTimeout(r, 500))
+  }
+
+  isRunning.value = false
+  currentRunningTokenId.value = null
+  message.success('批量领取宝箱积分结束')
+}
+
 const batchOpenBox = async () => {
   if (selectedTokens.value.length === 0) return
 
