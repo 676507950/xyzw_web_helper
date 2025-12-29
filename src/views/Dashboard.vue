@@ -9,7 +9,7 @@
             <div class="welcome-text">
               <h1>欢迎回来，{{ tokenStore.selectedToken?.name || '游戏玩家' }}！</h1>
               <p>今天是 {{ currentDate }}，继续您的游戏管理之旅吧</p>
-              <p>反馈微信：VIP-W66668888，添加备注脚本，朋友圈会发布更新通知>fp>
+              <p>反馈微信：VIP-W66668888，添加备注脚本，朋友圈会发布更新通知</p>
             </div>
             <div class="welcome-actions">
               <n-button
