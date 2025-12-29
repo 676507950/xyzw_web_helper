@@ -98,7 +98,7 @@
                 </n-button>
                 
                 <n-button
-                text type="primary" size="large" class="hero-button" onclick="window.open('https://112345319.lanzoub.com/iSKqP3efkxhi','_blank')">
+                text type="primary" size="large" class="hero-button" onclick="window.open('https://112345319.lanzoub.com/b0syczjva','_blank')">
                 使用教程 密码:ed38
                 </n-button>
 
