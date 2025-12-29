@@ -96,6 +96,12 @@
                 <n-button text type="primary" size="large" class="hero-button" @click="scrollToFeatures">
                   了解更多
                 </n-button>
+                
+                <n-button
+                text type="primary" size="large" class="hero-button" onclick="window.open('https://112345319.lanzoub.com/iSKqP3efkxhi','_blank')">
+                使用教程 密码:ed38
+                </n-button>
+
               </div>
             </div>
 
