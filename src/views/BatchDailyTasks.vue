@@ -1,110 +1,158 @@
 <template>
   <div class="batch-daily-tasks">
-    <!-- Header -->
-    <div class="page-header">
-      <h2>批量日常任务</h2>
-      <div class="actions">
-        <n-button type="primary" @click="startBatch" :disabled="isRunning || selectedTokens.length === 0">
-          {{ isRunning ? '执行中...' : '开始执行' }}
-        </n-button>
-        <n-button @click="stopBatch" :disabled="!isRunning" type="error" style="margin-left: 12px">
-          停止
-        </n-button>
+    <div class="main-layout">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Header -->
+        <div class="page-header">
+          <h2>批量日常任务</h2>
+          <div class="actions">
+            <n-button type="primary" @click="startBatch" :disabled="isRunning || selectedTokens.length === 0">
+              {{ isRunning ? '执行中...' : '开始执行' }}
+            </n-button>
+            <n-button @click="stopBatch" :disabled="!isRunning" type="error" style="margin-left: 12px">
+              停止
+            </n-button>
+          </div>
+        </div>
+
+        <!-- Token Selection -->
+        <n-card title="账号列表" class="token-list-card">
+          <n-space style="margin-bottom: 12px">
+            <n-button size="small" @click="claimHangUpRewards" :disabled="isRunning || selectedTokens.length === 0">
+              领取挂机
+            </n-button>
+            <n-button size="small" @click="batchAddHangUpTime" :disabled="isRunning || selectedTokens.length === 0">
+              一键加钟
+            </n-button>
+            <n-button size="small" @click="resetBottles" :disabled="isRunning || selectedTokens.length === 0">
+              重置罐子
+            </n-button>
+            <n-button size="small" @click="batchlingguanzi" :disabled="isRunning || selectedTokens.length === 0">
+              一键领取罐子
+            </n-button>
+            <n-button size="small" @click="climbTower" :disabled="isRunning || selectedTokens.length === 0">
+              一键爬塔
+            </n-button>
+            <n-button size="small" @click="batchStudy" :disabled="isRunning || selectedTokens.length === 0">
+              一键答题
+            </n-button>
+            <n-button size="small" @click="batchSmartSendCar"
+              :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen">
+              智能发车
+            </n-button>
+            <n-button size="small" @click="batchClaimCars"
+              :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen">
+              一键收车
+            </n-button>
+            <n-button size="small" @click="openHelperModal('box')" :disabled="isRunning || selectedTokens.length === 0">
+              批量开箱
+            </n-button>
+            <n-button size="small" @click="batchClaimBoxPointReward" :disabled="isRunning || selectedTokens.length === 0">
+              领取宝箱积分
+            </n-button>
+            <n-button size="small" @click="openHelperModal('fish')" :disabled="isRunning || selectedTokens.length === 0">
+              批量钓鱼
+            </n-button>
+            <n-button size="small" @click="openHelperModal('recruit')" :disabled="isRunning || selectedTokens.length === 0">
+              批量招募
+            </n-button>
+            <n-button size="small" @click="batchbaoku13" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
+              一键宝库前3层
+            </n-button>
+            <n-button size="small" @click="batchbaoku45" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
+              一键宝库4,5层
+            </n-button>
+            <n-button size="small" @click="batchmengjing" :disabled="isRunning || selectedTokens.length === 0 || !ismengjingActivityOpen">
+              一键梦境
+            </n-button>
+            <n-button size="small" @click="batchclubsign" :disabled="isRunning || selectedTokens.length === 0">
+              一键俱乐部签到
+            </n-button>
+            <n-button size="small" @click="batcharenafight" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
+              一键竞技场战斗3次
+            </n-button>
+            <n-button size="small" @click="batchTopUpFish" :disabled="isRunning || selectedTokens.length === 0">
+              一键钓鱼补齐
+            </n-button>
+            <n-button size="small" @click="batchTopUpArena" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
+              一键竞技场补齐
+            </n-button>
+          </n-space>
+          <n-space vertical>
+            <n-checkbox :checked="isAllSelected" :indeterminate="isIndeterminate" @update:checked="handleSelectAll">
+              全选
+            </n-checkbox>
+            <n-checkbox-group v-model:value="selectedTokens">
+              <n-grid :x-gap="12" :y-gap="8" :cols="2">
+                <n-grid-item v-for="token in tokens" :key="token.id">
+                  <div class="token-row">
+                    <n-checkbox :value="token.id" :label="token.name" style="flex: 1">
+                      <div class="token-item">
+                        <span>{{ token.name }}</span>
+                        <n-tag size="small" :type="getStatusType(token.id)" style="margin-left: 8px">
+                          {{ getStatusText(token.id) }}
+                        </n-tag>
+                      </div>
+                    </n-checkbox>
+                    <n-button size="tiny" circle @click.stop="openSettings(token)">
+                      <template #icon>
+                        <n-icon>
+                          <Settings />
+                        </n-icon>
+                      </template>
+                    </n-button>
+                  </div>
+                </n-grid-item>
+              </n-grid>
+            </n-checkbox-group>
+          </n-space>
+        </n-card>
+
+        <!-- Scheduled Tasks -->
+        <n-card title="定时任务" class="scheduled-tasks-card" style="margin-top: 16px">
+          <n-space style="margin-bottom: 12px">
+            <n-button type="primary" size="small" @click="openTaskModal">
+              新增定时任务
+            </n-button>
+            <n-button size="small" @click="showTasksModal = true">
+              查看定时任务
+            </n-button>
+          </n-space>
+          
+          <!-- 简单的任务统计 -->
+          <div class="tasks-count" v-if="scheduledTasks.length > 0">
+            <p>已保存 {{ scheduledTasks.length }} 个定时任务</p>
+          </div>
+          <div class="tasks-count" v-else>
+            <p>暂无定时任务</p>
+          </div>
+        </n-card>
+      </div>
+
+      <!-- Right Column - Execution Log -->
+      <div class="right-column">
+        <n-card :title="currentRunningTokenName ? `正在执行: ${currentRunningTokenName}` : '执行日志'" class="log-card">
+          <template #header-extra>
+            <div class="log-header-controls">
+              <n-checkbox v-model:checked="autoScrollLog" size="small">
+                自动滚动
+              </n-checkbox>
+              <n-button size="small" @click="copyLogs" style="margin-left: 8px">
+                复制日志
+              </n-button>
+            </div>
+          </template>
+          <n-progress type="line" :percentage="currentProgress" :indicator-placement="'inside'" processing />
+          <div class="log-container" ref="logContainer">
+            <div v-for="(log, index) in logs" :key="index" class="log-item" :class="log.type">
+              <span class="time">{{ log.time }}</span>
+              <span class="message">{{ log.message }}</span>
+            </div>
+          </div>
+        </n-card>
       </div>
     </div>
-
-    <!-- Token Selection -->
-    <n-card title="账号列表" class="token-list-card">
-      <n-space style="margin-bottom: 12px">
-        <n-button size="small" @click="claimHangUpRewards" :disabled="isRunning || selectedTokens.length === 0">
-          领取挂机
-        </n-button>
-        <n-button size="small" @click="batchAddHangUpTime" :disabled="isRunning || selectedTokens.length === 0">
-          一键加钟
-        </n-button>
-        <n-button size="small" @click="resetBottles" :disabled="isRunning || selectedTokens.length === 0">
-          重置罐子
-        </n-button>
-        <n-button size="small" @click="batchlingguanzi" :disabled="isRunning || selectedTokens.length === 0">
-          一键领取罐子
-        </n-button>
-        <n-button size="small" @click="climbTower" :disabled="isRunning || selectedTokens.length === 0">
-          一键爬塔
-        </n-button>
-        <n-button size="small" @click="batchStudy" :disabled="isRunning || selectedTokens.length === 0">
-          一键答题
-        </n-button>
-        <n-button size="small" @click="batchSmartSendCar"
-          :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen">
-          智能发车
-        </n-button>
-        <n-button size="small" @click="batchClaimCars"
-          :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen">
-          一键收车
-        </n-button>
-        <n-button size="small" @click="openHelperModal('box')" :disabled="isRunning || selectedTokens.length === 0">
-          批量开箱
-        </n-button>
-        <n-button size="small" @click="batchClaimBoxPointReward" :disabled="isRunning || selectedTokens.length === 0">
-          领取宝箱积分
-        </n-button>
-        <n-button size="small" @click="openHelperModal('fish')" :disabled="isRunning || selectedTokens.length === 0">
-          批量钓鱼
-        </n-button>
-        <n-button size="small" @click="openHelperModal('recruit')" :disabled="isRunning || selectedTokens.length === 0">
-          批量招募
-        </n-button>
-        <n-button size="small" @click="batchbaoku13" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
-          一键宝库前3层
-        </n-button>
-        <n-button size="small" @click="batchbaoku45" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
-          一键宝库4,5层
-        </n-button>
-        <n-button size="small" @click="batchmengjing" :disabled="isRunning || selectedTokens.length === 0 || !ismengjingActivityOpen">
-          一键梦境
-        </n-button>
-        <n-button size="small" @click="batchclubsign" :disabled="isRunning || selectedTokens.length === 0">
-          一键俱乐部签到
-        </n-button>
-        <n-button size="small" @click="batcharenafight" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
-          一键竞技场战斗3次
-        </n-button>
-        <n-button size="small" @click="batchTopUpFish" :disabled="isRunning || selectedTokens.length === 0">
-          一键钓鱼补齐
-        </n-button>
-        <n-button size="small" @click="batchTopUpArena" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
-          一键竞技场补齐
-        </n-button>
-      </n-space>
-      <n-space vertical>
-        <n-checkbox :checked="isAllSelected" :indeterminate="isIndeterminate" @update:checked="handleSelectAll">
-          全选
-        </n-checkbox>
-        <n-checkbox-group v-model:value="selectedTokens">
-          <n-grid :x-gap="12" :y-gap="8" :cols="2">
-            <n-grid-item v-for="token in tokens" :key="token.id">
-              <div class="token-row">
-                <n-checkbox :value="token.id" :label="token.name" style="flex: 1">
-                  <div class="token-item">
-                    <span>{{ token.name }}</span>
-                    <n-tag size="small" :type="getStatusType(token.id)" style="margin-left: 8px">
-                      {{ getStatusText(token.id) }}
-                    </n-tag>
-                  </div>
-                </n-checkbox>
-                <n-button size="tiny" circle @click.stop="openSettings(token)">
-                  <template #icon>
-                    <n-icon>
-                      <Settings />
-                    </n-icon>
-                  </template>
-                </n-button>
-              </div>
-            </n-grid-item>
-          </n-grid>
-        </n-checkbox-group>
-      </n-space>
-    </n-card>
 
     <!-- Settings Modal -->
     <n-modal v-model:show="showSettingsModal" preset="card" :title="`任务设置 - ${currentSettingsTokenName}`"
@@ -302,23 +350,7 @@
       </div>
     </n-modal>
 
-    <!-- Progress & Logs -->
-    <div class="execution-area" v-if="currentRunningTokenId || logs.length > 0">
-      <n-card :title="currentRunningTokenName ? `正在执行: ${currentRunningTokenName}` : '执行日志'" style="margin-top: 16px">
-        <template #extra>
-          <n-button size="small" @click="copyLogs">
-            复制日志
-          </n-button>
-        </template>
-        <n-progress type="line" :percentage="currentProgress" :indicator-placement="'inside'" processing />
-        <div class="log-container" ref="logContainer">
-          <div v-for="(log, index) in logs" :key="index" class="log-item" :class="log.type">
-            <span class="time">{{ log.time }}</span>
-            <span class="message">{{ log.message }}</span>
-          </div>
-        </div>
-      </n-card>
-    </div>
+
   </div>
 </template>
 
@@ -789,6 +821,7 @@ const currentRunningTokenId = ref(null)
 const currentProgress = ref(0)
 const logs = ref([])
 const logContainer = ref(null)
+const autoScrollLog = ref(true)
 
 const currentRunningTokenName = computed(() => {
   const t = tokens.value.find(x => x.id === currentRunningTokenId.value)
@@ -853,11 +886,19 @@ const calculateMonthProgress = () => {
 const addLog = (log) => {
   logs.value.push(log)
   nextTick(() => {
-    if (logContainer.value) {
+    if (logContainer.value && autoScrollLog.value) {
       logContainer.value.scrollTop = logContainer.value.scrollHeight
     }
   })
 }
+
+watch(autoScrollLog, (newValue) => {
+  if (newValue && logContainer.value) {
+    nextTick(() => {
+      logContainer.value.scrollTop = logContainer.value.scrollHeight
+    })
+  }
+})
 
 const copyLogs = () => {
   if (logs.value.length === 0) {
@@ -2043,7 +2084,7 @@ const batchClaimCars = async () => {
     const token = tokens.value.find(t => t.id === tokenId)
 
     try {
-      addLog({ time: new Date().toLocaleTimeString(), message: `=== 开始一键收车: ${token.name} ===`, type: 'info' })
+       addLog({ time: new Date().toLocaleTimeString(), message: `=== 开始一键收车: ${token.name} ===`, type: 'info' })
 
       await ensureConnection(tokenId)
 
@@ -2058,7 +2099,6 @@ const batchClaimCars = async () => {
         if (canClaim(car)) {
           try {
             await tokenStore.sendMessageWithPromise(tokenId, 'car_claim', { carId: String(car.id) }, 10000)
-            await tokenStore.sendMessageWithPromise(token.id, 'car_research', { researchId: 1 }, 5000)
             claimedCount++
             addLog({ time: new Date().toLocaleTimeString(), message: `收车成功: ${gradeLabel(car.color)}`, type: 'success' })
           } catch (e) {
@@ -2408,8 +2448,30 @@ const stopBatch = () => {
 <style scoped>
 .batch-daily-tasks {
   padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.main-layout {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.left-column {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  padding-right: 8px;
+}
+
+.right-column {
+  width: 450px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-header {
@@ -2424,18 +2486,34 @@ const stopBatch = () => {
   align-items: center;
 }
 
-.execution-area {
-  margin-top: 20px;
+.log-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.log-card :deep(.n-card__content) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.log-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .log-container {
-  height: 300px;
+  flex: 1;
   overflow-y: auto;
   background: #f5f5f5;
   padding: 10px;
   border-radius: 4px;
   margin-top: 10px;
   font-family: monospace;
+  min-height: 200px;
 }
 
 .log-item {
@@ -2510,5 +2588,67 @@ const stopBatch = () => {
 .switch-label {
   font-size: 14px;
   color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .right-column {
+    width: 380px;
+  }
+}
+
+@media (max-width: 992px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .left-column {
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .right-column {
+    width: 100%;
+    height: 400px;
+    flex-shrink: 0;
+  }
+
+  .log-container {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .batch-daily-tasks {
+    padding: 12px;
+    height: auto;
+    overflow: visible;
+  }
+
+  .main-layout {
+    height: auto;
+    overflow: visible;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .page-header .actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .right-column {
+    height: 350px;
+  }
+
+  .log-header-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 </style>
