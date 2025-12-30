@@ -1,5 +1,5 @@
 <template>
-  <div class="status-card club-car-king" style="min-width: 400px;">
+  <div class="status-card club-car-king" >
     <div class="card-header">
       <img class="status-icon" src="/icons/疯狂赛车.png" alt="疯狂赛车">
       <div class="status-info">

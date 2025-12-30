@@ -33,11 +33,13 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^6.7.3",
     "@iconify-json/mdi": "^1.2.3",
     "@intlify/unplugin-vue-i18n": "^6.0.8",
     "@types/node": "^20.19.21",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/tsconfig": "^0.8.1",
+    "jiti": "^2.6.1",
     "sass": "^1.93.2",
     "typescript": "^5.9.3",
     "unocss": "^0.61.9",

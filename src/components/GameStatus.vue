@@ -52,13 +52,16 @@
         <!-- 梦境助手（提取组件） -->
         <DreamHelperCard v-if="activeSection === 'tools'" />
 		
-		<!-- 咸王宝库（提取组件） -->
-        <BossTower v-if="activeSection === 'tools'" />
+		<!-- 武将升级助手（提取组件） -->
+        <HeroUpgradeCard v-if="activeSection === 'tools'" />
+
+        <!-- 洗练助手（提取组件） -->
+        <RefineHelperCard v-if="activeSection === 'tools'" />
 
         <!-- 消耗活动进度（提取组件） -->
         <ConsumptionProgressCard v-if="activeSection === 'tools'" />
-        <!-- 武将升级助手（提取组件） -->
-        <HeroUpgradeCard v-if="activeSection === 'tools'" />
+        <!-- 咸王宝库（提取组件） -->
+        <BossTower v-if="activeSection === 'tools'" />
 
         <!-- 俱乐部排位（暂时隐藏） -->
         <div class="status-card legion-match" v-if="ENABLE_LEGION_MATCH && activeSection === 'club'">
@@ -163,6 +166,7 @@ import FightHelperCard from "./cards/FightHelperCard.vue";
 import DreamHelperCard from "./cards/DreamHelperCard.vue";
 import HeroUpgradeCard from "./cards/HeroUpgradeCard.vue";
 import ConsumptionProgressCard from "./cards/ConsumptionProgressCard.vue";
+import RefineHelperCard from "./cards/RefineHelperCard.vue";
 import TowerStatus from "./Tower/TowerStatus.vue";
 import WeirdTowerStatus from "./Tower/WeirdTowerStatus.vue";
 import BossTower from "./Tower/BossTower.vue";

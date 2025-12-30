@@ -1,7 +1,7 @@
 <template>
   <MyCard class="star-upgrade" :statusClass="{ active: state.isRunning }">
     <template #icon>
-      <img src="/icons/ta.png" alt="升级图标" />
+      <img src="/icons/legionCup.png" alt="升级图标" />
     </template>
     <template #title>
       <h3>武将升级</h3>

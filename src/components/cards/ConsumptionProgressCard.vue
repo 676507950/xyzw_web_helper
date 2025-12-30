@@ -9,8 +9,13 @@
 
         <div class="item-header">
           <div class="item-values">
-            <div class="current">黄金道具数量:{{ ActivityGoldItem }}</div>
-            <div class="current">普通道具数量:{{ ActivityItem }}</div>
+            <div class="current">黄金道具数量:{{ ActivityGoldItem }}（还需: {{ remainingGoldNeeded }}） 获取率:{{ Math.floor(1/goldRateUsed*1000)/1000 }}</div>
+                        <div class="current">普通道具已累计获取: {{ totalObtained }}(剩余:{{ ActivityItem }})</div>
+                        <div class="current">还需普通道具(库存 {{ ActivityItem }} 已计入): {{ remainingOrdNeeded }}</div>
+                        <div class="current">可行方案:
+                            <a-button  type="primary" size="small" style="margin-left:8px;" @click="showCombosModal = true">查看所有可行方案</a-button>
+                        </div>
+                        <div class="current" v-if="feasibleCombos.length === 0">暂无可行组合或已满足目标</div>
           </div>
         </div>
         <div class="setting-item">
@@ -42,10 +47,33 @@
                     <div class="item-footer">
                         <span class="next-reward" v-if="!item.isCompleted"> 下一档: {{ item.nextTarget }} (还需 {{ item.nextTarget - item.current }}) </span>
                         <span class="completed-text" v-else> 已完成所有档位 </span>
+                        <span class="obtained-items" v-if="item.obtainedItems > 0"> 已获得道具: {{ item.obtainedItems }} </span>
                     </div>
                 </div>
             </div>
         </div>
+        <!--显示可行方案-->
+        <a-modal v-model:visible="showCombosModal" width="900px" height="600px" :footer="false">
+            <template #title>
+                <h3>所有可行组合（按总普通道具升序）</h3>
+            </template>
+            <div class="cp-modal-scroll">
+                <div v-if="feasibleCombos.length === 0">暂无可行组合或已满足目标</div>
+                <div v-else>
+                    <div v-for="(combo, idx) in feasibleCombos" :key="idx" style="margin-bottom:12px;">
+                        <div><strong>方案 {{ idx + 1 }} : {{ combo.totalOrd }}档</strong></div>
+                        <ol>
+                            <li v-for="step in combo.combo" :key="step.id + '-' + step.threshold">{{ step.name }} -> 达到 {{ step.threshold }} (可得 {{ step.delta }} 普通道具, 还需消耗 {{ step.cost }})</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <n-space align="center" justify="end">
+                    <n-button @click="showCombosModal = false">关闭</n-button>
+                </n-space>
+            </template>
+        </a-modal>
     </div>
 </template>
 
@@ -210,6 +238,120 @@ const missionTypes = {
         { num: 500000 },
     ],
 };
+
+const rewardConfigs = {
+    [ConsumptionTaskID.招募]: [
+        { num: 8 },
+        { num: 8 },
+        { num: 8 },
+        { num: 8 },
+        { num: 8 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+        { num: 24 },
+        { num: 24 },
+        { num: 24 },
+        { num: 24 },
+        { num: 24 },
+        { num: 32 },
+        { num: 32 },
+        { num: 32 },
+        { num: 32 },
+        { num: 32 },
+    ],
+    [ConsumptionTaskID.宝箱]: [
+        { num: 4 },
+        { num: 4 },
+        { num: 4 },
+        { num: 4 },
+        { num: 4 },
+        { num: 8 },
+        { num: 8 },
+        { num: 8 },
+        { num: 8 },
+        { num: 8 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+    ],
+    [ConsumptionTaskID.捕获]: [
+        { num: 4 },
+        { num: 4 },
+        { num: 4 },
+        { num: 8 },
+        { num: 8 },
+        { num: 8 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+        { num: 16 },
+        { num: 20 },
+        { num: 20 },
+        { num: 20 },
+        { num: 24 },
+        { num: 24 },
+        { num: 24 },
+    ],
+    [ConsumptionTaskID.盐罐]: [
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+        { num: 1 },
+    ],
+    [ConsumptionTaskID.金砖]: [
+        { num: 3 },
+        { num: 3 },
+        { num: 3 },
+        { num: 3 },
+        { num: 3 },
+        { num: 6 },
+        { num: 6 },
+        { num: 6 },
+        { num: 6 },
+        { num: 6 },
+        { num: 9 },
+        { num: 9 },
+        { num: 9 },
+        { num: 9 },
+        { num: 9 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+        { num: 12 },
+    ],
+};
+
 // 消耗活动的ID (仅作参考，实际逻辑会自动查找)
 const ACTIVITY_ID = 2512261;
 const roleInfo = computed(() => tokenStore.gameData?.roleInfo || null);
@@ -265,6 +407,36 @@ const progressList = computed(() => {
 
     const tasks = activityData.task || {};
 
+    // 现在 current 表示已消耗量（不是轮数）。
+    // 使用 missionTypes[id] 找到 current 所处的轮次（即 missionTypes 中 num <= current 的数量），
+    // 然后按照 rewardConfigs[id] 的逐轮奖励累加前 N 轮的奖励。
+    const calcObtainedForTask = (id, consumed) => {
+        const rewardCfg = rewardConfigs[id];
+        if (!rewardCfg || !rewardCfg.length || !consumed || consumed <= 0) return 0;
+
+        const missionCfg = missionTypes[id] || [];
+
+        // missionCfg 中每一项的 num 表示达到该小轮的累计消耗阈值。
+        // 计算已完成的小轮数：missionCfg 中 num <= consumed 的数量
+        let completedRounds = 0;
+        for (let i = 0; i < missionCfg.length; i++) {
+            const threshold = missionCfg[i]?.num || 0;
+            if (consumed >= threshold) completedRounds++;
+            else break;
+        }
+
+        // 累加 rewardCfg 前 completedRounds 项，超出部分使用最后一项补齐
+        const len = rewardCfg.length;
+        const lastVal = rewardCfg[len - 1]?.num || 0;
+        let total = 0;
+        for (let i = 0; i < completedRounds; i++) {
+            if (i < len) total += rewardCfg[i]?.num || 0;
+            else total += lastVal;
+        }
+
+        return total;
+    };
+
     return Object.keys(TaskNames).map(key => {
         const id = Number(key);
         const current = tasks[id] || 0;
@@ -300,8 +472,117 @@ const progressList = computed(() => {
             nextTarget,
             percentage,
             isCompleted,
+            // 通用计算：若该任务在 rewardConfigs 中有配置，则计算已获得的道具数
+            obtainedItems: calcObtainedForTask(id, current),
         };
     });
+});
+
+// 控制模态框显示
+const showCombosModal = ref(false);
+
+// 所有类别累计已获得的普通道具数
+const totalObtained = computed(() => {
+    return progressList.value.reduce((s, it) => s + (it.obtainedItems || 0), 0);
+});
+
+// 预测相关
+const targetGold = ref(250);
+// 默认黄金产出率（普通道具 -> 1 黄金），当观测数据不可用时使用
+const defaultGoldRate = 4;
+
+// 当前已获得黄金
+const currentGold = computed(() => ActivityGoldItem.value || 0);
+const remainingGoldNeeded = computed(() => Math.max(0, targetGold.value - currentGold.value));
+
+// 基于观测的黄金产出率：使用 当前已获得黄金 / 普通道具 已累计获取 计算金率（普通道具/黄金）
+const goldRateObserved = computed(() => {
+    const g = currentGold.value || 0;
+    const o = totalObtained.value || 0;
+    const s = ActivityItem.value || 0;
+    if (g > 0 && o > 0 && o > s) {
+        // 返回使用的普通道具/黄金（即平均需要多少普通道具产出 1 个黄金）
+        return (o-s) / g;
+    }
+    return null;
+});
+
+const goldRateUsed = computed(() => {
+    return goldRateObserved.value || defaultGoldRate;
+});
+
+// 估算需要的普通道具数量（简单线性估算）：需要 remainingGoldNeeded * goldRateUsed 个普通道具
+const neededOrd = computed(() => remainingGoldNeeded.value * (goldRateUsed.value || defaultGoldRate));
+
+// 当前库存普通道具
+const currentOrdStock = computed(() => ActivityItem.value || 0);
+// 对于显示，向上取整剩余所需的普通道具数，确保提示为整数
+const remainingOrdNeeded = computed(() => Math.max(0, Math.ceil(neededOrd.value - currentOrdStock.value)));
+
+
+// 构造可选升级项分组：对每个类别列出未来每个档位的选项
+const groupedUpgradeOptions = computed(() => {
+    const groups = [];
+    for (const k of Object.keys(TaskNames)) {
+        const id = Number(k);
+        const name = TaskNames[id];
+        const current = (progressList.value.find(p => p.id === id)?.current) || 0;
+        const configs = missionTypes[id] || [];
+        const rewards = rewardConfigs[id] || [];
+        const beforeRounds = configs.filter(c => c.num <= current).length;
+        const opts = [];
+        for (let j = beforeRounds; j < configs.length; j++) {
+            const threshold = configs[j].num;
+            const completedRounds = j + 1;
+            let delta = 0;
+            for (let r = beforeRounds; r < completedRounds; r++) {
+                delta += rewards[r]?.num || rewards[rewards.length - 1]?.num || 0;
+            }
+            const cost = Math.max(0, threshold - current);
+            if (delta > 0 && cost > 0) {
+                opts.push({ id, name, threshold, delta, cost, roundsIndex: completedRounds });
+            }
+        }
+        groups.push({ id, name, current, options: opts });
+    }
+    return groups;
+});
+
+// 列出所有可行组合（供用户查看不同组合方案），按总消耗升序排列
+const feasibleCombos = computed(() => {
+    const target = Math.ceil(remainingOrdNeeded.value || 0);
+    const groups = groupedUpgradeOptions.value || [];
+    const combos = [];
+    const m = groups.length;
+    // recursive enumeration: for each group pick 0 or one option
+    const MAX_COMBOS = 1e6;
+    let count = 0;
+
+    const recurse = (idx, chosen, sumDelta, sumCost) => {
+        if (count > MAX_COMBOS) return;
+        if (idx === m) {
+            if (sumDelta >= target) {
+                // chosen is array of option objects
+                combos.push({ sumDelta, sumCost, combo: chosen.slice(), totalOrd: (totalObtained.value || 0) + sumDelta });
+            }
+            count++;
+            return;
+        }
+        const group = groups[idx];
+        // option: pick none
+        recurse(idx + 1, chosen, sumDelta, sumCost);
+        // option: pick one of group's options
+        for (const opt of group.options) {
+            chosen.push(opt);
+            recurse(idx + 1, chosen, sumDelta + opt.delta, sumCost + opt.cost);
+            chosen.pop();
+            if (count > MAX_COMBOS) return;
+        }
+    };
+
+    recurse(0, [], 0, 0);
+    combos.sort((a, b) => a.sumDelta - b.sumDelta || a.sumCost - b.sumCost);
+    return combos;
 });
 </script>
 
@@ -432,4 +713,18 @@ const progressList = computed(() => {
         color: #52c41a;
     }
 }
+.obtained-items {
+    margin-left: 12px;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+/* 模态内部可滚动容器，确保在内容过多时显示滚动条且标题/底部可见 */
+.cp-modal-scroll {
+    max-height: 60vh; /* 不超过视口高度 */
+    overflow-y: auto;
+    padding-right: 8px; /* 给滚动条留出空间，避免文字遮挡 */
+}
+.cp-modal-scroll::-webkit-scrollbar { width: 10px; }
+.cp-modal-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 6px; }
+.cp-modal-scroll::-webkit-scrollbar-track { background: transparent; }
 </style>

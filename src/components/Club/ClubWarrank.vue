@@ -2,11 +2,17 @@
   <div>
     <div class="status-card club-warrank">
       <div class="card-header">
-        <img src="/icons/1733492491706152.png" alt="俱乐部图标" class="status-icon">
+        <img src="/icons/moonPalace.png" alt="俱乐部图标" class="status-icon">
         <div class="status-info">
           <h3>盐场匹配信息详情</h3>
           <p>俱乐部盐场匹配详情</p>
         </div>
+      </div>
+      <div class="inline-container">
+        <n-checkbox-group v-model:value="exportmethod" name="group-exportmethod" size="small">
+          <n-checkbox value="1">表格导出</n-checkbox>
+          <n-checkbox value="2">图片导出</n-checkbox>
+        </n-checkbox-group>
       </div>
       <div class="inline-container">
         <a-date-picker v-model:value="inputDate1" :defaultValue="inputDate1" @change="fetchBattleRecordsByDate" valueFormat="YYYY/MM/DD" format="YYYY/MM/DD"
@@ -23,16 +29,14 @@
               <Copy />
             </n-icon>
           </template>导出</n-button>
+      </div>
+      <div class="inline-container">
         <n-button type="info" size="small" :disabled="!battleRecords1 || loading1" @click="hcSort">
           <template #icon>
           </template>红淬排序</n-button>
         <n-button type="info" size="small" :disabled="!battleRecords1 || loading1" @click="scoreSort">
           <template #icon>
           </template>积分排序</n-button>
-        <n-checkbox-group v-model:value="exportmethod" name="group-exportmethod" size="small">
-          <n-checkbox value="1">表格导出</n-checkbox>
-          <n-checkbox value="2">图片导出</n-checkbox>
-        </n-checkbox-group>
       </div>
 
 
@@ -540,6 +544,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-bottom: var(--spacing-sm);
   }
 
   .member-header {
@@ -611,6 +616,7 @@ onMounted(() => {
         white-space: normal
       }
     }
+  }
 
     .details-button {
       flex-shrink: 0;
@@ -848,7 +854,7 @@ onMounted(() => {
     .empty-club .actions {
       margin-top: var(--spacing-sm);
     }
-  }
+  
 
   /* 卡片基础样式，保持与 GameStatus 一致 */
   .status-card {

@@ -789,16 +789,20 @@ const handleFightNumChange = (value) => {
   if (typeof value === 'string') {
     // 如果是字符串，转换为数字
     const num = parseInt(value, 10);
-    // 确保数字有效且大于0
-    if (!isNaN(num) && num > 0) {
+    // 确保数字有效且大于0,尽量限制最大次数,万一谁请求打多了,可不是什么好事情
+    if (!isNaN(num) && num > 0&&num<=50) {
       fightNum.value = num;
     } else {
       // 否则重置为默认值1
       fightNum.value = 1;
     }
   } else {
-    // 如果已经是数字类型，直接使用
-    fightNum.value = value;
+    if(num>0&&num<50){
+      // 如果已经是数字类型，直接使用
+      fightNum.value = value;
+    }else{
+      fightNum.value = 1;
+    }
   }
 }
 

@@ -212,6 +212,10 @@ export class DailyTaskRunner {
     }
 
     if (!isTaskCompleted(5) && settings.claimHangUp) {
+      taskList.push({
+        name: '领取挂机奖励',
+        execute: () => this.executeGameCommand(tokenId, 'system_claimhangupreward', {}, '领取挂机奖励')
+      })
       for (let i = 0; i < 4; i++) {
         taskList.push({
           name: `挂机加钟 ${i + 1}/4`,
@@ -219,15 +223,6 @@ export class DailyTaskRunner {
             { isSkipShareCard: true, type: 2 }, `挂机加钟 ${i + 1}`)
         })
       }
-      taskList.push({
-        name: '领取挂机奖励',
-        execute: () => this.executeGameCommand(tokenId, 'system_claimhangupreward', {}, '领取挂机奖励')
-      })
-      taskList.push({
-        name: '挂机加钟 5/5',
-        execute: () => this.executeGameCommand(tokenId, 'system_mysharecallback',
-          { isSkipShareCard: true, type: 2 }, '挂机加钟 5')
-      })
     }
 
     if (!isTaskCompleted(7) && settings.openBox) {

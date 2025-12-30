@@ -49,6 +49,7 @@ declare module 'vue' {
     MyCard: typeof import('./src/components/Common/MyCard.vue')['default']
     Rank: typeof import('./src/components/Club/Rank.vue')['default']
     RecruitHelperCard: typeof import('./src/components/cards/RecruitHelperCard.vue')['default']
+    RefineHelperCard: typeof import('./src/components/cards/RefineHelperCard.vue')['default']
     RoleProfileCard: typeof import('./src/components/Setting/RoleProfileCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

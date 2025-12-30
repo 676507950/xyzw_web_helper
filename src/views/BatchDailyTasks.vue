@@ -48,34 +48,42 @@
             <n-button size="small" @click="openHelperModal('box')" :disabled="isRunning || selectedTokens.length === 0">
               批量开箱
             </n-button>
-            <n-button size="small" @click="batchClaimBoxPointReward" :disabled="isRunning || selectedTokens.length === 0">
+            <n-button size="small" @click="batchClaimBoxPointReward"
+              :disabled="isRunning || selectedTokens.length === 0">
               领取宝箱积分
             </n-button>
-            <n-button size="small" @click="openHelperModal('fish')" :disabled="isRunning || selectedTokens.length === 0">
+            <n-button size="small" @click="openHelperModal('fish')"
+              :disabled="isRunning || selectedTokens.length === 0">
               批量钓鱼
             </n-button>
-            <n-button size="small" @click="openHelperModal('recruit')" :disabled="isRunning || selectedTokens.length === 0">
+            <n-button size="small" @click="openHelperModal('recruit')"
+              :disabled="isRunning || selectedTokens.length === 0">
               批量招募
             </n-button>
-            <n-button size="small" @click="batchbaoku13" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
+            <n-button size="small" @click="batchbaoku13"
+              :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
               一键宝库前3层
             </n-button>
-            <n-button size="small" @click="batchbaoku45" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
+            <n-button size="small" @click="batchbaoku45"
+              :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">
               一键宝库4,5层
             </n-button>
-            <n-button size="small" @click="batchmengjing" :disabled="isRunning || selectedTokens.length === 0 || !ismengjingActivityOpen">
+            <n-button size="small" @click="batchmengjing"
+              :disabled="isRunning || selectedTokens.length === 0 || !ismengjingActivityOpen">
               一键梦境
             </n-button>
             <n-button size="small" @click="batchclubsign" :disabled="isRunning || selectedTokens.length === 0">
               一键俱乐部签到
             </n-button>
-            <n-button size="small" @click="batcharenafight" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
+            <n-button size="small" @click="batcharenafight"
+              :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
               一键竞技场战斗3次
             </n-button>
             <n-button size="small" @click="batchTopUpFish" :disabled="isRunning || selectedTokens.length === 0">
               一键钓鱼补齐
             </n-button>
-            <n-button size="small" @click="batchTopUpArena" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
+            <n-button size="small" @click="batchTopUpArena"
+              :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">
               一键竞技场补齐
             </n-button>
           </n-space>
@@ -119,7 +127,7 @@
               查看定时任务
             </n-button>
           </n-space>
-          
+
           <!-- 简单的任务统计 -->
           <div class="tasks-count" v-if="scheduledTasks.length > 0">
             <p>已保存 {{ scheduledTasks.length }} 个定时任务</p>
@@ -219,30 +227,11 @@
       </div>
     </n-modal>
 
-    <!-- Scheduled Tasks -->
-    <n-card title="定时任务" class="scheduled-tasks-card" style="margin-top: 16px">
-      <n-space style="margin-bottom: 12px">
-        <n-button type="primary" size="small" @click="openTaskModal">
-          新增定时任务
-        </n-button>
-        <n-button size="small" @click="showTasksModal = true">
-          查看定时任务
-        </n-button>
-      </n-space>
-      
-      <!-- 简单的任务统计 -->
-      <div class="tasks-count" v-if="scheduledTasks.length > 0">
-        <p>已保存 {{ scheduledTasks.length }} 个定时任务</p>
-      </div>
-      <div class="tasks-count" v-else>
-        <p>暂无定时任务</p>
-      </div>
-    </n-card>
-
     <!-- Tasks List Modal -->
     <n-modal v-model:show="showTasksModal" preset="card" title="定时任务列表" style="width: 90%; max-width: 800px">
       <div class="tasks-list" style="max-height: 600px; overflow-y: auto;">
-        <div v-for="task in scheduledTasks" :key="task.id" class="task-item" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div v-for="task in scheduledTasks" :key="task.id" class="task-item"
+          style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div style="font-weight: bold;">{{ task.name }}</div>
             <n-switch v-model:value="task.enabled" @update:value="toggleTaskEnabled(task.id, $event)">
@@ -280,7 +269,8 @@
     </n-modal>
 
     <!-- Task Modal -->
-    <n-modal v-model:show="showTaskModal" preset="card" :title="editingTask ? '编辑定时任务' : '新增定时任务'" style="width: 90%; max-width: 600px">
+    <n-modal v-model:show="showTaskModal" preset="card" :title="editingTask ? '编辑定时任务' : '新增定时任务'"
+      style="width: 90%; max-width: 600px">
       <div class="settings-content">
         <div class="settings-grid">
           <div class="setting-item">
@@ -467,9 +457,9 @@ const availableTasks = [
 const taskColumns = [
   { title: '任务名称', key: 'name', width: 150 },
   { title: '运行类型', key: 'runType', width: 100 },
-  { 
-    title: '运行时间', 
-    key: 'runTime', 
+  {
+    title: '运行时间',
+    key: 'runTime',
     width: 150,
     render: (row) => {
       // Display appropriate time format based on run type
@@ -553,34 +543,34 @@ const saveTask = () => {
     message.warning('请输入任务名称')
     return
   }
-  
+
   if (taskForm.runType === 'daily' && !taskForm.runTime) {
     message.warning('请选择运行时间')
     return
   }
-  
+
   if (taskForm.runType === 'cron' && !taskForm.cronExpression) {
     message.warning('请输入Cron表达式')
     return
   }
-  
+
   if (taskForm.selectedTokens.length === 0) {
     message.warning('请选择至少一个账号')
     return
   }
-  
+
   if (taskForm.selectedTasks.length === 0) {
     message.warning('请选择至少一个任务')
     return
   }
-  
+
   // Format runTime as string for storage
   let formattedRunTime = null
   if (taskForm.runType === 'daily' && taskForm.runTime) {
     const time = new Date(taskForm.runTime)
     formattedRunTime = time.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' })
   }
-  
+
   const taskData = {
     id: editingTask.value?.id || 'task_' + Date.now(),
     name: taskForm.name,
@@ -591,7 +581,7 @@ const saveTask = () => {
     selectedTasks: [...taskForm.selectedTasks],
     enabled: taskForm.enabled
   }
-  
+
   if (editingTask.value) {
     // Update existing task
     const index = scheduledTasks.value.findIndex(t => t.id === editingTask.value.id)
@@ -602,7 +592,7 @@ const saveTask = () => {
     // Add new task
     scheduledTasks.value.push(taskData)
   }
-  
+
   saveScheduledTasks()
   console.log('After saving task, scheduledTasks.length:', scheduledTasks.value.length)
   console.log('Scheduled tasks:', scheduledTasks.value)
@@ -680,15 +670,15 @@ const scheduleTaskExecution = () => {
   // Check every minute
   setInterval(() => {
     if (isRunning.value) return // Don't run if already executing tasks
-    
+
     const now = new Date()
     const currentTime = now.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' })
-    
+
     scheduledTasks.value.forEach(task => {
       if (!task.enabled) return
-      
+
       let shouldRun = false
-      
+
       if (task.runType === 'daily') {
         // Check if current time matches the scheduled time
         shouldRun = currentTime === task.runTime
@@ -702,7 +692,7 @@ const scheduleTaskExecution = () => {
           return
         }
       }
-      
+
       if (shouldRun) {
         executeScheduledTask(task)
       }
@@ -713,17 +703,17 @@ const scheduleTaskExecution = () => {
 // Execute a scheduled task
 const executeScheduledTask = async (task) => {
   addLog({ time: new Date().toLocaleTimeString(), message: `=== 开始执行定时任务: ${task.name} ===`, type: 'info' })
-  
+
   try {
     // Set selected tokens from the task
     selectedTokens.value = [...task.selectedTokens]
-    
+
     // Execute each selected task
     for (const taskName of task.selectedTasks) {
       if (shouldStop.value) break
-      
+
       addLog({ time: new Date().toLocaleTimeString(), message: `执行任务: ${availableTasks.find(t => t.value === taskName)?.label || taskName}`, type: 'info' })
-      
+
       // Call the task function dynamically
       const taskFunction = eval(taskName)
       if (typeof taskFunction === 'function') {
@@ -732,7 +722,7 @@ const executeScheduledTask = async (task) => {
         addLog({ time: new Date().toLocaleTimeString(), message: `任务函数不存在: ${taskName}`, type: 'error' })
       }
     }
-    
+
     addLog({ time: new Date().toLocaleTimeString(), message: `=== 定时任务执行完成: ${task.name} ===`, type: 'success' })
   } catch (error) {
     addLog({ time: new Date().toLocaleTimeString(), message: `定时任务执行失败: ${error.message}`, type: 'error' })
@@ -1011,7 +1001,7 @@ const claimHangUpRewards = async () => {
       await tokenStore.sendMessageWithPromise(tokenId, 'system_claimhangupreward', {}, 5000)
       await new Promise(r => setTimeout(r, 500))
 
-      
+
       // 2. Add time 4 times
       for (let i = 0; i < 4; i++) {
         addLog({ time: new Date().toLocaleTimeString(), message: `挂机加钟 ${i + 1}/4`, type: 'info' })
@@ -1057,18 +1047,17 @@ const batchbaoku13 = async () => {
       await ensureConnection(tokenId)
       const bosstowerinfo = await tokenStore.sendMessageWithPromise(tokenId, "bosstower_getinfo", {})
       const towerId = bosstowerinfo.bossTower.towerId
-      if (towerId >= 1 && towerId <=3 )
-      {
-      for (let i = 0; i < 2; i++) {
-        if (shouldStop.value) break
-        await tokenStore.sendMessageWithPromise(tokenId, 'bosstower_startboss', {})
-        await new Promise(r => setTimeout(r, 500))
-      }
-      for (let i = 0; i < 9; i++) {
-        if (shouldStop.value) break
-        await tokenStore.sendMessageWithPromise(tokenId, 'bosstower_startbox', {})
-        await new Promise(r => setTimeout(r, 500))
-      }
+      if (towerId >= 1 && towerId <= 3) {
+        for (let i = 0; i < 2; i++) {
+          if (shouldStop.value) break
+          await tokenStore.sendMessageWithPromise(tokenId, 'bosstower_startboss', {})
+          await new Promise(r => setTimeout(r, 500))
+        }
+        for (let i = 0; i < 9; i++) {
+          if (shouldStop.value) break
+          await tokenStore.sendMessageWithPromise(tokenId, 'bosstower_startbox', {})
+          await new Promise(r => setTimeout(r, 500))
+        }
       }
       tokenStatus.value[tokenId] = 'completed'
       addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 宝库战斗已完成，请上线手动领取奖励 ===`, type: 'success' })
@@ -1105,13 +1094,12 @@ const batchbaoku45 = async () => {
       await ensureConnection(tokenId)
       const bosstowerinfo = await tokenStore.sendMessageWithPromise(tokenId, "bosstower_getinfo", {})
       const towerId = bosstowerinfo.bossTower.towerId
-      if (towerId >= 4 && towerId <=5 )
-      {
-      for (let i = 0; i < 2; i++) {
-        if (shouldStop.value) break
-        await tokenStore.sendMessageWithPromise(tokenId, 'bosstower_startboss', {})
-        await new Promise(r => setTimeout(r, 500))
-      }
+      if (towerId >= 4 && towerId <= 5) {
+        for (let i = 0; i < 2; i++) {
+          if (shouldStop.value) break
+          await tokenStore.sendMessageWithPromise(tokenId, 'bosstower_startboss', {})
+          await new Promise(r => setTimeout(r, 500))
+        }
       }
       tokenStatus.value[tokenId] = 'completed'
       addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 宝库战斗已完成 ===`, type: 'success' })
@@ -1149,17 +1137,15 @@ const batchmengjing = async () => {
       if (shouldStop.value) break
       const mjbattleTeam = { "0": 107 }
       const dayOfWeek = new Date().getDay()
-      if (dayOfWeek === 0 | dayOfWeek === 1 | dayOfWeek === 3 | dayOfWeek === 4)
-      {
-      await tokenStore.sendMessageWithPromise(tokenId, 'dungeon_selecthero', { battleTeam: mjbattleTeam }, 5000)
-      await new Promise(r => setTimeout(r, 500))
-      tokenStatus.value[tokenId] = 'completed'
-      addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 咸王梦境已完成 ===`, type: 'success' })
+      if (dayOfWeek === 0 | dayOfWeek === 1 | dayOfWeek === 3 | dayOfWeek === 4) {
+        await tokenStore.sendMessageWithPromise(tokenId, 'dungeon_selecthero', { battleTeam: mjbattleTeam }, 5000)
+        await new Promise(r => setTimeout(r, 500))
+        tokenStatus.value[tokenId] = 'completed'
+        addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 咸王梦境已完成 ===`, type: 'success' })
       }
-      else
-      {
-      addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 当前未在开放时间 ===`, type: 'error' })
-      break
+      else {
+        addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 当前未在开放时间 ===`, type: 'error' })
+        break
       }
     } catch (error) {
       console.error(error)
@@ -1266,30 +1252,28 @@ const batcharenafight = async () => {
       await ensureConnection(tokenId)
       if (shouldStop.value) break
       for (let i = 0; i < 3; i++) {
-      // 开始竞技场
-      await tokenStore.sendMessageWithPromise(tokenId, "arena_startarea", {});
-      let targets
-      try {
-      targets = await tokenStore.sendMessageWithPromise(tokenId, 'arena_getareatarget', {})
-      } catch (err) {
-      message.error(`获取竞技场目标失败：${err.message}`)
-      break
-      }        
-      const targetId = pickArenaTargetId(targets)
-      if (!targetId) 
-      { 
-      addLog({ time: new Date().toLocaleTimeString(), message: `未找到可用的竞技场目标: ${error.message || '未知错误'}`, type: 'error' })
-      break
-      }
-      try { 
-      await tokenStore.sendMessageWithPromise(tokenId, 'fight_startareaarena', {targetId})
-      addLog({ time: new Date().toLocaleTimeString(), message: `${token.name} 竞技场战斗 ${i + 1}/3`, type: 'info' })
-      await new Promise(r => setTimeout(r, 500))
-      }
-      catch (e) 
-      { 
-      addLog({ time: new Date().toLocaleTimeString(), message: `竞技场对决失败: ${error.message || '未知错误'}`, type: 'error' })
-      }
+        // 开始竞技场
+        await tokenStore.sendMessageWithPromise(tokenId, "arena_startarea", {});
+        let targets
+        try {
+          targets = await tokenStore.sendMessageWithPromise(tokenId, 'arena_getareatarget', {})
+        } catch (err) {
+          message.error(`获取竞技场目标失败：${err.message}`)
+          break
+        }
+        const targetId = pickArenaTargetId(targets)
+        if (!targetId) {
+          addLog({ time: new Date().toLocaleTimeString(), message: `未找到可用的竞技场目标: ${error.message || '未知错误'}`, type: 'error' })
+          break
+        }
+        try {
+          await tokenStore.sendMessageWithPromise(tokenId, 'fight_startareaarena', { targetId })
+          addLog({ time: new Date().toLocaleTimeString(), message: `${token.name} 竞技场战斗 ${i + 1}/3`, type: 'info' })
+          await new Promise(r => setTimeout(r, 500))
+        }
+        catch (e) {
+          addLog({ time: new Date().toLocaleTimeString(), message: `竞技场对决失败: ${error.message || '未知错误'}`, type: 'error' })
+        }
       }
       await new Promise(r => setTimeout(r, 500))
       tokenStatus.value[tokenId] = 'completed'
@@ -1627,7 +1611,7 @@ const batchTopUpFish = async () => {
       addLog({ time: new Date().toLocaleTimeString(), message: `获取月度任务进度...`, type: 'info' })
       const result = await tokenStore.sendMessageWithPromise(tokenId, 'activity_get', {}, 10000)
       const act = result?.activity || result?.body?.activity || result
-      
+
       if (!act) {
         addLog({ time: new Date().toLocaleTimeString(), message: `获取月度任务进度失败`, type: 'error' })
         tokenStatus.value[tokenId] = 'failed'
@@ -1635,7 +1619,7 @@ const batchTopUpFish = async () => {
       }
       const myMonthInfo = act.myMonthInfo || {}
       const fishNum = Number(myMonthInfo?.['2']?.num || 0)
-      
+
       // 计算目标数量
       const monthProgress = calculateMonthProgress()
       const now = new Date()
@@ -1658,7 +1642,7 @@ const batchTopUpFish = async () => {
         try {
           const roleInfo = await tokenStore.sendGetRoleInfo(tokenId)
           role = roleInfo?.role
-        } catch {}
+        } catch { }
       }
       let freeUsed = 0
       const lastFreeTime = Number(role?.statisticsTime?.['artifact:normal:lottery:time'] || 0)
@@ -1689,7 +1673,7 @@ const batchTopUpFish = async () => {
       }
       // 付费钓鱼
       addLog({ time: new Date().toLocaleTimeString(), message: `开始付费钓鱼补齐: 共需 ${remaining} 次（每次最多10）`, type: 'info' })
-      
+
       while (remaining > 0 && !shouldStop.value) {
         const batch = Math.min(10, remaining)
         try {
@@ -1748,7 +1732,7 @@ const batchTopUpArena = async () => {
       addLog({ time: new Date().toLocaleTimeString(), message: `获取月度任务进度...`, type: 'info' })
       const result = await tokenStore.sendMessageWithPromise(tokenId, 'activity_get', {}, 10000)
       const act = result?.activity || result?.body?.activity || result
-      
+
       if (!act) {
         addLog({ time: new Date().toLocaleTimeString(), message: `获取月度任务进度失败`, type: 'error' })
         tokenStatus.value[tokenId] = 'failed'
@@ -1756,7 +1740,7 @@ const batchTopUpArena = async () => {
       }
       const myArenaInfo = act.myArenaInfo || {}
       const arenaNum = Number(myArenaInfo?.num || 0)
-      
+
       // 计算目标数量
       const monthProgress = calculateMonthProgress()
       const now = new Date()
@@ -1787,7 +1771,7 @@ const batchTopUpArena = async () => {
       while (remaining > 0 && safetyCounter < safetyMaxFights && !shouldStop.value) {
         const planFights = Math.ceil(remaining / 2) // 估计每场战斗可能获得2次进度
         addLog({ time: new Date().toLocaleTimeString(), message: `第${round}轮：计划战斗 ${planFights} 场`, type: 'info' })
-        
+
         for (let i = 0; i < planFights && safetyCounter < safetyMaxFights && !shouldStop.value; i++) {
           let targets
           try {
@@ -1796,13 +1780,13 @@ const batchTopUpArena = async () => {
             addLog({ time: new Date().toLocaleTimeString(), message: `获取竞技场目标失败：${err.message}`, type: 'error' })
             break
           }
-          
+
           const targetId = pickArenaTargetId(targets)
           if (!targetId) {
             addLog({ time: new Date().toLocaleTimeString(), message: `未找到可用的竞技场目标`, type: 'warning' })
             break
           }
-          
+
           try {
             await tokenStore.sendMessageWithPromise(tokenId, 'fight_startareaarena', { targetId }, 15000)
             addLog({ time: new Date().toLocaleTimeString(), message: `竞技场战斗 ${i + 1}/${planFights} 完成`, type: 'info' })
@@ -1810,20 +1794,20 @@ const batchTopUpArena = async () => {
             addLog({ time: new Date().toLocaleTimeString(), message: `竞技场对决失败：${e.message}`, type: 'error' })
             // 继续尝试下一场战斗
           }
-          
+
           safetyCounter++
           await new Promise(r => setTimeout(r, 1200))
         }
-        
+
         // 获取最新进度
         const updatedResult = await tokenStore.sendMessageWithPromise(tokenId, 'activity_get', {}, 10000)
         const updatedAct = updatedResult?.activity || updatedResult?.body?.activity || updatedResult
         const updatedMyArenaInfo = updatedAct.myArenaInfo || {}
         const updatedArenaNum = Number(updatedMyArenaInfo?.num || 0)
         remaining = Math.max(0, shouldBe - updatedArenaNum)
-        
+
         addLog({ time: new Date().toLocaleTimeString(), message: `第${round}轮后进度: ${updatedArenaNum}/${ARENA_TARGET}，还需补齐: ${remaining}次`, type: 'info' })
-        
+
         round++
       }
       // 最终进度检查
@@ -2084,7 +2068,7 @@ const batchClaimCars = async () => {
     const token = tokens.value.find(t => t.id === tokenId)
 
     try {
-       addLog({ time: new Date().toLocaleTimeString(), message: `=== 开始一键收车: ${token.name} ===`, type: 'info' })
+      addLog({ time: new Date().toLocaleTimeString(), message: `=== 开始一键收车: ${token.name} ===`, type: 'info' })
 
       await ensureConnection(tokenId)
 
@@ -2292,8 +2276,8 @@ const batchOpenBox = async () => {
         await tokenStore.sendMessageWithPromise(tokenId, 'item_openbox', { itemId: boxType, number: remainder }, 5000)
         addLog({ time: new Date().toLocaleTimeString(), message: `开箱进度: ${totalCount}/${totalCount}`, type: 'info' })
       }
-	  await tokenStore.sendMessageWithPromise(tokenId, 'item_batchclaimboxpointreward')
-	  await new Promise(r => setTimeout(r, 500))
+      await tokenStore.sendMessageWithPromise(tokenId, 'item_batchclaimboxpointreward')
+      await new Promise(r => setTimeout(r, 500))
       await tokenStore.sendMessage(tokenId, 'role_getroleinfo')
       tokenStatus.value[tokenId] = 'completed'
       addLog({ time: new Date().toLocaleTimeString(), message: `=== ${token.name} 开箱完成 ===`, type: 'success' })
@@ -2468,10 +2452,11 @@ const stopBatch = () => {
 }
 
 .right-column {
-  width: 450px;
+  width: 400px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  height: 700px;
 }
 
 .page-header {
@@ -2598,8 +2583,15 @@ const stopBatch = () => {
 }
 
 @media (max-width: 992px) {
+  .batch-daily-tasks {
+    height: auto;
+    overflow: visible;
+  }
+
   .main-layout {
     flex-direction: column;
+    height: auto;
+    overflow: visible;
   }
 
   .left-column {
@@ -2609,25 +2601,41 @@ const stopBatch = () => {
 
   .right-column {
     width: 100%;
-    height: 400px;
+    height: auto;
     flex-shrink: 0;
   }
 
   .log-container {
-    min-height: 250px;
+    height: 300px;
+    min-height: 300px;
   }
 }
 
 @media (max-width: 768px) {
   .batch-daily-tasks {
     padding: 12px;
-    height: auto;
-    overflow: visible;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .main-layout {
     height: auto;
     overflow: visible;
+    flex-direction: column;
+  }
+
+  .left-column {
+    overflow: visible;
+    padding-right: 0;
+    flex: none;
+    height: auto;
+  }
+
+  .right-column {
+    height: auto;
+    width: 100%;
+    flex: none;
   }
 
   .page-header {
@@ -2641,8 +2649,20 @@ const stopBatch = () => {
     gap: 8px;
   }
 
-  .right-column {
-    height: 350px;
+  .log-card {
+    height: auto !important;
+  }
+
+  .log-card :deep(.n-card__content) {
+    flex: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .log-container {
+    height: 300px;
+    min-height: 300px;
+    flex: none !important;
   }
 
   .log-header-controls {

@@ -14,6 +14,12 @@
             </template>
             刷新
           </n-button>
+        </div>
+        <div class="header-actions">
+          <n-checkbox-group v-model:value="exportmethod" name="group-exportmethod" size="small">
+          <n-checkbox value="1">表格导出</n-checkbox>
+          <n-checkbox value="2">图片导出</n-checkbox>
+          </n-checkbox-group>
           <n-button type="primary" size="small" :disabled="!battleRecords || loading" @click="handleExport">
             <template #icon>
               <n-icon>
@@ -22,10 +28,6 @@
             </template>
             导出
           </n-button>
-          <n-checkbox-group v-model:value="exportmethod" name="group-exportmethod" size="small">
-          <n-checkbox value="1">表格导出</n-checkbox>
-          <n-checkbox value="2">图片导出</n-checkbox>
-          </n-checkbox-group>
         </div>
       </div>
 
@@ -598,7 +600,7 @@ onMounted(() => {
 
 .stat-inline {
   font-size: var(--font-size-xs);
-  padding: 2px 8px;
+  padding: 2px ;
   border-radius: var(--border-radius-small);
   white-space: nowrap;
   min-width: 52px;
