@@ -226,11 +226,11 @@
               </div>
               <div class="summary-item die-rate">
                 <span class="summary-label">我方掉将率：</span>
-                <span class="summary-value">{{ ((fightResult.ourDieHeroGameCount/fightNum)*100).toFixed(2) }}%</span>
+                <span class="summary-value">{{ ((fightResult.ourTotalDieHeroCount/(fightNum*5))*100).toFixed(2) }}%</span>
               </div>
               <div class="summary-item die-rate">
                 <span class="summary-label">敌方掉将率：</span>
-                <span class="summary-value">{{ ((fightResult.enemyDieHeroGameCount/fightNum)*100).toFixed(2) }}%</span>
+                <span class="summary-value">{{ ((fightResult.enemyTotalDieHeroCount/(fightNum*5))*100).toFixed(2) }}%</span>
               </div>
             </div>
           </div>
@@ -414,7 +414,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted  } from 'vue'
+import { ref, computed, onMounted, watch  } from 'vue'
 import { useMessage, NDatePicker, NPagination } from 'naive-ui'
 import { useTokenStore } from '@/stores/tokenStore'
 import {
@@ -474,6 +474,13 @@ const memberData = ref(null)
 const fightNum = ref(1)
 //战斗结果
 const fightResult = ref(null)
+
+// 监听targetId变化，清除之前的切磋结果
+watch(targetId, (newId, oldId) => {
+  if (newId !== oldId) {
+    fightResult.value = null;
+  }
+})
 // 模态框控制符
 const showHeroModal = ref(false)
 //选中的武将信息
@@ -583,8 +590,8 @@ const fetchfightPVP = async () => {
 
   try {
     let winCount = 0;
-    let ourDieHeroGameCount = 0;
-    let enemyDieHeroGameCount = 0;
+    let ourTotalDieHeroCount = 0; // 我方总掉落将领数
+    let enemyTotalDieHeroCount = 0; // 敌方总掉落将领数
     let resultCount = [];
     for (var i = 0; i < fightNum.value; i++) {
       const result = await tokenStore.sendMessageWithPromise(tokenId, 'fight_startpvp',
@@ -603,18 +610,16 @@ const fetchfightPVP = async () => {
           leftCount++;
         }
       })
-      if (leftCount != 0) {
-        ourDieHeroGameCount++;
-      }
+      ourTotalDieHeroCount += leftCount;
+      
       let rightCount = 0;
       result.battleData.result.accept.teamInfo.forEach(item => {
         if (item.hp == 0) {
           rightCount++;
         }
       })
-      if (rightCount != 0) {
-        enemyDieHeroGameCount++;
-      }
+      enemyTotalDieHeroCount += rightCount;
+      
       let tempObj = {
         leftName: result.battleData.leftTeam.name,
         leftheadImg: result.battleData.leftTeam.headImg,
@@ -634,8 +639,8 @@ const fetchfightPVP = async () => {
     }
     const teamData = {
       winCount,
-      ourDieHeroGameCount,
-      enemyDieHeroGameCount,
+      ourTotalDieHeroCount,
+      enemyTotalDieHeroCount,
       resultCount
     };
     fightResult.value = teamData;
@@ -667,6 +672,9 @@ const fetchTargetInfo = async () => {
     return
   }
 
+  // 清除之前的切磋结果
+  fightResult.value = null;
+  
   loading1.value = true
   loadingText.value = '正在查询对手信息...'
   queryDate.value = gettoday()

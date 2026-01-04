@@ -3,11 +3,11 @@
  * 基于mirror代码中的游戏指令实现完整的游戏功能
  */
 
-import { g_utils } from './bonProtocol.js'
+import { g_utils } from "./bonProtocol.js";
 
 // 生成随机数工具函数
 function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**
@@ -16,7 +16,7 @@ function randomInt(min, max) {
  */
 export class GameCommands {
   constructor(g_utils_instance = g_utils) {
-    this.g_utils = g_utils_instance
+    this.g_utils = g_utils_instance;
   }
 
   /**
@@ -28,8 +28,8 @@ export class GameCommands {
       body: {},
       cmd: "_sys/ack",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -44,12 +44,12 @@ export class GameCommands {
         platform: "hortor",
         platformExt: "mix",
         scene: "",
-        ...params
+        ...params,
       }),
       ack: ack || 0,
       seq: seq || 0,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -60,12 +60,12 @@ export class GameCommands {
       cmd: "system_getdatabundlever",
       body: this.g_utils.bon.encode({
         isAudit: false,
-        ...params
+        ...params,
       }),
       ack: ack || 0,
       seq: seq || 0,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -76,12 +76,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         buyNum: 1,
-        ...params
+        ...params,
       }),
       cmd: "system_buygold",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -93,12 +93,12 @@ export class GameCommands {
       body: this.g_utils.bon.encode({
         type: 3,
         isSkipShareCard: true,
-        ...params
+        ...params,
       }),
       cmd: "system_mysharecallback",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -109,12 +109,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         friendId: 0,
-        ...params
+        ...params,
       }),
       cmd: "friend_batch",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -127,12 +127,12 @@ export class GameCommands {
         byClub: false,
         recruitNumber: 1,
         recruitType: 3,
-        ...params
+        ...params,
       }),
       cmd: "hero_recruit",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -142,12 +142,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "system_claimhangupreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -159,12 +159,12 @@ export class GameCommands {
       body: this.g_utils.bon.encode({
         itemId: 2001,
         number: 10,
-        ...params
+        ...params,
       }),
       cmd: "item_openbox",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -174,12 +174,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "arena_startarea",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -190,12 +190,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         refresh: false,
-        ...params
+        ...params,
       }),
       cmd: "arena_getareatarget",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -203,18 +203,18 @@ export class GameCommands {
    */
   fight_startareaarena(ack = 0, seq = 0, params = {}) {
     if (params?.targetId === undefined || params?.targetId === null) {
-      throw new Error("fight_startareaarena requires targetId in params")
+      throw new Error("fight_startareaarena requires targetId in params");
     }
     // battleVersion 应该由调用方通过 params 传入
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "fight_startareaarena",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -225,12 +225,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         storeId: 1,
-        ...params
+        ...params,
       }),
       cmd: "store_goodslist",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -241,12 +241,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         goodsId: 1,
-        ...params
+        ...params,
       }),
       cmd: "store_buy",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -257,12 +257,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         storeId: 1,
-        ...params
+        ...params,
       }),
       cmd: "store_refresh",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -272,12 +272,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "bottlehelper_claim",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -288,12 +288,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         bottleType: -1,
-        ...params
+        ...params,
       }),
       cmd: "bottlehelper_start",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -304,12 +304,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         bottleType: -1,
-        ...params
+        ...params,
       }),
       cmd: "bottlehelper_stop",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -322,12 +322,12 @@ export class GameCommands {
         lotteryNumber: 1,
         newFree: true,
         type: 1,
-        ...params
+        ...params,
       }),
       cmd: "artifact_lottery",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -338,12 +338,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         taskId: 1,
-        ...params
+        ...params,
       }),
       cmd: "task_claimdailypoint",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -354,12 +354,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         rewardId: 0,
-        ...params
+        ...params,
       }),
       cmd: "task_claimweekreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -369,12 +369,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "fight_startboss",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -384,12 +384,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "genie_sweep",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -399,12 +399,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "genie_buysweep",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -414,12 +414,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "system_signinreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -430,12 +430,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         discountId: 1,
-        ...params
+        ...params,
       }),
       cmd: "discount_claimreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -446,12 +446,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         cardId: 1,
-        ...params
+        ...params,
       }),
       cmd: "card_claimreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -461,12 +461,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "legion_signin",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -476,12 +476,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "fight_startlegionboss",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -492,12 +492,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         rewardId: 0,
-        ...params
+        ...params,
       }),
       cmd: "task_claimdailyreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -509,8 +509,8 @@ export class GameCommands {
       body: this.g_utils.bon.encode({}),
       cmd: "legion_getinfo",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -522,8 +522,8 @@ export class GameCommands {
       body: this.g_utils.bon.encode({}),
       cmd: "legionmatch_rolesignup",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -535,8 +535,8 @@ export class GameCommands {
       body: this.g_utils.bon.encode({}),
       cmd: "fight_starttower",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -546,12 +546,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "tower_claimreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -561,12 +561,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "tower_getinfo",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -578,8 +578,8 @@ export class GameCommands {
       body: this.g_utils.bon.encode({}),
       cmd: "study_startgame",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -589,12 +589,12 @@ export class GameCommands {
     return {
       ack,
       body: this.g_utils.bon.encode({
-        ...params
+        ...params,
       }),
       cmd: "study_answer",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -605,12 +605,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         rewardId: 1,
-        ...params
+        ...params,
       }),
       cmd: "study_claimreward",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -623,12 +623,12 @@ export class GameCommands {
         category: [0, 4, 5],
         lastId: 0,
         size: 60,
-        ...params
+        ...params,
       }),
       cmd: "mail_getlist",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -639,12 +639,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         category: 0,
-        ...params
+        ...params,
       }),
       cmd: "mail_claimallattachment",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 
   /**
@@ -655,12 +655,12 @@ export class GameCommands {
       ack,
       body: this.g_utils.bon.encode({
         date: "2025/10/04",
-        ...params
+        ...params,
       }),
       cmd: "legionwar_getdetails",
       seq,
-      time: Date.now()
-    }
+      time: Date.now(),
+    };
   }
 }
 
@@ -680,10 +680,10 @@ export const studyQuestions = [
   { name: "《三国演义》中，夏侯杰在当阳桥被张飞吓死？", value: 1 },
   { name: "《三国演义》中，张飞在当阳桥厉吼吓退曹军？", value: 1 },
   { name: "《三国演义》中，赵云参与了「三英战吕布」？", value: 2 },
-  { name: "《三国演义》中，赵云参与了「桃园三结义」？", value: 2 }
+  { name: "《三国演义》中，赵云参与了「桃园三结义」？", value: 2 },
   // 更多题目可以从原始数据中添加...
-]
+];
 
 // 创建命令实例
-export const gameCommands = new GameCommands()
-export default GameCommands
+export const gameCommands = new GameCommands();
+export default GameCommands;

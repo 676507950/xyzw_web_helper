@@ -2,7 +2,7 @@
  * BON (Binary Object Notation) 协议实现
  * 基于提供的真实 BON 源码重新实现
  */
-import lz4 from 'lz4js';
+import lz4 from "lz4js";
 
 // -----------------------------
 // BON 编解码器核心实现
@@ -22,9 +22,18 @@ export class DataReader {
     this.position = 0;
   }
 
-  get data() { return this._data; }
+  get data() {
+    return this._data;
+  }
   get dataView() {
-    return this._view || (this._view = new DataView(this._data.buffer, this._data.byteOffset, this._data.byteLength));
+    return (
+      this._view ||
+      (this._view = new DataView(
+        this._data.buffer,
+        this._data.byteOffset,
+        this._data.byteLength,
+      ))
+    );
   }
 
   reset(bytes) {
@@ -35,7 +44,7 @@ export class DataReader {
 
   validate(n) {
     if (this.position + n > this._data.length) {
-      console.error('read eof');
+      console.error("read eof");
       return false;
     }
     return true;
@@ -54,7 +63,11 @@ export class DataReader {
 
   readInt32() {
     if (!this.validate(4)) return;
-    const v = this._data[this.position++] | (this._data[this.position++] << 8) | (this._data[this.position++] << 16) | (this._data[this.position++] << 24);
+    const v =
+      this._data[this.position++] |
+      (this._data[this.position++] << 8) |
+      (this._data[this.position++] << 16) |
+      (this._data[this.position++] << 24);
     return v | 0;
   }
 
@@ -88,9 +101,9 @@ export class DataReader {
     let b = 0;
     let count = 0;
     do {
-      if (count++ === 35) throw new Error('Format_Bad7BitInt32');
+      if (count++ === 35) throw new Error("Format_Bad7BitInt32");
       b = this.readUInt8();
-      value |= (b & 0x7F) << shift;
+      value |= (b & 0x7f) << shift;
       shift += 7;
     } while ((b & 0x80) !== 0);
     return value >>> 0;
@@ -104,15 +117,19 @@ export class DataReader {
   readUint8Array(length, copy = false) {
     const start = this.position;
     const end = start + length;
-    const out = copy ? this._data.slice(start, end) : this._data.subarray(start, end);
+    const out = copy
+      ? this._data.slice(start, end)
+      : this._data.subarray(start, end);
     this.position = end;
     return out;
   }
 
   readUTFBytes(length) {
-    if (length === 0) return '';
+    if (length === 0) return "";
     if (!this.validate(length)) return;
-    const str = new TextDecoder('utf8').decode(this._data.subarray(this.position, this.position + length));
+    const str = new TextDecoder("utf8").decode(
+      this._data.subarray(this.position, this.position + length),
+    );
     this.position += length;
     return str;
   }
@@ -128,7 +145,10 @@ export class DataWriter {
   }
 
   get dataView() {
-    return this._view || (this._view = new DataView(this.data.buffer, 0, this.data.byteLength));
+    return (
+      this._view ||
+      (this._view = new DataView(this.data.buffer, 0, this.data.byteLength))
+    );
   }
 
   reset() {
@@ -156,21 +176,21 @@ export class DataWriter {
   writeInt16(v) {
     this.ensureBuffer(2);
     this.data[this.position++] = v | 0;
-    this.data[this.position++] = (v >> 8) & 0xFF;
+    this.data[this.position++] = (v >> 8) & 0xff;
   }
 
   writeInt32(v) {
     this.ensureBuffer(4);
     this.data[this.position++] = v | 0;
-    this.data[this.position++] = (v >> 8) & 0xFF;
-    this.data[this.position++] = (v >> 16) & 0xFF;
-    this.data[this.position++] = (v >> 24) & 0xFF;
+    this.data[this.position++] = (v >> 8) & 0xff;
+    this.data[this.position++] = (v >> 16) & 0xff;
+    this.data[this.position++] = (v >> 24) & 0xff;
   }
 
   writeInt64(v) {
     this.writeInt32(v);
     if (v < 0) {
-      this.writeInt32(~Math.floor((-v) / 0x100000000));
+      this.writeInt32(~Math.floor(-v / 0x100000000));
     } else {
       this.writeInt32(Math.floor(v / 0x100000000) | 0);
     }
@@ -191,10 +211,10 @@ export class DataWriter {
   _write7BitInt(v) {
     let n = v >>> 0;
     while (n >= 0x80) {
-      this.data[this.position++] = (n & 0xFF) | 0x80;
+      this.data[this.position++] = (n & 0xff) | 0x80;
       n >>>= 7;
     }
-    this.data[this.position++] = n & 0x7F;
+    this.data[this.position++] = n & 0x7f;
   }
 
   write7BitInt(v) {
@@ -203,12 +223,17 @@ export class DataWriter {
   }
 
   _7BitIntLen(v) {
-    return v < 0 ? 5
-      : v < 0x80 ? 1
-      : v < 0x4000 ? 2
-      : v < 0x200000 ? 3
-      : v < 0x10000000 ? 4
-      : 5;
+    return v < 0
+      ? 5
+      : v < 0x80
+        ? 1
+        : v < 0x4000
+          ? 2
+          : v < 0x200000
+            ? 3
+            : v < 0x10000000
+              ? 4
+              : 5;
   }
 
   writeUTF(str) {
@@ -225,7 +250,10 @@ export class DataWriter {
     const reserved = from - start;
 
     const encoder = new TextEncoder();
-    const { written } = encoder.encodeInto(str, this.data.subarray(this.position));
+    const { written } = encoder.encodeInto(
+      str,
+      this.data.subarray(this.position),
+    );
     this.position += written;
     const after = this.position;
     const size = after - from;
@@ -252,12 +280,17 @@ export class DataWriter {
   writeUTFBytes(str) {
     this.ensureBuffer(6 * str.length);
     const encoder = new TextEncoder();
-    const { written } = encoder.encodeInto(str, this.data.subarray(this.position));
+    const { written } = encoder.encodeInto(
+      str,
+      this.data.subarray(this.position),
+    );
     this.position += written;
   }
 
   getBytes(clone = false) {
-    return clone ? this.data.slice(0, this.position) : this.data.subarray(0, this.position);
+    return clone
+      ? this.data.slice(0, this.position)
+      : this.data.subarray(0, this.position);
   }
 }
 
@@ -279,7 +312,7 @@ export class BonEncoder {
 
   encodeLong(v) {
     this.dw.writeInt8(2);
-    if (typeof v === 'number') {
+    if (typeof v === "number") {
       this.dw.writeInt64(v);
     } else {
       this.dw.writeInt32(v.low | 0);
@@ -355,9 +388,9 @@ export class BonEncoder {
     const keys = [];
     for (const k in obj) {
       if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
-      if (k.startsWith('_')) continue;
+      if (k.startsWith("_")) continue;
       const type = typeof obj[k];
-      if (type === 'function' || type === 'undefined') continue;
+      if (type === "function" || type === "undefined") continue;
       keys.push(k);
     }
     this.dw.write7BitInt(keys.length);
@@ -398,7 +431,7 @@ export class BonEncoder {
         this.encodeBinary(v);
         return;
       default:
-        if (typeof v !== 'object') {
+        if (typeof v !== "object") {
           this.encodeNull();
           return;
         }
@@ -485,7 +518,7 @@ export const bon = {
   decode: (bytes) => {
     _dec.reset(bytes);
     return _dec.decode();
-  }
+  },
 };
 
 /** —— 协议消息包装，与原 ProtoMsg 类等价 —— */
@@ -502,26 +535,45 @@ export class ProtoMsg {
     this.rtt = 0;
   }
 
-  get sendMsg() { return this._sendMsg; }
-  get seq() { return this._raw.seq; }
-  get resp() { return this._raw.resp; }
-  get ack() { return this._raw.ack; }
-  get cmd() { return this._raw?.cmd && this._raw?.cmd.toLowerCase(); }
-  get code() { return ~~this._raw.code; }
-  get error() { return this._raw.error; }
-  get time() { return this._raw.time; }
-  get body() { return this._raw.body; }
+  get sendMsg() {
+    return this._sendMsg;
+  }
+  get seq() {
+    return this._raw.seq;
+  }
+  get resp() {
+    return this._raw.resp;
+  }
+  get ack() {
+    return this._raw.ack;
+  }
+  get cmd() {
+    return this._raw?.cmd && this._raw?.cmd.toLowerCase();
+  }
+  get code() {
+    return ~~this._raw.code;
+  }
+  get error() {
+    return this._raw.error;
+  }
+  get time() {
+    return this._raw.time;
+  }
+  get body() {
+    return this._raw.body;
+  }
 
   /** 惰性 decode body → rawData（bon.decode） */
   get rawData() {
-    if (this._rawData !== undefined || this.body === undefined) return this._rawData;
+    if (this._rawData !== undefined || this.body === undefined)
+      return this._rawData;
     this._rawData = bon.decode(this.body);
     return this._rawData;
   }
 
   /** 指定数据类型 */
   setDataType(t) {
-    if (t) this._t = { name: t.name ?? 'Anonymous', ctor: t };
+    if (t) this._t = { name: t.name ?? "Anonymous", ctor: t };
     return this;
   }
 
@@ -533,7 +585,8 @@ export class ProtoMsg {
 
   /** 将 rawData 反序列化为业务对象 */
   getData(clazz) {
-    if (this._data !== undefined || this.rawData === undefined) return this._data;
+    if (this._data !== undefined || this.rawData === undefined)
+      return this._data;
 
     let t = this._t;
     if (clazz && t && clazz !== t.ctor) {
@@ -565,48 +618,94 @@ const lx = {
     for (let n = Math.min(e.length, 100); --n >= 0; ) e[n] ^= t;
 
     // 写入标识与混淆位
-    e[0] = 112; e[1] = 108;
-    e[2] = (e[2] & 0b10101010) | ((t >> 7 & 1) << 6) | ((t >> 6 & 1) << 4) | ((t >> 5 & 1) << 2) | (t >> 4 & 1);
-    e[3] = (e[3] & 0b10101010) | ((t >> 3 & 1) << 6) | ((t >> 2 & 1) << 4) | ((t >> 1 & 1) << 2) | (t & 1);
+    e[0] = 112;
+    e[1] = 108;
+    e[2] =
+      (e[2] & 0b10101010) |
+      (((t >> 7) & 1) << 6) |
+      (((t >> 6) & 1) << 4) |
+      (((t >> 5) & 1) << 2) |
+      ((t >> 4) & 1);
+    e[3] =
+      (e[3] & 0b10101010) |
+      (((t >> 3) & 1) << 6) |
+      (((t >> 2) & 1) << 4) |
+      (((t >> 1) & 1) << 2) |
+      (t & 1);
     return e;
   },
   decrypt: (e) => {
     const t =
-      ((e[2] >> 6 & 1) << 7) | ((e[2] >> 4 & 1) << 6) | ((e[2] >> 2 & 1) << 5) | ((e[2] & 1) << 4) |
-      ((e[3] >> 6 & 1) << 3) | ((e[3] >> 4 & 1) << 2) | ((e[3] >> 2 & 1) << 1) | (e[3] & 1);
+      (((e[2] >> 6) & 1) << 7) |
+      (((e[2] >> 4) & 1) << 6) |
+      (((e[2] >> 2) & 1) << 5) |
+      ((e[2] & 1) << 4) |
+      (((e[3] >> 6) & 1) << 3) |
+      (((e[3] >> 4) & 1) << 2) |
+      (((e[3] >> 2) & 1) << 1) |
+      (e[3] & 1);
     for (let n = Math.min(100, e.length); --n >= 2; ) e[n] ^= t;
-    e[0] = 4; e[1] = 34; e[2] = 77; e[3] = 24; // 还原头以便 lz4 解
+    e[0] = 4;
+    e[1] = 34;
+    e[2] = 77;
+    e[3] = 24; // 还原头以便 lz4 解
     return lz4.decompress(e);
-  }
+  },
 };
 
 /** 随机首 4 字节 + XOR 的 "x" 方案 */
 const x = {
   encrypt: (e) => {
-    const rnd = ~~(Math.random() * 0xFFFFFFFF) >>> 0;
+    const rnd = ~~(Math.random() * 0xffffffff) >>> 0;
     const n = new Uint8Array(e.length + 4);
-    n[0] = rnd & 0xFF; n[1] = (rnd >>> 8) & 0xFF; n[2] = (rnd >>> 16) & 0xFF; n[3] = (rnd >>> 24) & 0xFF;
+    n[0] = rnd & 0xff;
+    n[1] = (rnd >>> 8) & 0xff;
+    n[2] = (rnd >>> 16) & 0xff;
+    n[3] = (rnd >>> 24) & 0xff;
     n.set(e, 4);
     const r = 2 + ~~(Math.random() * 248);
     for (let i = n.length; --i >= 0; ) n[i] ^= r;
-    n[0] = 112; n[1] = 120;
-    n[2] = (n[2] & 0b10101010) | ((r >> 7 & 1) << 6) | ((r >> 6 & 1) << 4) | ((r >> 5 & 1) << 2) | (r >> 4 & 1);
-    n[3] = (n[3] & 0b10101010) | ((r >> 3 & 1) << 6) | ((r >> 2 & 1) << 4) | ((r >> 1 & 1) << 2) | (r & 1);
+    n[0] = 112;
+    n[1] = 120;
+    n[2] =
+      (n[2] & 0b10101010) |
+      (((r >> 7) & 1) << 6) |
+      (((r >> 6) & 1) << 4) |
+      (((r >> 5) & 1) << 2) |
+      ((r >> 4) & 1);
+    n[3] =
+      (n[3] & 0b10101010) |
+      (((r >> 3) & 1) << 6) |
+      (((r >> 2) & 1) << 4) |
+      (((r >> 1) & 1) << 2) |
+      (r & 1);
     return n;
   },
   decrypt: (e) => {
     const t =
-      ((e[2] >> 6 & 1) << 7) | ((e[2] >> 4 & 1) << 6) | ((e[2] >> 2 & 1) << 5) | ((e[2] & 1) << 4) |
-      ((e[3] >> 6 & 1) << 3) | ((e[3] >> 4 & 1) << 2) | ((e[3] >> 2 & 1) << 1) | (e[3] & 1);
+      (((e[2] >> 6) & 1) << 7) |
+      (((e[2] >> 4) & 1) << 6) |
+      (((e[2] >> 2) & 1) << 5) |
+      ((e[2] & 1) << 4) |
+      (((e[3] >> 6) & 1) << 3) |
+      (((e[3] >> 4) & 1) << 2) |
+      (((e[3] >> 2) & 1) << 1) |
+      (e[3] & 1);
     for (let n = e.length; --n >= 4; ) e[n] ^= t;
     return e.subarray(4);
-  }
+  },
 };
 
 /** 依赖 globalThis.XXTEA 的 "xtm" 方案 */
 const xtm = {
-  encrypt: (e) => globalThis.XXTEA ? globalThis.XXTEA.encryptMod({ data: e.buffer, length: e.length }) : e,
-  decrypt: (e) => globalThis.XXTEA ? globalThis.XXTEA.decryptMod({ data: e.buffer, length: e.length }) : e,
+  encrypt: (e) =>
+    globalThis.XXTEA
+      ? globalThis.XXTEA.encryptMod({ data: e.buffer, length: e.length })
+      : e,
+  decrypt: (e) =>
+    globalThis.XXTEA
+      ? globalThis.XXTEA.decryptMod({ data: e.buffer, length: e.length })
+      : e,
 };
 
 /** 注册器 */
@@ -614,19 +713,22 @@ function register(name, impl) {
   registry.set(name, impl);
 }
 
-register('lx', lx);
-register('x', x);
-register('xtm', xtm);
+register("lx", lx);
+register("x", x);
+register("xtm", xtm);
 
 /** 默认使用 x 加密（自动检测解密） */
 const passthrough = {
-  encrypt: (e) => getEnc('x').encrypt(e),
+  encrypt: (e) => getEnc("x").encrypt(e),
   decrypt: (e) => {
-    if (e.length > 4 && e[0] === 112 && e[1] === 108)        e = getEnc('lx').decrypt(e);
-    else if (e.length > 4 && e[0] === 112 && e[1] === 120)   e = getEnc('x').decrypt(e);
-    else if (e.length > 3 && e[0] === 112 && e[1] === 116)   e = getEnc('xtm').decrypt(e);
+    if (e.length > 4 && e[0] === 112 && e[1] === 108)
+      e = getEnc("lx").decrypt(e);
+    else if (e.length > 4 && e[0] === 112 && e[1] === 120)
+      e = getEnc("x").decrypt(e);
+    else if (e.length > 3 && e[0] === 112 && e[1] === 116)
+      e = getEnc("xtm").decrypt(e);
     return e;
-  }
+  },
 };
 
 /** 对外：按名称取加解密器；找不到则用默认 */
@@ -638,7 +740,9 @@ export function getEnc(name) {
 export function encode(obj, enc) {
   let bytes = bon.encode(obj, false);
   const out = enc.encrypt(bytes);
-  return out.buffer.byteLength === out.length ? out.buffer : out.buffer.slice(0, out.length);
+  return out.buffer.byteLength === out.length
+    ? out.buffer
+    : out.buffer.slice(0, out.length);
 }
 
 /** 对外：parse（解密 → bon.decode → ProtoMsg） */
@@ -659,79 +763,94 @@ export const GameMessages = {
     cmd: "_sys/ack",
     hint: undefined,
     seq,
-    time: Date.now()
+    time: Date.now(),
   }),
 
   // 获取角色信息
   getRoleInfo: (ack = 0, seq = 0, params = {}) => ({
     cmd: "role_getroleinfo",
-    body: encode({
-      clientVersion: "2.1.5-wx",
-      inviteUid: 0,
-      platform: "hortor",
-      platformExt: "mix",
-      scene: "",
-      ...params
-    }, getEnc('x')),
+    body: encode(
+      {
+        clientVersion: "2.1.5-wx",
+        inviteUid: 0,
+        platform: "hortor",
+        platformExt: "mix",
+        scene: "",
+        ...params,
+      },
+      getEnc("x"),
+    ),
     ack: ack || 0,
     seq: seq || 0,
-    time: Date.now()
+    time: Date.now(),
   }),
 
   // 获取数据包版本
   getDataBundleVer: (ack = 0, seq = 0, params = {}) => ({
     cmd: "system_getdatabundlever",
-    body: encode({
-      isAudit: false,
-      ...params
-    }, getEnc('x')),
+    body: encode(
+      {
+        isAudit: false,
+        ...params,
+      },
+      getEnc("x"),
+    ),
     ack: ack || 0,
     seq: seq || 0,
-    time: Date.now()
+    time: Date.now(),
   }),
 
   // 购买金币
   buyGold: (ack = 0, seq = 0, params = {}) => ({
     ack,
-    body: encode({
-      buyNum: 1,
-      ...params
-    }, getEnc('x')),
+    body: encode(
+      {
+        buyNum: 1,
+        ...params,
+      },
+      getEnc("x"),
+    ),
     cmd: "system_buygold",
     seq,
-    time: Date.now()
+    time: Date.now(),
   }),
 
   // 签到奖励
   signInReward: (ack = 0, seq = 0, params = {}) => ({
     ack,
-    body: encode({
-      ...params
-    }, getEnc('x')),
+    body: encode(
+      {
+        ...params,
+      },
+      getEnc("x"),
+    ),
     cmd: "system_signinreward",
     seq,
-    time: Date.now()
+    time: Date.now(),
   }),
 
   // 领取每日任务奖励
   claimDailyReward: (ack = 0, seq = 0, params = {}) => ({
     ack,
-    body: encode({
-      rewardId: 0,
-      ...params
-    }, getEnc('x')),
+    body: encode(
+      {
+        rewardId: 0,
+        ...params,
+      },
+      getEnc("x"),
+    ),
     cmd: "task_claimdailyreward",
     seq,
-    time: Date.now()
-  })
+    time: Date.now(),
+  }),
 };
 
 // 创建全局实例
 export const g_utils = {
   getEnc,
-  encode: (obj, encName = 'x') => encode(obj, getEnc(encName)),
-  parse: (data, encName = 'auto') => parse(data, getEnc(encName)),
-  bon // 添加BON编解码器
+  encode: (obj, encName = "x") => encode(obj, getEnc(encName)),
+  parse: (data, encName = "auto") => parse(data, getEnc(encName)),
+  bon, // 添加BON编解码器
 };
 
 // 兼容性导出（保持旧的接口）
@@ -744,31 +863,36 @@ export const bonProtocol = {
     ack: ack || 0,
     seq: seq || 0,
     time: Date.now(),
-    ...options
+    ...options,
   }),
   parseMessage: (messageData) => {
     try {
       let message;
-      if (typeof messageData === 'string') {
+      if (typeof messageData === "string") {
         message = JSON.parse(messageData);
       } else {
         message = messageData;
       }
-      if (message.body && (message.body instanceof ArrayBuffer || message.body instanceof Uint8Array)) {
+      if (
+        message.body &&
+        (message.body instanceof ArrayBuffer ||
+          message.body instanceof Uint8Array)
+      ) {
         message.body = bon.decode(message.body);
       }
       return message;
     } catch (error) {
-      console.error('消息解析失败:', error);
+      console.error("消息解析失败:", error);
       return {
         error: true,
-        message: '消息解析失败',
-        originalData: messageData
+        message: "消息解析失败",
+        originalData: messageData,
       };
     }
   },
   generateSeq: () => Math.floor(Math.random() * 1000000),
-  generateMessageId: () => 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+  generateMessageId: () =>
+    "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
 };
 
 // 导出单独的加密器类以兼容测试文件
@@ -776,4 +900,13 @@ export const LXCrypto = lx;
 export const XCrypto = x;
 export const XTMCrypto = xtm;
 
-export default { ProtoMsg, getEnc, encode, parse, GameMessages, g_utils, bon, bonProtocol };
+export default {
+  ProtoMsg,
+  getEnc,
+  encode,
+  parse,
+  GameMessages,
+  g_utils,
+  bon,
+  bonProtocol,
+};

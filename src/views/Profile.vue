@@ -16,37 +16,56 @@
             <a-input v-model:value="userInfo.email" />
           </a-form-item>
           <a-form-item label="昵称">
-            <a-input v-model:value="userInfo.nickname" placeholder="请输入昵称" />
+            <a-input
+              v-model:value="userInfo.nickname"
+              placeholder="请输入昵称"
+            />
           </a-form-item>
           <a-form-item label="手机">
-            <a-input v-model:value="userInfo.phone" placeholder="请输入手机号" />
+            <a-input
+              v-model:value="userInfo.phone"
+              placeholder="请输入手机号"
+            />
           </a-form-item>
         </a-form>
 
         <template #actions>
-          <a-button type="primary" @click="saveProfile">
-            保存更改
-          </a-button>
+          <a-button type="primary" @click="saveProfile"> 保存更改 </a-button>
         </template>
       </a-card>
 
       <h2>密码修改</h2>
       <a-card>
-        <a-form :model="passwordForm" ref="passwordFormRef" label-placement="left" label-width="100px">
+        <a-form
+          :model="passwordForm"
+          ref="passwordFormRef"
+          label-placement="left"
+          label-width="100px"
+        >
           <a-form-item label="当前密码" prop="currentPassword">
-            <a-input v-model:value="passwordForm.currentPassword" type="password" placeholder="请输入当前密码" />
+            <a-input
+              v-model:value="passwordForm.currentPassword"
+              type="password"
+              placeholder="请输入当前密码"
+            />
           </a-form-item>
           <a-form-item label="新密码" prop="newPassword">
-            <a-input v-model:value="passwordForm.newPassword" type="password" placeholder="请输入新密码" />
+            <a-input
+              v-model:value="passwordForm.newPassword"
+              type="password"
+              placeholder="请输入新密码"
+            />
           </a-form-item>
           <a-form-item label="确认新密码" prop="confirmPassword">
-            <a-input v-model:value="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" />
+            <a-input
+              v-model:value="passwordForm.confirmPassword"
+              type="password"
+              placeholder="请再次输入新密码"
+            />
           </a-form-item>
         </a-form>
         <template #actions>
-          <a-button type="primary" @click="changePassword">
-            修改密码
-          </a-button>
+          <a-button type="primary" @click="changePassword"> 修改密码 </a-button>
         </template>
       </a-card>
 
@@ -54,28 +73,27 @@
       <a-card>
         <a-form>
           <a-form-item label="主题设置">
-            <n-select v-model:value="preferences.theme" :options="themeOptions" @update:value="updateTheme" />
-            <template #extra>
-              选择您喜欢的界面主题
-            </template>
+            <n-select
+              v-model:value="preferences.theme"
+              :options="themeOptions"
+              @update:value="updateTheme"
+            />
+            <template #extra> 选择您喜欢的界面主题 </template>
           </a-form-item>
           <a-form-item label="语言设置">
-            <n-select v-model:value="preferences.language" :options="languageOptions" />
-            <template #extra>
-              选择界面显示语言
-            </template>
+            <n-select
+              v-model:value="preferences.language"
+              :options="languageOptions"
+            />
+            <template #extra> 选择界面显示语言 </template>
           </a-form-item>
           <a-form-item label="通知设置">
             <n-switch v-model:value="preferences.notifications" />
-            <template #extra>
-              接收任务完成通知
-            </template>
+            <template #extra> 接收任务完成通知 </template>
           </a-form-item>
           <a-form-item label="自动执行">
             <n-switch v-model:value="preferences.autoExecute" />
-            <template #extra>
-              默认开启任务自动执行
-            </template>
+            <template #extra> 默认开启任务自动执行 </template>
           </a-form-item>
         </a-form>
       </a-card>
@@ -91,9 +109,7 @@
               <h3>两步验证</h3>
               <p>为您的账户添加额外的安全保护</p>
             </div>
-            <n-button @click="setupTwoFactor">
-              设置
-            </n-button>
+            <n-button @click="setupTwoFactor"> 设置 </n-button>
           </div>
 
           <div class="security-item">
@@ -101,9 +117,7 @@
               <h3>登录历史</h3>
               <p>查看最近的登录记录</p>
             </div>
-            <n-button @click="viewLoginHistory">
-              查看
-            </n-button>
+            <n-button @click="viewLoginHistory"> 查看 </n-button>
           </div>
 
           <div class="security-item">
@@ -111,9 +125,7 @@
               <h3>数据导出</h3>
               <p>导出您的所有数据</p>
             </div>
-            <n-button @click="exportData">
-              导出
-            </n-button>
+            <n-button @click="exportData"> 导出 </n-button>
           </div>
 
           <div class="security-item danger">
@@ -121,177 +133,177 @@
               <h3>删除账户</h3>
               <p>永久删除您的账户和所有数据</p>
             </div>
-            <n-button type="error" @click="deleteAccount">
-              删除
-            </n-button>
+            <n-button type="error" @click="deleteAccount"> 删除 </n-button>
           </div>
         </div>
       </a-card>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useMessage, useDialog } from 'naive-ui'
-import { useAuthStore } from '@/stores/auth'
+import { ref, reactive, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useMessage, useDialog } from "naive-ui";
+import { useAuthStore } from "@/stores/auth";
 
-const router = useRouter()
-const message = useMessage()
-const dialog = useDialog()
-const authStore = useAuthStore()
-const passwordFormRef = ref(null)
+const router = useRouter();
+const message = useMessage();
+const dialog = useDialog();
+const authStore = useAuthStore();
+const passwordFormRef = ref(null);
 
 // 用户信息
 const userInfo = reactive({
-  username: '',
-  email: '',
-  nickname: '',
-  phone: '',
-  avatar: ''
-})
+  username: "",
+  email: "",
+  nickname: "",
+  phone: "",
+  avatar: "",
+});
 
 // 密码表单
 const passwordForm = reactive({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-})
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+});
 
 // 系统偏好
 const preferences = reactive({
-  theme: 'auto',
-  language: 'zh-CN',
+  theme: "auto",
+  language: "zh-CN",
   notifications: true,
-  autoExecute: false
-})
+  autoExecute: false,
+});
 
 // 密码验证规则
 const passwordRules = {
   currentPassword: [
-    { required: true, message: '请输入当前密码', trigger: 'blur' }
+    { required: true, message: "请输入当前密码", trigger: "blur" },
   ],
   newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+    { required: true, message: "请输入新密码", trigger: "blur" },
+    { min: 6, message: "密码长度不能少于6位", trigger: "blur" },
   ],
   confirmPassword: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
+    { required: true, message: "请确认新密码", trigger: "blur" },
     {
       validator: (rule, value) => value === passwordForm.newPassword,
-      message: '两次输入的密码不一致',
-      trigger: 'blur'
-    }
-  ]
-}
+      message: "两次输入的密码不一致",
+      trigger: "blur",
+    },
+  ],
+};
 
 // 选项数据
 const themeOptions = [
-  { label: '跟随系统', value: 'auto' },
-  { label: '浅色主题', value: 'light' },
-  { label: '深色主题', value: 'dark' }
-]
+  { label: "跟随系统", value: "auto" },
+  { label: "浅色主题", value: "light" },
+  { label: "深色主题", value: "dark" },
+];
 
 const languageOptions = [
-  { label: '简体中文', value: 'zh-CN' },
-  { label: 'English', value: 'en-US' }
-]
+  { label: "简体中文", value: "zh-CN" },
+  { label: "English", value: "en-US" },
+];
 
 // 方法
 const saveProfile = async () => {
   try {
     // 这里应该调用API保存用户信息
-    message.success('个人信息保存成功')
+    message.success("个人信息保存成功");
   } catch (error) {
-    message.error('保存失败，请稍后重试')
+    message.error("保存失败，请稍后重试");
   }
-}
+};
 
 const changePassword = async () => {
-  if (!passwordFormRef.value) return
+  if (!passwordFormRef.value) return;
 
   try {
-    await passwordFormRef.value.validate()
+    await passwordFormRef.value.validate();
 
     // 这里应该调用API修改密码
-    message.success('密码修改成功')
+    message.success("密码修改成功");
 
     // 清空表单
-    Object.keys(passwordForm).forEach(key => {
-      passwordForm[key] = ''
-    })
+    Object.keys(passwordForm).forEach((key) => {
+      passwordForm[key] = "";
+    });
   } catch (error) {
     // 验证失败
   }
-}
+};
 
 const savePreferences = () => {
   // 保存偏好设置
-  localStorage.setItem('userPreferences', JSON.stringify(preferences))
-  message.success('偏好设置保存成功')
-}
+  localStorage.setItem("userPreferences", JSON.stringify(preferences));
+  message.success("偏好设置保存成功");
+};
 
 const updateTheme = (theme) => {
-  preferences.theme = theme
-  localStorage.setItem('theme', theme)
-  if (theme === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark')
-  } else if (theme === 'light') {
-    document.documentElement.removeAttribute('data-theme')
+  preferences.theme = theme;
+  localStorage.setItem("theme", theme);
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+  } else if (theme === "light") {
+    document.documentElement.removeAttribute("data-theme");
   } else {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    if (prefersDark) document.documentElement.setAttribute('data-theme', 'dark')
-    else document.documentElement.removeAttribute('data-theme')
+    const prefersDark =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (prefersDark)
+      document.documentElement.setAttribute("data-theme", "dark");
+    else document.documentElement.removeAttribute("data-theme");
   }
-}
+};
 
 const changeAvatar = () => {
-  message.info('头像更换功能开发中...')
-}
+  message.info("头像更换功能开发中...");
+};
 
 const setupTwoFactor = () => {
-  message.info('两步验证设置功能开发中...')
-}
+  message.info("两步验证设置功能开发中...");
+};
 
 const viewLoginHistory = () => {
-  message.info('登录历史查看功能开发中...')
-}
+  message.info("登录历史查看功能开发中...");
+};
 
 const exportData = () => {
-  message.info('数据导出功能开发中...')
-}
+  message.info("数据导出功能开发中...");
+};
 
 const deleteAccount = () => {
   dialog.warning({
-    title: '删除账户',
-    content: '此操作将永久删除您的账户和所有数据，且无法恢复。确定要继续吗？',
-    positiveText: '确定删除',
-    negativeText: '取消',
+    title: "删除账户",
+    content: "此操作将永久删除您的账户和所有数据，且无法恢复。确定要继续吗？",
+    positiveText: "确定删除",
+    negativeText: "取消",
     onPositiveClick: () => {
-      message.error('账户删除功能暂未开放')
-    }
-  })
-}
+      message.error("账户删除功能暂未开放");
+    },
+  });
+};
 
 // 生命周期
 onMounted(() => {
   // 加载用户信息
   if (authStore.userInfo) {
-    Object.assign(userInfo, authStore.userInfo)
+    Object.assign(userInfo, authStore.userInfo);
   }
 
   // 加载用户偏好
-  const savedPreferences = localStorage.getItem('userPreferences')
+  const savedPreferences = localStorage.getItem("userPreferences");
   if (savedPreferences) {
     try {
-      Object.assign(preferences, JSON.parse(savedPreferences))
+      Object.assign(preferences, JSON.parse(savedPreferences));
     } catch (error) {
-      console.error('解析用户偏好失败:', error)
+      console.error("解析用户偏好失败:", error);
     }
   }
-})
+});
 </script>
 
 <style scoped lang="scss">
@@ -335,7 +347,6 @@ h2 {
 
 .profile-section {
   margin-bottom: var(--spacing-2xl);
-
 }
 
 .security-items {
@@ -379,7 +390,6 @@ h2 {
     }
   }
 }
-
 
 @media (max-width: 768px) {
   .container {

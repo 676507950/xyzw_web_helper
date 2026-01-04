@@ -15,41 +15,42 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
-import { darkTheme } from 'naive-ui'
-import { useTheme } from '@/composables/useTheme'
+import { computed, onMounted, onUnmounted } from "vue";
+import { darkTheme } from "naive-ui";
+import { useTheme } from "@/composables/useTheme";
 
-const { isDark, initTheme, setupSystemThemeListener, updateReactiveState } = useTheme()
+const { isDark, initTheme, setupSystemThemeListener, updateReactiveState } =
+  useTheme();
 
 // Naive UI 主题
 const naiveTheme = computed(() => {
-  return isDark.value ? darkTheme : null
-})
+  return isDark.value ? darkTheme : null;
+});
 
 // 监听主题变化事件
 const handleThemeChange = () => {
   // 确保响应式状态同步
-  updateReactiveState()
+  updateReactiveState();
   // 强制重新渲染
   setTimeout(() => {
-    updateReactiveState()
-  }, 50)
-}
+    updateReactiveState();
+  }, 50);
+};
 
 onMounted(() => {
-  initTheme()
-  setupSystemThemeListener()
-  
+  initTheme();
+  setupSystemThemeListener();
+
   // 监听自定义主题变化事件
-  window.addEventListener('theme-change', handleThemeChange)
-  
+  window.addEventListener("theme-change", handleThemeChange);
+
   // 初始化时更新状态
-  updateReactiveState()
-})
+  updateReactiveState();
+});
 
 onUnmounted(() => {
-  window.removeEventListener('theme-change', handleThemeChange)
-})
+  window.removeEventListener("theme-change", handleThemeChange);
+});
 </script>
 
 <style>
@@ -206,7 +207,9 @@ body[data-theme="dark"] .n-popover-container {
   min-height: 100vh;
   background: var(--app-background);
   color: var(--text-color);
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 /* 全局样式重置 */
@@ -216,9 +219,21 @@ body[data-theme="dark"] .n-popover-container {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family:
+    "SF Pro Display",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Microsoft YaHei",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif;
   color: var(--text-color);
   transition: color 0.3s ease;
 }

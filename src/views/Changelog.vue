@@ -8,9 +8,7 @@
             <i class="icon-history">📜</i>
             更新日志
           </h1>
-          <p class="page-description">
-            查看系统的最新更新和改进内容
-          </p>
+          <p class="page-description">查看系统的最新更新和改进内容</p>
         </div>
 
         <!-- 筛选器 -->
@@ -92,7 +90,7 @@
             <p class="subscribe-desc">第一时间获取系统更新信息</p>
           </div>
           <button class="subscribe-btn" @click="handleSubscribe">
-            {{ isSubscribed ? '已订阅' : '立即订阅' }}
+            {{ isSubscribed ? "已订阅" : "立即订阅" }}
           </button>
         </div>
       </div>
@@ -101,62 +99,62 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import ChangelogCard from '@/components/ChangelogCard.vue'
-import { useChangelogStore } from '@/stores/changelogStore'
+import { ref, computed, onMounted } from "vue";
+import ChangelogCard from "@/components/ChangelogCard.vue";
+import { useChangelogStore } from "@/stores/changelogStore";
 
-const changelogStore = useChangelogStore()
+const changelogStore = useChangelogStore();
 
-const selectedType = ref('all')
-const isSubscribed = ref(false)
+const selectedType = ref("all");
+const isSubscribed = ref(false);
 
 const versionTypes = [
-  { value: 'all', label: '全部' },
-  { value: 'major', label: '主要版本' },
-  { value: 'minor', label: '次要版本' },
-  { value: 'patch', label: '补丁' },
-  { value: 'hotfix', label: '热修复' }
-]
+  { value: "all", label: "全部" },
+  { value: "major", label: "主要版本" },
+  { value: "minor", label: "次要版本" },
+  { value: "patch", label: "补丁" },
+  { value: "hotfix", label: "热修复" },
+];
 
 const filteredChangelogs = computed(() => {
-  if (selectedType.value === 'all') {
-    return changelogStore.changelogs
+  if (selectedType.value === "all") {
+    return changelogStore.changelogs;
   }
   return changelogStore.changelogs.filter(
-    changelog => changelog.type === selectedType.value
-  )
-})
+    (changelog) => changelog.type === selectedType.value,
+  );
+});
 
 const stats = computed(() => ({
   totalVersions: changelogStore.changelogs.length,
   totalFeatures: changelogStore.changelogs.reduce(
     (sum, log) => sum + (log.features?.length || 0),
-    0
+    0,
   ),
   totalFixes: changelogStore.changelogs.reduce(
     (sum, log) => sum + (log.fixes?.length || 0),
-    0
+    0,
   ),
   totalImprovements: changelogStore.changelogs.reduce(
     (sum, log) => sum + (log.improvements?.length || 0),
-    0
-  )
-}))
+    0,
+  ),
+}));
 
 const handleSubscribe = () => {
-  isSubscribed.value = !isSubscribed.value
+  isSubscribed.value = !isSubscribed.value;
   if (isSubscribed.value) {
-    localStorage.setItem('changelog_subscribed', 'true')
-    alert('已成功订阅更新通知！')
+    localStorage.setItem("changelog_subscribed", "true");
+    alert("已成功订阅更新通知！");
   } else {
-    localStorage.removeItem('changelog_subscribed')
-    alert('已取消订阅')
+    localStorage.removeItem("changelog_subscribed");
+    alert("已取消订阅");
   }
-}
+};
 
 onMounted(() => {
-  isSubscribed.value = localStorage.getItem('changelog_subscribed') === 'true'
-})
+  isSubscribed.value = localStorage.getItem("changelog_subscribed") === "true";
+});
 </script>
 
 <style scoped>

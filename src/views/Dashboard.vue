@@ -7,7 +7,9 @@
         <section class="welcome-section">
           <div class="welcome-content">
             <div class="welcome-text">
-              <h1>欢迎回来，{{ tokenStore.selectedToken?.name || '游戏玩家' }}！</h1>
+              <h1>
+                欢迎回来，{{ tokenStore.selectedToken?.name || "游戏玩家" }}！
+              </h1>
               <p>今天是 {{ currentDate }}，继续您的游戏管理之旅吧</p>
               <p>反馈微信：VIP-W66668888，添加备注脚本，朋友圈会发布更新通知</p>
             </div>
@@ -19,10 +21,7 @@
               >
                 进入游戏功能
               </n-button>
-              <n-button
-                size="large"
-                @click="handleManageTokens"
-              >
+              <n-button size="large" @click="handleManageTokens">
                 管理Token
               </n-button>
             </div>
@@ -32,15 +31,8 @@
         <!-- 统计卡片 -->
         <section class="stats-section">
           <div class="stats-grid">
-            <div
-              v-for="stat in statistics"
-              :key="stat.id"
-              class="stat-card"
-            >
-              <div
-                class="stat-icon"
-                :style="{ color: stat.color }"
-              >
+            <div v-for="stat in statistics" :key="stat.id" class="stat-card">
+              <div class="stat-icon" :style="{ color: stat.color }">
                 <component :is="stat.icon" />
               </div>
               <div class="stat-content">
@@ -50,10 +42,7 @@
                 <div class="stat-label">
                   {{ stat.label }}
                 </div>
-                <div
-                  class="stat-change"
-                  :class="stat.changeType"
-                >
+                <div class="stat-change" :class="stat.changeType">
                   {{ stat.change }}
                 </div>
               </div>
@@ -63,9 +52,7 @@
 
         <!-- 快速操作 -->
         <section class="quick-actions-section">
-          <h2 class="section-title">
-            快速操作
-          </h2>
+          <h2 class="section-title">快速操作</h2>
           <div class="actions-grid">
             <div
               v-for="action in quickActions"
@@ -87,31 +74,19 @@
         <!-- 最近活动 -->
         <section class="recent-activity-section">
           <div class="activity-header">
-            <h2 class="section-title">
-              最近活动
-            </h2>
-            <n-button
-              text
-              type="primary"
-              @click="refreshActivity"
-            >
+            <h2 class="section-title">最近活动</h2>
+            <n-button text type="primary" @click="refreshActivity">
               刷新
             </n-button>
           </div>
 
-          <div
-            v-if="recentActivities.length"
-            class="activity-list"
-          >
+          <div v-if="recentActivities.length" class="activity-list">
             <div
               v-for="activity in recentActivities"
               :key="activity.id"
               class="activity-item"
             >
-              <div
-                class="activity-icon"
-                :class="activity.type"
-              >
+              <div class="activity-icon" :class="activity.type">
                 <component :is="getActivityIcon(activity.type)" />
               </div>
               <div class="activity-content">
@@ -125,10 +100,7 @@
             </div>
           </div>
 
-          <div
-            v-else
-            class="empty-activity"
-          >
+          <div v-else class="empty-activity">
             <n-empty description="暂无活动记录" />
           </div>
         </section>
@@ -138,10 +110,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import { useTokenStore } from '@/stores/tokenStore'
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useMessage } from "naive-ui";
+import { useTokenStore } from "@/stores/tokenStore";
 import {
   PersonCircle,
   Cube,
@@ -150,105 +122,102 @@ import {
   Time,
   TrendingUp,
   Add,
-  Cloud
-} from '@vicons/ionicons5'
+  Cloud,
+} from "@vicons/ionicons5";
 
-const router = useRouter()
-const message = useMessage()
-const tokenStore = useTokenStore()
+const router = useRouter();
+const message = useMessage();
+const tokenStore = useTokenStore();
 
 // 响应式数据
-const recentActivities = ref([])
+const recentActivities = ref([]);
 
 // 计算属性
 const currentDate = computed(() => {
-  return new Date().toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long'
-  })
-})
-
+  return new Date().toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+});
 
 const statistics = computed(() => [
   {
     id: 1,
     icon: PersonCircle,
-    label: '游戏Token',
+    label: "游戏Token",
     value: tokenStore.gameTokens.length,
-    change: '+2 本月',
-    changeType: 'positive',
-    color: '#18a058'
+    change: "+2 本月",
+    changeType: "positive",
+    color: "#18a058",
   },
   {
     id: 2,
     icon: CheckmarkCircle,
-    label: '已完成任务',
-    value: '156',
-    change: '+12 今日',
-    changeType: 'positive',
-    color: '#2080f0'
+    label: "已完成任务",
+    value: "156",
+    change: "+12 今日",
+    changeType: "positive",
+    color: "#2080f0",
   },
   {
     id: 3,
     icon: Time,
-    label: '节省时间',
-    value: '24.5h',
-    change: '+3.2h 本周',
-    changeType: 'positive',
-    color: '#f0a020'
+    label: "节省时间",
+    value: "24.5h",
+    change: "+3.2h 本周",
+    changeType: "positive",
+    color: "#f0a020",
   },
   {
     id: 4,
     icon: TrendingUp,
-    label: '效率提升',
-    value: '85%',
-    change: '+15% 本月',
-    changeType: 'positive',
-    color: '#d03050'
-  }
-])
+    label: "效率提升",
+    value: "85%",
+    change: "+15% 本月",
+    changeType: "positive",
+    color: "#d03050",
+  },
+]);
 
 const quickActions = ref([
   {
     id: 1,
     icon: Cube,
-    title: '游戏功能',
-    description: '访问所有游戏功能模块',
-    action: 'game-features'
+    title: "游戏功能",
+    description: "访问所有游戏功能模块",
+    action: "game-features",
   },
   {
     id: 2,
     icon: Add,
-    title: '添加Token',
-    description: '快速添加新的游戏Token',
-    action: 'add-token'
+    title: "添加Token",
+    description: "快速添加新的游戏Token",
+    action: "add-token",
   },
   {
     id: 3,
     icon: CheckmarkCircle,
-    title: '执行任务',
-    description: '一键执行所有待完成任务',
-    action: 'execute-tasks'
+    title: "执行任务",
+    description: "一键执行所有待完成任务",
+    action: "execute-tasks",
   },
   {
     id: 4,
     icon: Cloud,
-    title: 'WebSocket测试',
-    description: '测试WebSocket连接和游戏命令',
-    action: 'websocket-test'
+    title: "WebSocket测试",
+    description: "测试WebSocket连接和游戏命令",
+    action: "websocket-test",
   },
   {
     id: 5,
     icon: Settings,
-    title: '系统设置',
-    description: '配置个人偏好和系统选项',
-    action: 'open-settings'
-  }
-])
-
-
+    title: "系统设置",
+    description: "配置个人偏好和系统选项",
+    action: "open-settings",
+  },
+]);
 
 const handleManageTokens = () => {
   // 降噪
@@ -259,100 +228,100 @@ const handleManageTokens = () => {
   */
 
   try {
-    router.push('/tokens')
+    router.push("/tokens");
     // 降噪
   } catch (error) {
-    console.error('❌ 导航失败:', error)
-    message.error('导航到Token管理页面失败')
+    console.error("❌ 导航失败:", error);
+    message.error("导航到Token管理页面失败");
   }
-}
+};
 
 const handleQuickAction = (action) => {
   switch (action.action) {
-    case 'game-features':
-      router.push('/admin/game-features')
-      break
-    case 'add-token':
-      handleManageTokens()
-      break
-    case 'execute-tasks':
-      router.push('/admin/game-features')
-      break
-    case 'websocket-test':
-      router.push('/websocket-test')
-      break
-    case 'open-settings':
-      router.push('/admin/profile')
-      break
+    case "game-features":
+      router.push("/admin/game-features");
+      break;
+    case "add-token":
+      handleManageTokens();
+      break;
+    case "execute-tasks":
+      router.push("/admin/game-features");
+      break;
+    case "websocket-test":
+      router.push("/websocket-test");
+      break;
+    case "open-settings":
+      router.push("/admin/profile");
+      break;
   }
-}
+};
 
 const refreshActivity = () => {
   // 模拟刷新活动数据
   recentActivities.value = [
     {
       id: 1,
-      type: 'success',
-      message: '成功完成日常任务：每日签到',
-      timestamp: Date.now() - 30 * 60 * 1000
+      type: "success",
+      message: "成功完成日常任务：每日签到",
+      timestamp: Date.now() - 30 * 60 * 1000,
     },
     {
       id: 2,
-      type: 'info',
-      message: '添加了新的游戏角色：剑士小明',
-      timestamp: Date.now() - 2 * 60 * 60 * 1000
+      type: "info",
+      message: "添加了新的游戏角色：剑士小明",
+      timestamp: Date.now() - 2 * 60 * 60 * 1000,
     },
     {
       id: 3,
-      type: 'warning',
-      message: '任务执行遇到错误，请检查网络连接',
-      timestamp: Date.now() - 4 * 60 * 60 * 1000
-    }
-  ]
-  message.success('活动数据已刷新')
-}
+      type: "warning",
+      message: "任务执行遇到错误，请检查网络连接",
+      timestamp: Date.now() - 4 * 60 * 60 * 1000,
+    },
+  ];
+  message.success("活动数据已刷新");
+};
 
 const getActivityIcon = (type) => {
   switch (type) {
-    case 'success':
-      return CheckmarkCircle
-    case 'warning':
-      return Time
-    case 'info':
+    case "success":
+      return CheckmarkCircle;
+    case "warning":
+      return Time;
+    case "info":
     default:
-      return Cube
+      return Cube;
   }
-}
+};
 
 const formatTime = (timestamp) => {
-  const diff = Date.now() - timestamp
-  const minutes = Math.floor(diff / (1000 * 60))
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
   if (days > 0) {
-    return `${days}天前`
+    return `${days}天前`;
   } else if (hours > 0) {
-    return `${hours}小时前`
+    return `${hours}小时前`;
   } else if (minutes > 0) {
-    return `${minutes}分钟前`
+    return `${minutes}分钟前`;
   } else {
-    return '刚刚'
+    return "刚刚";
   }
-}
+};
 
 // 生命周期
 onMounted(async () => {
   // 确保有Token
   if (!tokenStore.hasTokens) {
-    router.push('/tokens')
-    return
+    router.push("/tokens");
+    return;
   }
 
   // 初始化Token数据
-  tokenStore.initTokenStore()
-  refreshActivity()
-})
+  tokenStore.initTokenStore();
+  refreshActivity();
+});
 </script>
 
 <style scoped lang="scss">
@@ -373,7 +342,11 @@ onMounted(async () => {
 
 // 欢迎区域
 .welcome-section {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  );
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-2xl);
   margin-bottom: var(--spacing-xl);
@@ -405,7 +378,6 @@ onMounted(async () => {
   display: flex;
   gap: var(--spacing-md);
 }
-
 
 // 统计区域
 .stats-section {

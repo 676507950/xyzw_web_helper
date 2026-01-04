@@ -1,47 +1,34 @@
 <template>
-  <div
-    class="daily-task-card"
-    :class="{ completed: task.completed }"
-  >
+  <div class="daily-task-card" :class="{ completed: task.completed }">
     <!-- 卡片头部 -->
     <div class="card-header">
       <div class="header-left">
-        <img 
-          :src="task.icon || '/icons/ta.png'" 
+        <img
+          :src="task.icon || '/icons/ta.png'"
           :alt="task.title"
           class="task-icon"
-        >
+        />
         <div class="title-container">
           <h3 class="title">
             {{ task.title }}
           </h3>
-          <p
-            v-if="task.subtitle"
-            class="subtitle"
-          >
+          <p v-if="task.subtitle" class="subtitle">
             {{ task.subtitle }}
           </p>
         </div>
       </div>
-      
+
       <div class="header-right">
-        <div 
-          class="status-indicator" 
+        <div
+          class="status-indicator"
           :class="{ completed: task.completed }"
           @click="toggleStatus"
         >
-          <span
-            class="status-dot"
-            :class="{ completed: task.completed }"
-          />
-          <span>{{ task.completed ? '已完成' : '待完成' }}</span>
+          <span class="status-dot" :class="{ completed: task.completed }" />
+          <span>{{ task.completed ? "已完成" : "待完成" }}</span>
         </div>
-        
-        <n-button 
-          text 
-          class="settings-button"
-          @click="showSettings = true"
-        >
+
+        <n-button text class="settings-button" @click="showSettings = true">
           <template #icon>
             <n-icon class="settings-icon">
               <Settings />
@@ -52,26 +39,19 @@
     </div>
 
     <!-- 进度信息 -->
-    <div
-      v-if="task.progress"
-      class="progress-container"
-    >
+    <div v-if="task.progress" class="progress-container">
       <div class="info-container">
         <div class="info-item">
           <span class="info-label">当前进度</span>
-          <span class="info-value">{{ task.progress.current }}/{{ task.progress.total }}</span>
+          <span class="info-value"
+            >{{ task.progress.current }}/{{ task.progress.total }}</span
+          >
         </div>
-        <div
-          v-if="task.reward"
-          class="info-item"
-        >
+        <div v-if="task.reward" class="info-item">
           <span class="info-label">奖励</span>
           <span class="info-value">{{ task.reward }}</span>
         </div>
-        <div
-          v-if="task.nextReset"
-          class="info-item"
-        >
+        <div v-if="task.nextReset" class="info-item">
           <span class="info-label">重置时间</span>
           <span class="info-value">{{ formatResetTime(task.nextReset) }}</span>
         </div>
@@ -79,13 +59,10 @@
     </div>
 
     <!-- 操作按钮 -->
-    <div
-      v-if="!task.completed"
-      class="actions-container"
-    >
-      <n-button 
-        type="primary" 
-        block 
+    <div v-if="!task.completed" class="actions-container">
+      <n-button
+        type="primary"
+        block
         :loading="isExecuting"
         :disabled="!task.canExecute"
         class="complete-button"
@@ -96,9 +73,9 @@
     </div>
 
     <!-- 设置模态框 -->
-    <n-modal 
-      v-model:show="showSettings" 
-      preset="card" 
+    <n-modal
+      v-model:show="showSettings"
+      preset="card"
       title="任务设置"
       style="width: 480px"
     >
@@ -110,30 +87,30 @@
           <span>{{ task.title }} - 设置</span>
         </div>
       </template>
-      
+
       <div class="settings-content">
         <div class="settings-grid">
           <div class="setting-item">
-            <n-checkbox 
+            <n-checkbox
               v-model:checked="taskSettings.autoExecute"
               @update:checked="updateSetting('autoExecute', $event)"
             >
               自动执行
             </n-checkbox>
           </div>
-          
+
           <div class="setting-item">
             <label class="setting-label">执行延迟 (秒)</label>
-            <n-input-number 
+            <n-input-number
               v-model:value="taskSettings.delay"
               :min="0"
               :max="300"
               @update:value="updateSetting('delay', $event)"
             />
           </div>
-          
+
           <div class="setting-item">
-            <n-checkbox 
+            <n-checkbox
               v-model:checked="taskSettings.notification"
               @update:checked="updateSetting('notification', $event)"
             >
@@ -141,21 +118,18 @@
             </n-checkbox>
           </div>
         </div>
-        
+
         <!-- 任务详情 -->
-        <div
-          v-if="task.details"
-          class="task-details"
-        >
+        <div v-if="task.details" class="task-details">
           <h4>任务详情</h4>
           <div class="task-list">
-            <div 
+            <div
               v-for="detail in task.details"
-              :key="detail.id" 
+              :key="detail.id"
               class="task-item"
             >
               <div class="task-item-left">
-                <n-icon 
+                <n-icon
                   class="task-status-icon"
                   :class="{ completed: detail.completed }"
                 >
@@ -167,25 +141,22 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 执行日志 -->
-        <div
-          v-if="task.logs && task.logs.length"
-          class="execution-log"
-        >
+        <div v-if="task.logs && task.logs.length" class="execution-log">
           <h4>执行日志</h4>
           <div class="log-container">
-            <div 
+            <div
               v-for="log in task.logs.slice(-5)"
-              :key="log.id" 
+              :key="log.id"
               class="log-item"
             >
               <span class="log-time">{{ formatLogTime(log.timestamp) }}</span>
-              <span 
+              <span
                 class="log-message"
-                :class="{ 
+                :class="{
                   error: log.type === 'error',
-                  success: log.type === 'success' 
+                  success: log.type === 'success',
                 }"
               >
                 {{ log.message }}
@@ -199,94 +170,102 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useMessage } from 'naive-ui'
-import { Settings, Checkmark as CheckCircle, Time as Clock } from '@vicons/ionicons5'
+import { ref, computed, watch } from "vue";
+import { useMessage } from "naive-ui";
+import {
+  Settings,
+  Checkmark as CheckCircle,
+  Time as Clock,
+} from "@vicons/ionicons5";
 
 const props = defineProps({
   task: {
     type: Object,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const emit = defineEmits(['update:task', 'execute', 'toggle-status'])
+const emit = defineEmits(["update:task", "execute", "toggle-status"]);
 
-const message = useMessage()
-const showSettings = ref(false)
-const isExecuting = ref(false)
+const message = useMessage();
+const showSettings = ref(false);
+const isExecuting = ref(false);
 
 // 任务设置
 const taskSettings = ref({
   autoExecute: props.task.settings?.autoExecute || false,
   delay: props.task.settings?.delay || 0,
-  notification: props.task.settings?.notification || true
-})
+  notification: props.task.settings?.notification || true,
+});
 
 // 计算属性
 const getButtonText = () => {
-  if (isExecuting.value) return '执行中...'
-  if (!props.task.canExecute) return '不可执行'
-  return '立即执行'
-}
+  if (isExecuting.value) return "执行中...";
+  if (!props.task.canExecute) return "不可执行";
+  return "立即执行";
+};
 
 // 方法
 const toggleStatus = () => {
-  emit('toggle-status', props.task.id)
-}
+  emit("toggle-status", props.task.id);
+};
 
 const executeTask = async () => {
-  if (isExecuting.value || !props.task.canExecute) return
-  
+  if (isExecuting.value || !props.task.canExecute) return;
+
   try {
-    isExecuting.value = true
-    await emit('execute', props.task.id)
-    
+    isExecuting.value = true;
+    await emit("execute", props.task.id);
+
     if (taskSettings.value.notification) {
-      message.success(`任务 "${props.task.title}" 执行成功`)
+      message.success(`任务 "${props.task.title}" 执行成功`);
     }
   } catch (error) {
-    message.error(`任务执行失败: ${error.message}`)
+    message.error(`任务执行失败: ${error.message}`);
   } finally {
-    isExecuting.value = false
+    isExecuting.value = false;
   }
-}
+};
 
 const updateSetting = (key, value) => {
-  taskSettings.value[key] = value
-  
+  taskSettings.value[key] = value;
+
   // 发出设置更新事件
-  emit('update:task', {
+  emit("update:task", {
     ...props.task,
-    settings: { ...taskSettings.value }
-  })
-}
+    settings: { ...taskSettings.value },
+  });
+};
 
 const formatResetTime = (timestamp) => {
-  const date = new Date(timestamp)
-  return date.toLocaleString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+  const date = new Date(timestamp);
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const formatLogTime = (timestamp) => {
-  const date = new Date(timestamp)
-  return date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
-}
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+};
 
 // 监听任务设置变化
-watch(() => props.task.settings, (newSettings) => {
-  if (newSettings) {
-    taskSettings.value = { ...taskSettings.value, ...newSettings }
-  }
-}, { immediate: true })
+watch(
+  () => props.task.settings,
+  (newSettings) => {
+    if (newSettings) {
+      taskSettings.value = { ...taskSettings.value, ...newSettings };
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped lang="scss">
@@ -299,12 +278,12 @@ watch(() => props.task.settings, (newSettings) => {
   position: relative;
   transition: all var(--transition-normal);
   border-left: 4px solid var(--primary-color);
-  
+
   &:hover {
     box-shadow: var(--shadow-medium);
     transform: translateY(-2px);
   }
-  
+
   &.completed {
     border-left-color: var(--success-color);
     opacity: 0.8;
@@ -368,11 +347,11 @@ watch(() => props.task.settings, (newSettings) => {
   font-size: var(--font-size-sm);
   padding: var(--spacing-xs) var(--spacing-md);
   transition: all var(--transition-fast);
-  
+
   &:hover {
     background-color: var(--bg-secondary);
   }
-  
+
   &.completed {
     background-color: rgba(24, 160, 88, 0.1);
     color: var(--success-color);
@@ -385,7 +364,7 @@ watch(() => props.task.settings, (newSettings) => {
   background-color: var(--text-secondary);
   border-radius: 50%;
   transition: background-color var(--transition-fast);
-  
+
   &.completed {
     background-color: var(--success-color);
   }
@@ -393,7 +372,7 @@ watch(() => props.task.settings, (newSettings) => {
 
 .settings-button {
   padding: var(--spacing-xs);
-  
+
   &:hover {
     background-color: var(--bg-tertiary);
   }
@@ -441,7 +420,7 @@ watch(() => props.task.settings, (newSettings) => {
   width: 100%;
   height: 40px;
   font-weight: var(--font-weight-medium);
-  
+
   &.n-button--disabled {
     cursor: not-allowed;
     opacity: 0.5;
@@ -486,7 +465,7 @@ watch(() => props.task.settings, (newSettings) => {
 .task-details,
 .execution-log {
   margin-top: var(--spacing-xl);
-  
+
   h4 {
     color: var(--text-primary);
     font-size: var(--font-size-md);
@@ -518,7 +497,7 @@ watch(() => props.task.settings, (newSettings) => {
   color: var(--text-tertiary);
   width: 20px;
   height: 20px;
-  
+
   &.completed {
     color: var(--success-color);
   }
@@ -552,11 +531,11 @@ watch(() => props.task.settings, (newSettings) => {
 
 .log-message {
   color: var(--text-secondary);
-  
+
   &.error {
     color: var(--error-color);
   }
-  
+
   &.success {
     color: var(--success-color);
   }
@@ -567,13 +546,13 @@ watch(() => props.task.settings, (newSettings) => {
   .daily-task-card {
     padding: var(--spacing-md);
   }
-  
+
   .header-right {
     flex-direction: column;
     gap: var(--spacing-sm);
     align-items: flex-end;
   }
-  
+
   .info-container {
     flex-direction: column;
     gap: var(--spacing-sm);

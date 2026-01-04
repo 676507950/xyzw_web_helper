@@ -5,21 +5,26 @@
       <div class="login-card glass">
         <div class="card-header">
           <div class="brand">
-            <img src="/icons/xiaoyugan.png" alt="XYZW" class="brand-logo">
-            <h1 class="brand-title">
-              XYZW 游戏管理系统
-            </h1>
+            <img src="/icons/xiaoyugan.png" alt="XYZW" class="brand-logo" />
+            <h1 class="brand-title">XYZW 游戏管理系统</h1>
           </div>
-          <p class="welcome-text">
-            欢迎回来，请登录您的账户
-          </p>
+          <p class="welcome-text">欢迎回来，请登录您的账户</p>
         </div>
 
         <div class="card-body">
-          <n-form ref="loginFormRef" :model="loginForm" :rules="loginRules" size="large" :show-label="false">
+          <n-form
+            ref="loginFormRef"
+            :model="loginForm"
+            :rules="loginRules"
+            size="large"
+            :show-label="false"
+          >
             <n-form-item path="username">
-              <n-input v-model:value="loginForm.username" placeholder="用户名或邮箱"
-                :input-props="{ autocomplete: 'username' }">
+              <n-input
+                v-model:value="loginForm.username"
+                placeholder="用户名或邮箱"
+                :input-props="{ autocomplete: 'username' }"
+              >
                 <template #prefix>
                   <n-icon>
                     <PersonCircle />
@@ -29,8 +34,13 @@
             </n-form-item>
 
             <n-form-item path="password">
-              <n-input v-model:value="loginForm.password" type="password" placeholder="密码"
-                :input-props="{ autocomplete: 'current-password' }" @keydown.enter="handleLogin">
+              <n-input
+                v-model:value="loginForm.password"
+                type="password"
+                placeholder="密码"
+                :input-props="{ autocomplete: 'current-password' }"
+                @keydown.enter="handleLogin"
+              >
                 <template #prefix>
                   <n-icon>
                     <Lock />
@@ -43,13 +53,23 @@
               <n-checkbox v-model:checked="loginForm.rememberMe">
                 记住我
               </n-checkbox>
-              <n-button text type="primary" @click="router.push('/forgot-password')">
+              <n-button
+                text
+                type="primary"
+                @click="router.push('/forgot-password')"
+              >
                 忘记密码？
               </n-button>
             </div>
 
-            <n-button type="primary" size="large" block :loading="authStore.isLoading" class="login-button"
-              @click="handleLogin">
+            <n-button
+              type="primary"
+              size="large"
+              block
+              :loading="authStore.isLoading"
+              class="login-button"
+              @click="handleLogin"
+            >
               登录
             </n-button>
           </n-form>
@@ -59,7 +79,11 @@
           </n-divider>
 
           <div class="social-login">
-            <n-button size="large" class="social-button" @click="handleSocialLogin('qq')">
+            <n-button
+              size="large"
+              class="social-button"
+              @click="handleSocialLogin('qq')"
+            >
               <template #icon>
                 <n-icon>
                   <PersonCircle />
@@ -68,7 +92,11 @@
               QQ登录
             </n-button>
 
-            <n-button size="large" class="social-button" @click="handleSocialLogin('wechat')">
+            <n-button
+              size="large"
+              class="social-button"
+              @click="handleSocialLogin('wechat')"
+            >
               <template #icon>
                 <n-icon>
                   <PersonCircle />
@@ -95,7 +123,11 @@
         </div>
 
         <div class="features-list">
-          <div v-for="feature in features" :key="feature.id" class="feature-item">
+          <div
+            v-for="feature in features"
+            :key="feature.id"
+            class="feature-item"
+          >
             <div class="feature-icon">
               <component :is="feature.icon" />
             </div>
@@ -118,114 +150,115 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import { useAuthStore } from '@/stores/auth'
-import { PersonCircle, Cube, Ribbon, Settings } from '@vicons/ionicons5'
+import { ref, reactive, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useMessage } from "naive-ui";
+import { useAuthStore } from "@/stores/auth";
+import { PersonCircle, Cube, Ribbon, Settings } from "@vicons/ionicons5";
 
-const router = useRouter()
-const message = useMessage()
-const authStore = useAuthStore()
-const loginFormRef = ref(null)
+const router = useRouter();
+const message = useMessage();
+const authStore = useAuthStore();
+const loginFormRef = ref(null);
 
 // 登录表单数据
 const loginForm = reactive({
-  username: '',
-  password: '',
-  rememberMe: false
-})
+  username: "",
+  password: "",
+  rememberMe: false,
+});
 
 // 表单验证规则
 const loginRules = {
   username: [
     {
       required: true,
-      message: '请输入用户名或邮箱',
-      trigger: ['input', 'blur']
-    }
+      message: "请输入用户名或邮箱",
+      trigger: ["input", "blur"],
+    },
   ],
   password: [
     {
       required: true,
-      message: '请输入密码',
-      trigger: ['input', 'blur']
+      message: "请输入密码",
+      trigger: ["input", "blur"],
     },
     {
       min: 6,
-      message: '密码长度不能少于6位',
-      trigger: ['input', 'blur']
-    }
-  ]
-}
+      message: "密码长度不能少于6位",
+      trigger: ["input", "blur"],
+    },
+  ],
+};
 
 // 功能特性数据
 const features = [
   {
     id: 1,
     icon: PersonCircle,
-    title: '多角色管理',
-    description: '统一管理多个游戏角色，随时切换查看'
+    title: "多角色管理",
+    description: "统一管理多个游戏角色，随时切换查看",
   },
   {
     id: 2,
     icon: Cube,
-    title: '任务自动化',
-    description: '智能执行日常任务，解放双手节省时间'
+    title: "任务自动化",
+    description: "智能执行日常任务，解放双手节省时间",
   },
   {
     id: 3,
     icon: Ribbon,
-    title: '数据统计',
-    description: '详细的进度统计，让游戏数据一目了然'
+    title: "数据统计",
+    description: "详细的进度统计，让游戏数据一目了然",
   },
   {
     id: 4,
     icon: Settings,
-    title: '个性化配置',
-    description: '灵活的设置选项，打造专属管理方案'
-  }
-]
+    title: "个性化配置",
+    description: "灵活的设置选项，打造专属管理方案",
+  },
+];
 
 // 处理登录
 const handleLogin = async () => {
-  if (!loginFormRef.value) return
+  if (!loginFormRef.value) return;
 
   try {
-    await loginFormRef.value.validate()
+    await loginFormRef.value.validate();
 
     const result = await authStore.login({
       username: loginForm.username,
       password: loginForm.password,
-      rememberMe: loginForm.rememberMe
-    })
+      rememberMe: loginForm.rememberMe,
+    });
 
     if (result.success) {
-      message.success('登录成功')
+      message.success("登录成功");
 
       // 跳转到dashboard或之前访问的页面
-      const redirect = router.currentRoute.value.query.redirect || '/admin/dashboard'
-      router.push(redirect)
+      const redirect =
+        router.currentRoute.value.query.redirect || "/admin/dashboard";
+      router.push(redirect);
     } else {
-      message.error(result.message)
+      message.error(result.message);
     }
   } catch (error) {
     // 表单验证失败
-    console.error('Login validation failed:', error)
+    console.error("Login validation failed:", error);
   }
-}
+};
 
 // 处理社交登录
 const handleSocialLogin = (provider) => {
-  message.info(`${provider === 'qq' ? 'QQ' : '微信'}登录功能开发中...`)
-}
+  message.info(`${provider === "qq" ? "QQ" : "微信"}登录功能开发中...`);
+};
 
 onMounted(() => {
   // 如果已经登录，直接跳转
   if (authStore.isAuthenticated) {
-    router.push('/admin/dashboard')
+    router.push("/admin/dashboard");
   }
-})
+});
 </script>
 
 <style scoped lang="scss">
@@ -469,7 +502,6 @@ onMounted(() => {
 }
 
 @keyframes float {
-
   0%,
   100% {
     transform: translateY(0) rotate(0deg);

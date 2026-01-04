@@ -1,5 +1,9 @@
 <template>
-  <div v-if="roleInfo && Object.keys(roleInfo).length > 0" class="role-profile-card" :class="rankInfo.class">
+  <div
+    v-if="roleInfo && Object.keys(roleInfo).length > 0"
+    class="role-profile-card"
+    :class="rankInfo.class"
+  >
     <div class="role-profile-content">
       <!-- 头像区域 -->
       <div class="avatar-container">
@@ -13,10 +17,12 @@
 
       <!-- 角色信息区域 -->
       <div class="role-info-section">
-        <div class="role-name">{{ roleInfo.name || '未知角色' }}</div>
+        <div class="role-name">{{ roleInfo.name || "未知角色" }}</div>
         <div class="role-stats">
           <span class="level-text">Lv.{{ roleInfo.level || 1 }}</span>
-          <span class="power-value">战力 {{ formatPower(roleInfo.power) }}</span>
+          <span class="power-value"
+            >战力 {{ formatPower(roleInfo.power) }}</span
+          >
         </div>
       </div>
 
@@ -48,122 +54,122 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { useTokenStore } from '@/stores/tokenStore'
+import { ref, computed, watch, onMounted } from "vue";
+import { useTokenStore } from "@/stores/tokenStore";
 
-const tokenStore = useTokenStore()
+const tokenStore = useTokenStore();
 
 // 默认头像列表（当角色头像为空时随机选择）
 const defaultAvatars = [
-  '/icons/1733492491706148.png',
-  '/icons/1733492491706152.png',
-  '/icons/1736425783912140.png',
-  '/icons/173746572831736.png',
-  '/icons/174023274867420.png'
-]
+  "/icons/1733492491706148.png",
+  "/icons/1733492491706152.png",
+  "/icons/1736425783912140.png",
+  "/icons/173746572831736.png",
+  "/icons/174023274867420.png",
+];
 
-const roleAvatar = ref('')
-const selectedDefaultAvatar = ref('')
+const roleAvatar = ref("");
+const selectedDefaultAvatar = ref("");
 
 // 战力段位配置
 const powerRanks = [
   {
     min: 0,
     max: 1000000,
-    title: '初出茅庐',
-    description: '初登江湖，尚显青涩。',
-    icon: '🌱',
-    class: 'rank-beginner',
-    color: '#6b7280'
+    title: "初出茅庐",
+    description: "初登江湖，尚显青涩。",
+    icon: "🌱",
+    class: "rank-beginner",
+    color: "#6b7280",
   },
   {
     min: 1000000,
     max: 10000000,
-    title: '小有名气',
-    description: '已有名声，立足江湖。',
-    icon: '⚔️',
-    class: 'rank-known',
-    color: '#10b981'
+    title: "小有名气",
+    description: "已有名声，立足江湖。",
+    icon: "⚔️",
+    class: "rank-known",
+    color: "#10b981",
   },
   {
     min: 10000000,
     max: 100000000,
-    title: '出入江湖',
-    description: '身经百战，渐成人物。',
-    icon: '🗡️',
-    class: 'rank-veteran',
-    color: '#3b82f6'
+    title: "出入江湖",
+    description: "身经百战，渐成人物。",
+    icon: "🗡️",
+    class: "rank-veteran",
+    color: "#3b82f6",
   },
   {
     min: 100000000,
     max: 500000000,
-    title: '纵横四方',
-    description: '武艺精进，名震一域。',
-    icon: '🏹',
-    class: 'rank-master',
-    color: '#8b5cf6'
+    title: "纵横四方",
+    description: "武艺精进，名震一域。",
+    icon: "🏹",
+    class: "rank-master",
+    color: "#8b5cf6",
   },
   {
     min: 500000000,
     max: 2000000000,
-    title: '盖世豪杰',
-    description: '豪迈英勇，威震四方。',
-    icon: '⚡',
-    class: 'rank-hero',
-    color: '#f59e0b'
+    title: "盖世豪杰",
+    description: "豪迈英勇，威震四方。",
+    icon: "⚡",
+    class: "rank-hero",
+    color: "#f59e0b",
   },
   {
     min: 2000000000,
     max: 4000000000,
-    title: '一方枭雄',
-    description: '才智兼备，呼风唤雨。',
-    icon: '👑',
-    class: 'rank-overlord',
-    color: '#ef4444'
+    title: "一方枭雄",
+    description: "才智兼备，呼风唤雨。",
+    icon: "👑",
+    class: "rank-overlord",
+    color: "#ef4444",
   },
   {
     min: 4000000000,
     max: 6000000000,
-    title: '睥睨江湖',
-    description: '实力深不可测，世人仰望。',
-    icon: '🔱',
-    class: 'rank-supreme',
-    color: '#ec4899'
+    title: "睥睨江湖",
+    description: "实力深不可测，世人仰望。",
+    icon: "🔱",
+    class: "rank-supreme",
+    color: "#ec4899",
   },
   {
     min: 6000000000,
     max: 9000000000,
-    title: '独霸天下',
-    description: '威势登峰造极，号令天下。',
-    icon: '⚜️',
-    class: 'rank-emperor',
-    color: '#dc2626'
+    title: "独霸天下",
+    description: "威势登峰造极，号令天下。",
+    icon: "⚜️",
+    class: "rank-emperor",
+    color: "#dc2626",
   },
   {
     min: 9000000000,
     max: 15000000000,
-    title: '不世之尊',
-    description: '超凡入圣，江湖传说。',
-    icon: '💎',
-    class: 'rank-legend',
-    color: '#7c3aed'
+    title: "不世之尊",
+    description: "超凡入圣，江湖传说。",
+    icon: "💎",
+    class: "rank-legend",
+    color: "#7c3aed",
   },
   {
     min: 15000000000,
     max: Infinity,
-    title: '无极至尊',
-    description: '超越传说，无人能及。',
-    icon: '🌟',
-    class: 'rank-infinite',
-    color: '#fbbf24'
-  }
-]
+    title: "无极至尊",
+    description: "超越传说，无人能及。",
+    icon: "🌟",
+    class: "rank-infinite",
+    color: "#fbbf24",
+  },
+];
 
 // 角色信息计算属性
 const roleInfo = computed(() => {
-  const gameData = tokenStore.gameData
+  const gameData = tokenStore.gameData;
   if (gameData && gameData.roleInfo && gameData.roleInfo.role) {
-    const role = gameData.roleInfo.role
+    const role = gameData.roleInfo.role;
     return {
       roleId: role.roleId,
       name: role.name,
@@ -175,132 +181,140 @@ const roleInfo = computed(() => {
       diamond: role.diamond,
       gold: role.gold,
       energy: role.energy,
-      maxEnergy: role.maxEnergy
-    }
+      maxEnergy: role.maxEnergy,
+    };
   }
-  return {}
-})
+  return {};
+});
 
 // 计算当前段位信息
 const rankInfo = computed(() => {
-  const power = roleInfo.value.power || 0
-  const rank = powerRanks.find(rank => power >= rank.min && power < rank.max)
-  return rank || powerRanks[0]
-})
+  const power = roleInfo.value.power || 0;
+  const rank = powerRanks.find((rank) => power >= rank.min && power < rank.max);
+  return rank || powerRanks[0];
+});
 
 // 计算下一个段位门槛
 const nextRankThreshold = computed(() => {
-  const currentRankIndex = powerRanks.findIndex(rank => rank === rankInfo.value)
+  const currentRankIndex = powerRanks.findIndex(
+    (rank) => rank === rankInfo.value,
+  );
   if (currentRankIndex >= 0 && currentRankIndex < powerRanks.length - 1) {
-    return powerRanks[currentRankIndex + 1].min
+    return powerRanks[currentRankIndex + 1].min;
   }
-  return null
-})
+  return null;
+});
 
 // 计算当前段位的进度百分比
 const progressPercentage = computed(() => {
-  const power = roleInfo.value.power || 0
-  const currentRank = rankInfo.value
+  const power = roleInfo.value.power || 0;
+  const currentRank = rankInfo.value;
 
   if (!nextRankThreshold.value) {
-    return 100 // 已达最高段位
+    return 100; // 已达最高段位
   }
 
-  const rangeSize = nextRankThreshold.value - currentRank.min
-  const currentProgress = power - currentRank.min
-  const percentage = Math.min(100, Math.max(0, (currentProgress / rangeSize) * 100))
+  const rangeSize = nextRankThreshold.value - currentRank.min;
+  const currentProgress = power - currentRank.min;
+  const percentage = Math.min(
+    100,
+    Math.max(0, (currentProgress / rangeSize) * 100),
+  );
 
-  return Math.round(percentage)
-})
+  return Math.round(percentage);
+});
 
 // 格式化战力数值
 const formatPower = (power) => {
-  if (!power || power === 0) return '0'
+  if (!power || power === 0) return "0";
 
-  const yi = 100000000      // 1亿
-  const wan = 10000         // 1万
+  const yi = 100000000; // 1亿
+  const wan = 10000; // 1万
 
   if (power >= yi) {
-    const value = (power / yi).toFixed(1)
-    return `${value}亿`
+    const value = (power / yi).toFixed(1);
+    return `${value}亿`;
   } else if (power >= wan) {
-    const value = (power / wan).toFixed(1)
-    return `${value}万`
+    const value = (power / wan).toFixed(1);
+    return `${value}万`;
   } else {
-    return power.toLocaleString()
+    return power.toLocaleString();
   }
-}
+};
 
 // 头像处理
 const initializeAvatar = () => {
   if (roleInfo.value.headImg) {
-    roleAvatar.value = roleInfo.value.headImg
+    roleAvatar.value = roleInfo.value.headImg;
   } else {
     // 如果没有头像，生成一个稳定的随机头像
     if (!selectedDefaultAvatar.value) {
-      const roleId = roleInfo.value.roleId || roleInfo.value.name || 'default'
+      const roleId = roleInfo.value.roleId || roleInfo.value.name || "default";
       const hash = Array.from(roleId.toString()).reduce((acc, char) => {
-        return acc + char.charCodeAt(0)
-      }, 0)
-      const index = hash % defaultAvatars.length
-      selectedDefaultAvatar.value = defaultAvatars[index]
+        return acc + char.charCodeAt(0);
+      }, 0);
+      const index = hash % defaultAvatars.length;
+      selectedDefaultAvatar.value = defaultAvatars[index];
     }
-    roleAvatar.value = selectedDefaultAvatar.value
+    roleAvatar.value = selectedDefaultAvatar.value;
   }
-}
+};
 
 // 头像加载失败处理
 const handleAvatarError = () => {
   if (!selectedDefaultAvatar.value) {
-    const index = Math.floor(Math.random() * defaultAvatars.length)
-    selectedDefaultAvatar.value = defaultAvatars[index]
+    const index = Math.floor(Math.random() * defaultAvatars.length);
+    selectedDefaultAvatar.value = defaultAvatars[index];
   }
-  roleAvatar.value = selectedDefaultAvatar.value
-}
+  roleAvatar.value = selectedDefaultAvatar.value;
+};
 
 // 初始化和数据加载
 const loadRoleData = async () => {
-  if (!tokenStore.selectedToken) return
+  if (!tokenStore.selectedToken) return;
 
-  const tokenId = tokenStore.selectedToken.id
-  const status = tokenStore.getWebSocketStatus(tokenId)
+  const tokenId = tokenStore.selectedToken.id;
+  const status = tokenStore.getWebSocketStatus(tokenId);
 
-  if (status === 'connected') {
+  if (status === "connected") {
     // 优先请求角色信息
     try {
-      await tokenStore.sendMessage(tokenId, 'role_getroleinfo')
-    } catch (error) {
-    }
+      await tokenStore.sendMessage(tokenId, "role_getroleinfo");
+    } catch (error) {}
   }
-}
+};
 
 // 组件挂载时初始化
 onMounted(async () => {
-  initializeAvatar()
-  await loadRoleData()
-})
+  initializeAvatar();
+  await loadRoleData();
+});
 
 // 监听角色信息变化
-watch(() => roleInfo.value, initializeAvatar, { deep: true, immediate: true })
+watch(() => roleInfo.value, initializeAvatar, { deep: true, immediate: true });
 
 // 监听Token变化
-watch(() => tokenStore.selectedToken, async (newToken) => {
-  if (newToken) {
-    await loadRoleData()
-  }
-}, { immediate: true })
+watch(
+  () => tokenStore.selectedToken,
+  async (newToken) => {
+    if (newToken) {
+      await loadRoleData();
+    }
+  },
+  { immediate: true },
+);
 
 // 监听WebSocket状态变化
 const wsStatus = computed(() => {
-  if (!tokenStore.selectedToken) return 'disconnected'
-  return tokenStore.getWebSocketStatus(tokenStore.selectedToken.id)
-})
+  if (!tokenStore.selectedToken) return "disconnected";
+  return tokenStore.getWebSocketStatus(tokenStore.selectedToken.id);
+});
 
 watch(wsStatus, async (newStatus) => {
-  if (newStatus === 'connected' && tokenStore.selectedToken) {
-    await loadRoleData()
+  if (newStatus === "connected" && tokenStore.selectedToken) {
+    await loadRoleData();
   }
-})
+});
 </script>
 
 <style scoped lang="scss">
@@ -309,7 +323,8 @@ watch(wsStatus, async (newStatus) => {
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-md);
   border-radius: var(--border-radius-large);
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     var(--bg-primary) 0%,
     rgba(102, 126, 234, 0.03) 100%
   );
@@ -436,7 +451,11 @@ watch(wsStatus, async (newStatus) => {
   height: 100%;
   border-radius: 2px;
   transition: width 0.3s ease;
-  background: linear-gradient(90deg, var(--primary-color), rgba(102, 126, 234, 0.8));
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    rgba(102, 126, 234, 0.8)
+  );
 }
 
 .progress-text {
@@ -453,7 +472,8 @@ watch(wsStatus, async (newStatus) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg,
+  background: linear-gradient(
+    45deg,
     rgba(102, 126, 234, 0.4),
     rgba(118, 75, 162, 0.4),
     rgba(254, 202, 87, 0.4),
@@ -467,7 +487,7 @@ watch(wsStatus, async (newStatus) => {
   animation: glowAnimation 3s ease-in-out infinite;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 2px;
     left: 2px;
@@ -480,7 +500,8 @@ watch(wsStatus, async (newStatus) => {
 }
 
 @keyframes glowAnimation {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -562,18 +583,29 @@ watch(wsStatus, async (newStatus) => {
 }
 
 @keyframes shimmer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 // 深色主题优化
 [data-theme="dark"] .role-profile-card {
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     var(--bg-secondary) 0%,
     rgba(102, 126, 234, 0.08) 100%
   );
@@ -668,7 +700,8 @@ watch(wsStatus, async (newStatus) => {
     font-size: 12px;
   }
 
-  .level-text, .power-value {
+  .level-text,
+  .power-value {
     font-size: 10px;
   }
 

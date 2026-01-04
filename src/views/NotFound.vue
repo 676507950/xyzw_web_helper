@@ -3,35 +3,24 @@
     <div class="container">
       <div class="error-content">
         <div class="error-visual">
-          <div class="error-number">
-            404
-          </div>
+          <div class="error-number">404</div>
           <div class="error-icon">
             <n-icon size="120">
               <Search />
             </n-icon>
           </div>
         </div>
-        
+
         <div class="error-text">
           <h1>页面未找到</h1>
           <p>抱歉，您访问的页面不存在或已被移除。</p>
         </div>
-        
+
         <div class="error-actions">
-          <n-button 
-            type="primary" 
-            size="large"
-            @click="router.push('/')"
-          >
+          <n-button type="primary" size="large" @click="router.push('/')">
             返回首页
           </n-button>
-          <n-button 
-            size="large"
-            @click="router.back()"
-          >
-            返回上一页
-          </n-button>
+          <n-button size="large" @click="router.back()"> 返回上一页 </n-button>
         </div>
       </div>
     </div>
@@ -39,10 +28,10 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { Search } from '@vicons/ionicons5'
+import { useRouter } from "vue-router";
+import { Search } from "@vicons/ionicons5";
 
-const router = useRouter()
+const router = useRouter();
 </script>
 
 <style scoped lang="scss">
@@ -88,13 +77,13 @@ const router = useRouter()
 
 .error-text {
   margin-bottom: var(--spacing-2xl);
-  
+
   h1 {
     font-size: var(--font-size-3xl);
     font-weight: var(--font-weight-bold);
     margin-bottom: var(--spacing-md);
   }
-  
+
   p {
     font-size: var(--font-size-lg);
     opacity: 0.9;
@@ -112,7 +101,7 @@ const router = useRouter()
   .error-number {
     font-size: 8rem;
   }
-  
+
   .error-actions {
     flex-direction: column;
     align-items: center;

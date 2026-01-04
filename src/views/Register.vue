@@ -4,21 +4,26 @@
       <div class="register-card glass">
         <div class="card-header">
           <div class="brand">
-            <img src="/icons/xiaoyugan.png" alt="XYZW" class="brand-logo">
-            <h1 class="brand-title">
-              注册 XYZW 账户
-            </h1>
+            <img src="/icons/xiaoyugan.png" alt="XYZW" class="brand-logo" />
+            <h1 class="brand-title">注册 XYZW 账户</h1>
           </div>
-          <p class="welcome-text">
-            加入我们，开始您的游戏管理之旅
-          </p>
+          <p class="welcome-text">加入我们，开始您的游戏管理之旅</p>
         </div>
 
         <div class="card-body">
-          <n-form ref="registerFormRef" :model="registerForm" :rules="registerRules" size="large" :show-label="false">
+          <n-form
+            ref="registerFormRef"
+            :model="registerForm"
+            :rules="registerRules"
+            size="large"
+            :show-label="false"
+          >
             <n-form-item path="username">
-              <n-input v-model:value="registerForm.username" placeholder="用户名"
-                :input-props="{ autocomplete: 'username' }">
+              <n-input
+                v-model:value="registerForm.username"
+                placeholder="用户名"
+                :input-props="{ autocomplete: 'username' }"
+              >
                 <template #prefix>
                   <n-icon>
                     <PersonCircle />
@@ -28,7 +33,11 @@
             </n-form-item>
 
             <n-form-item path="email">
-              <n-input v-model:value="registerForm.email" placeholder="邮箱地址" :input-props="{ autocomplete: 'email' }">
+              <n-input
+                v-model:value="registerForm.email"
+                placeholder="邮箱地址"
+                :input-props="{ autocomplete: 'email' }"
+              >
                 <template #prefix>
                   <n-icon>
                     <Mail />
@@ -38,8 +47,12 @@
             </n-form-item>
 
             <n-form-item path="password">
-              <n-input v-model:value="registerForm.password" type="password" placeholder="密码"
-                :input-props="{ autocomplete: 'new-password' }">
+              <n-input
+                v-model:value="registerForm.password"
+                type="password"
+                placeholder="密码"
+                :input-props="{ autocomplete: 'new-password' }"
+              >
                 <template #prefix>
                   <n-icon>
                     <Lock />
@@ -49,8 +62,13 @@
             </n-form-item>
 
             <n-form-item path="confirmPassword">
-              <n-input v-model:value="registerForm.confirmPassword" type="password" placeholder="确认密码"
-                :input-props="{ autocomplete: 'new-password' }" @keydown.enter="handleRegister">
+              <n-input
+                v-model:value="registerForm.confirmPassword"
+                type="password"
+                placeholder="确认密码"
+                :input-props="{ autocomplete: 'new-password' }"
+                @keydown.enter="handleRegister"
+              >
                 <template #prefix>
                   <n-icon>
                     <Lock />
@@ -72,8 +90,15 @@
               </n-checkbox>
             </div>
 
-            <n-button type="primary" size="large" block :loading="authStore.isLoading"
-              :disabled="!registerForm.agreeTerms" class="register-button" @click="handleRegister">
+            <n-button
+              type="primary"
+              size="large"
+              block
+              :loading="authStore.isLoading"
+              :disabled="!registerForm.agreeTerms"
+              class="register-button"
+              @click="handleRegister"
+            >
               注册账户
             </n-button>
           </n-form>
@@ -91,109 +116,109 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import { useAuthStore } from '@/stores/auth'
-import { PersonCircle, Mail } from '@vicons/ionicons5'
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { useMessage } from "naive-ui";
+import { useAuthStore } from "@/stores/auth";
+import { PersonCircle, Mail } from "@vicons/ionicons5";
 
-const router = useRouter()
-const message = useMessage()
-const authStore = useAuthStore()
-const registerFormRef = ref(null)
+const router = useRouter();
+const message = useMessage();
+const authStore = useAuthStore();
+const registerFormRef = ref(null);
 
 // 注册表单数据
 const registerForm = reactive({
-  username: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  agreeTerms: false
-})
+  username: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  agreeTerms: false,
+});
 
 // 表单验证规则
 const registerRules = {
   username: [
     {
       required: true,
-      message: '请输入用户名',
-      trigger: ['input', 'blur']
+      message: "请输入用户名",
+      trigger: ["input", "blur"],
     },
     {
       min: 3,
       max: 20,
-      message: '用户名长度应在3-20个字符之间',
-      trigger: ['input', 'blur']
-    }
+      message: "用户名长度应在3-20个字符之间",
+      trigger: ["input", "blur"],
+    },
   ],
   email: [
     {
       required: true,
-      message: '请输入邮箱地址',
-      trigger: ['input', 'blur']
+      message: "请输入邮箱地址",
+      trigger: ["input", "blur"],
     },
     {
-      type: 'email',
-      message: '请输入正确的邮箱格式',
-      trigger: ['input', 'blur']
-    }
+      type: "email",
+      message: "请输入正确的邮箱格式",
+      trigger: ["input", "blur"],
+    },
   ],
   password: [
     {
       required: true,
-      message: '请输入密码',
-      trigger: ['input', 'blur']
+      message: "请输入密码",
+      trigger: ["input", "blur"],
     },
     {
       min: 6,
-      message: '密码长度不能少于6位',
-      trigger: ['input', 'blur']
-    }
+      message: "密码长度不能少于6位",
+      trigger: ["input", "blur"],
+    },
   ],
   confirmPassword: [
     {
       required: true,
-      message: '请确认密码',
-      trigger: ['input', 'blur']
+      message: "请确认密码",
+      trigger: ["input", "blur"],
     },
     {
       validator: (rule, value) => {
-        return value === registerForm.password
+        return value === registerForm.password;
       },
-      message: '两次输入的密码不一致',
-      trigger: ['input', 'blur']
-    }
-  ]
-}
+      message: "两次输入的密码不一致",
+      trigger: ["input", "blur"],
+    },
+  ],
+};
 
 // 处理注册
 const handleRegister = async () => {
-  if (!registerFormRef.value) return
+  if (!registerFormRef.value) return;
 
   try {
-    await registerFormRef.value.validate()
+    await registerFormRef.value.validate();
 
     if (!registerForm.agreeTerms) {
-      message.warning('请先同意服务条款和隐私政策')
-      return
+      message.warning("请先同意服务条款和隐私政策");
+      return;
     }
 
     const result = await authStore.register({
       username: registerForm.username,
       email: registerForm.email,
-      password: registerForm.password
-    })
+      password: registerForm.password,
+    });
 
     if (result.success) {
-      message.success('注册成功，请登录')
-      router.push('/login')
+      message.success("注册成功，请登录");
+      router.push("/login");
     } else {
-      message.error(result.message)
+      message.error(result.message);
     }
   } catch (error) {
-    console.error('Registration validation failed:', error)
+    console.error("Registration validation failed:", error);
   }
-}
+};
 </script>
 
 <style scoped lang="scss">

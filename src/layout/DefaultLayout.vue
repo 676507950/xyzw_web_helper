@@ -4,7 +4,7 @@
     <nav class="dashboard-nav">
       <div class="nav-container">
         <div class="nav-brand">
-          <img src="/icons/xiaoyugan.png" alt="XYZW" class="brand-logo">
+          <img src="/icons/xiaoyugan.png" alt="XYZW" class="brand-logo" />
           <div class="brand-toggle" @click="isMobileMenuOpen = true">
             <n-icon>
               <Menu />
@@ -14,13 +14,21 @@
         </div>
 
         <div class="nav-menu">
-          <router-link to="/admin/dashboard" class="nav-item" active-class="active">
+          <router-link
+            to="/admin/dashboard"
+            class="nav-item"
+            active-class="active"
+          >
             <n-icon>
               <Home />
             </n-icon>
             <span>首页</span>
           </router-link>
-          <router-link to="/admin/game-features" class="nav-item" active-class="active">
+          <router-link
+            to="/admin/game-features"
+            class="nav-item"
+            active-class="active"
+          >
             <n-icon>
               <Cube />
             </n-icon>
@@ -32,25 +40,41 @@
             </n-icon>
             <span>Token管理</span>
           </router-link>
-          <router-link to="/admin/daily-tasks" class="nav-item" active-class="active">
+          <router-link
+            to="/admin/daily-tasks"
+            class="nav-item"
+            active-class="active"
+          >
             <n-icon>
               <Settings />
             </n-icon>
             <span>任务管理</span>
           </router-link>
-          <router-link to="/admin/batch-daily-tasks" class="nav-item" active-class="active">
+          <router-link
+            to="/admin/batch-daily-tasks"
+            class="nav-item"
+            active-class="active"
+          >
             <n-icon>
               <Layers />
             </n-icon>
             <span>批量日常</span>
           </router-link>
-          <router-link to="/admin/message-test" class="nav-item" active-class="active">
+          <router-link
+            to="/admin/message-test"
+            class="nav-item"
+            active-class="active"
+          >
             <n-icon>
               <ChatbubbleEllipsesSharp />
             </n-icon>
             <span>消息测试</span>
           </router-link>
-          <router-link to="/admin/profile" class="nav-item" active-class="active">
+          <router-link
+            to="/admin/profile"
+            class="nav-item"
+            active-class="active"
+          >
             <n-icon>
               <Settings />
             </n-icon>
@@ -64,8 +88,14 @@
 
           <n-dropdown :options="userMenuOptions" @select="handleUserAction">
             <div class="user-info">
-              <n-avatar src="" size="medium" fallback-src="/icons/xiaoyugan.png" />
-              <span class="username">{{ selectedToken?.name || '未选择Token' }}</span>
+              <n-avatar
+                src=""
+                size="medium"
+                fallback-src="/icons/xiaoyugan.png"
+              />
+              <span class="username">{{
+                selectedToken?.name || "未选择Token"
+              }}</span>
               <n-icon>
                 <ChevronDown />
               </n-icon>
@@ -74,45 +104,77 @@
         </div>
       </div>
     </nav>
-    <n-drawer v-model:show="isMobileMenuOpen" placement="left" style="width: 260px">
+    <n-drawer
+      v-model:show="isMobileMenuOpen"
+      placement="left"
+      style="width: 260px"
+    >
       <div class="drawer-menu">
-        <router-link to="/admin/dashboard" class="drawer-item" @click="isMobileMenuOpen = false">
+        <router-link
+          to="/admin/dashboard"
+          class="drawer-item"
+          @click="isMobileMenuOpen = false"
+        >
           <n-icon>
             <Home />
           </n-icon>
           <span>首页</span>
         </router-link>
-        <router-link to="/admin/game-features" class="drawer-item" @click="isMobileMenuOpen = false">
+        <router-link
+          to="/admin/game-features"
+          class="drawer-item"
+          @click="isMobileMenuOpen = false"
+        >
           <n-icon>
             <Cube />
           </n-icon>
           <span>游戏功能</span>
         </router-link>
-        <router-link to="/tokens" class="drawer-item" @click="isMobileMenuOpen = false">
+        <router-link
+          to="/tokens"
+          class="drawer-item"
+          @click="isMobileMenuOpen = false"
+        >
           <n-icon>
             <PersonCircle />
           </n-icon>
           <span>Token管理</span>
         </router-link>
-        <router-link to="/admin/daily-tasks" class="drawer-item" @click="isMobileMenuOpen = false">
+        <router-link
+          to="/admin/daily-tasks"
+          class="drawer-item"
+          @click="isMobileMenuOpen = false"
+        >
           <n-icon>
             <Settings />
           </n-icon>
           <span>任务管理</span>
         </router-link>
-        <router-link to="/admin/batch-daily-tasks" class="drawer-item" @click="isMobileMenuOpen = false">
+        <router-link
+          to="/admin/batch-daily-tasks"
+          class="drawer-item"
+          @click="isMobileMenuOpen = false"
+        >
           <n-icon>
             <Layers />
           </n-icon>
           <span>批量日常</span>
         </router-link>
-        <router-link to="/admin/message-test" class="drawer-item" @click="isMobileMenuOpen = false">
+        <router-link
+          to="/admin/message-test"
+          class="drawer-item"
+          @click="isMobileMenuOpen = false"
+        >
           <n-icon>
             <ChatbubbleEllipsesSharp />
           </n-icon>
           <span>消息测试</span>
         </router-link>
-        <router-link to="/admin/profile" class="drawer-item" @click="isMobileMenuOpen = false">
+        <router-link
+          to="/admin/profile"
+          class="drawer-item"
+          @click="isMobileMenuOpen = false"
+        >
           <n-icon>
             <Settings />
           </n-icon>
@@ -127,8 +189,12 @@
 </template>
 
 <script setup>
-import { useTokenStore, selectedToken, selectedTokenId } from '@/stores/tokenStore'
-import ThemeToggle from '@/components/Common/ThemeToggle.vue'
+import {
+  useTokenStore,
+  selectedToken,
+  selectedTokenId,
+} from "@/stores/tokenStore";
+import ThemeToggle from "@/components/Common/ThemeToggle.vue";
 import {
   Home,
   PersonCircle,
@@ -137,55 +203,53 @@ import {
   ChevronDown,
   ChatbubbleEllipsesSharp,
   Menu,
-  Layers
-} from '@vicons/ionicons5'
+  Layers,
+} from "@vicons/ionicons5";
 
+import { useRouter } from "vue-router";
+import { useMessage } from "naive-ui";
+import { ref } from "vue";
 
-import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import { ref } from 'vue'
+const tokenStore = useTokenStore();
+const router = useRouter();
+const message = useMessage();
 
-const tokenStore = useTokenStore()
-const router = useRouter()
-const message = useMessage()
-
-const isMobileMenuOpen = ref(false)
+const isMobileMenuOpen = ref(false);
 
 const userMenuOptions = [
   {
-    label: '个人资料',
-    key: 'profile'
+    label: "个人资料",
+    key: "profile",
   },
   {
-    label: '账户设置',
-    key: 'settings'
+    label: "账户设置",
+    key: "settings",
   },
   {
-    type: 'divider'
+    type: "divider",
   },
   {
-    label: '退出登录',
-    key: 'logout'
-  }
-]
+    label: "退出登录",
+    key: "logout",
+  },
+];
 
 // 方法
 const handleUserAction = (key) => {
   switch (key) {
-    case 'profile':
-      router.push('/admin/profile')
-      break
-    case 'settings':
-      router.push('/settings')
-      break
-    case 'logout':
-      tokenStore.clearAllTokens()
-      message.success('已清除所有Token')
-      router.push('/tokens')
-      break
+    case "profile":
+      router.push("/admin/profile");
+      break;
+    case "settings":
+      router.push("/settings");
+      break;
+    case "logout":
+      tokenStore.clearAllTokens();
+      message.success("已清除所有Token");
+      router.push("/tokens");
+      break;
   }
-}
-
+};
 </script>
 
 <style scoped lang="scss">
@@ -317,7 +381,6 @@ const handleUserAction = (key) => {
     display: inline-flex;
   }
 }
-
 
 .drawer-menu {
   display: flex;

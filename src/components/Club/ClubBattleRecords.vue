@@ -44,11 +44,13 @@
           <div class="records-info">
             <n-tag type="info">查询日期: {{ queryDate }}</n-tag>
             <n-tag type="success">总成员: {{ battleRecords.roleDetailsList.length }}</n-tag>
+            
           </div>
 
-          <div v-for="member in battleRecords.roleDetailsList" :key="member.roleId" class="member-card">
+          <div v-for="(member, index) in battleRecords.roleDetailsList" :key="member.roleId" class="member-card">
             <div class="member-header">
               <div class="member-info">
+                <div class="ranking-number">{{ index + 1 }}</div>
                 <img v-if="member.headImg" :src="member.headImg" :alt="member.name" class="member-avatar"
                   @error="handleImageError">
                 <div v-else class="member-avatar-placeholder">{{ member.name?.charAt(0) || '?' }}</div>
@@ -163,9 +165,10 @@
             <n-tag type="success">总成员: {{ battleRecords.roleDetailsList.length }}</n-tag>
           </div>
 
-          <div v-for="member in battleRecords.roleDetailsList" :key="member.roleId" class="member-card">
+          <div v-for="(member, index) in battleRecords.roleDetailsList" :key="member.roleId" class="member-card">
             <div class="member-header">
               <div class="member-info">
+                <div class="ranking-number">{{ index + 1 }}</div>
                 <img v-if="member.headImg" :src="member.headImg" :alt="member.name" class="member-avatar"
                   @error="handleImageError">
                 <div v-else class="member-avatar-placeholder">{{ member.name?.charAt(0) || '?' }}</div>
@@ -350,46 +353,53 @@ const fetchBattleRecordsByDate = (val)=>{
 } 
 
 // 查询战绩
-const fetchBattleRecords = async () => {
-  if (!tokenStore.selectedToken) {
-    message.warning('请先选择游戏角色')
-    return
-  }
-
-  const tokenId = tokenStore.selectedToken.id
-
-  // 检查WebSocket连接
-  const wsStatus = tokenStore.getWebSocketStatus(tokenId)
-  if (wsStatus !== 'connected') {
-    message.error('WebSocket未连接，无法查询战绩')
-    return
-  }
-
-  loading.value = true
-
-  try {
-    const result = await tokenStore.sendMessageWithPromise(
-      tokenId,
-      'legionwar_getdetails',
-      { date: queryDate.value },
-      10000
-    )
-
-    if (result && result.roleDetailsList) {
-      battleRecords.value = result
-      message.success('战绩加载成功')
-    } else {
-      battleRecords.value = null
-      message.warning('未查询到战绩数据')
+  const fetchBattleRecords = async () => {
+    if (!tokenStore.selectedToken) {
+      message.warning('请先选择游戏角色')
+      return
     }
-  } catch (error) {
-    console.error('查询战绩失败:', error)
-    message.error(`查询失败: ${error.message}`)
-    battleRecords.value = null
-  } finally {
-    loading.value = false
+
+    const tokenId = tokenStore.selectedToken.id
+
+    // 检查WebSocket连接
+    const wsStatus = tokenStore.getWebSocketStatus(tokenId)
+    if (wsStatus !== 'connected') {
+      message.error('WebSocket未连接，无法查询战绩')
+      return
+    }
+
+    loading.value = true
+
+    try {
+      const result = await tokenStore.sendMessageWithPromise(
+        tokenId,
+        'legionwar_getdetails',
+        { date: queryDate.value },
+        10000
+      )
+
+      if (result && result.roleDetailsList) {
+        // 按击杀数从高到低排序
+        const sortedRoleDetailsList = [...result.roleDetailsList].sort((a, b) => {
+          return (b.winCnt || 0) - (a.winCnt || 0)
+        })
+        battleRecords.value = {
+          ...result,
+          roleDetailsList: sortedRoleDetailsList
+        }
+        message.success('战绩加载成功，已按击杀数从高到低排序')
+      } else {
+        battleRecords.value = null
+        message.warning('未查询到战绩数据')
+      }
+    } catch (error) {
+      console.error('查询战绩失败:', error)
+      message.error(`查询失败: ${error.message}`)
+      battleRecords.value = null
+    } finally {
+      loading.value = false
+    }
   }
-}
 
 // 刷新战绩
 const handleRefresh = () => {
@@ -495,9 +505,7 @@ onMounted(() => {
 }
 
 .battle-records-content {
-  min-height: 400px;
-  max-height: 400px;
-  overflow-y: auto;
+  min-height: 200px;
 }
 
 .loading-state,
@@ -505,7 +513,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  min-height: 200px;
 }
 
 .records-list {
@@ -519,6 +527,19 @@ onMounted(() => {
   gap: var(--spacing-md);
   padding-bottom: var(--spacing-md);
   border-bottom: 1px solid var(--border-light);
+  align-items: center;
+}
+
+.sort-indicator {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(32, 128, 240, 0.1);
+  padding: 4px 8px;
+  border-radius: var(--border-radius-small);
+  border: 1px solid rgba(32, 128, 240, 0.2);
 }
 
 .member-card {
@@ -548,8 +569,22 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  min-width: 120px;
-  max-width: 120px;
+  min-width: 140px;
+  max-width: 140px;
+  flex-shrink: 0;
+}
+
+.ranking-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   flex-shrink: 0;
 }
 
@@ -642,8 +677,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  max-height: 400px;
-  overflow-y: auto;
 }
 
 .battle-item {

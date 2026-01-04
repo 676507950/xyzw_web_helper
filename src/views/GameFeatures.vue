@@ -92,15 +92,22 @@ const connectionStatusText = computed(() => {
 });
 
 const connectionClass = computed(() => {
-  return connectionStatus.value === "connected" ? "status-connected" : "status-disconnected";
+  return connectionStatus.value === "connected"
+    ? "status-connected"
+    : "status-disconnected";
 });
 
 const isConnected = computed(() => {
   return connectionStatus.value === "connected";
 });
 
-const pickArenaTargetId = targets => {
-  const candidate = targets?.rankList?.[0] || targets?.roleList?.[0] || targets?.targets?.[0] || targets?.targetList?.[0] || targets?.list?.[0];
+const pickArenaTargetId = (targets) => {
+  const candidate =
+    targets?.rankList?.[0] ||
+    targets?.roleList?.[0] ||
+    targets?.targets?.[0] ||
+    targets?.targetList?.[0] ||
+    targets?.list?.[0];
 
   if (candidate?.roleId) return candidate.roleId;
   if (candidate?.id) return candidate.id;
@@ -108,7 +115,7 @@ const pickArenaTargetId = targets => {
 };
 
 // 方法
-const handleFeatureAction = async featureType => {
+const handleFeatureAction = async (featureType) => {
   if (!tokenStore.selectedToken) {
     message.warning("请先选择Token");
     router.push("/tokens");
@@ -128,7 +135,12 @@ const handleFeatureAction = async featureType => {
       message.info("开始执行队伍挑战...");
       let targets;
       try {
-        targets = await tokenStore.sendMessageWithPromise(tokenId, "arena_getareatarget", {}, 8000);
+        targets = await tokenStore.sendMessageWithPromise(
+          tokenId,
+          "arena_getareatarget",
+          {},
+          8000,
+        );
       } catch (err) {
         message.error(`获取竞技场目标失败：${err.message}`);
         return;
@@ -139,7 +151,12 @@ const handleFeatureAction = async featureType => {
         return;
       }
       try {
-        await tokenStore.sendMessageWithPromise(tokenId, "fight_startareaarena", { targetId }, 15000);
+        await tokenStore.sendMessageWithPromise(
+          tokenId,
+          "fight_startareaarena",
+          { targetId },
+          15000,
+        );
         message.success("竞技场战斗已发起");
       } catch (err) {
         message.error(`竞技场战斗失败：${err.message}`);
@@ -252,11 +269,12 @@ onMounted(() => {
 // 监听当前选中 Token 的连接错误（如 token 过期）并给出明确提示
 watch(
   () => {
-    if (!tokenStore.selectedToken) return { status: "disconnected", lastError: null };
+    if (!tokenStore.selectedToken)
+      return { status: "disconnected", lastError: null };
     const conn = tokenStore.wsConnections[tokenStore.selectedToken.id];
     return { status: conn?.status, lastError: conn?.lastError };
   },
-  cur => {
+  (cur) => {
     if (!cur) return;
     if (cur.status === "error" && cur.lastError) {
       const err = String(cur.lastError.error || "").toLowerCase();
@@ -266,7 +284,7 @@ watch(
       }
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 // 初始化游戏数据
@@ -280,7 +298,10 @@ const initializeGameData = async () => {
     tokenStore.sendMessage(tokenId, "tower_getinfo");
     tokenStore.sendMessage(tokenId, "evotower_getinfo");
     tokenStore.sendMessage(tokenId, "presetteam_getinfo");
-    const res = await tokenStore.sendMessageWithPromise(tokenId, "fight_startlevel");
+    const res = await tokenStore.sendMessageWithPromise(
+      tokenId,
+      "fight_startlevel",
+    );
     tokenStore.setBattleVersion(res?.battleData?.version);
   } catch (error) {
     // 静默处理初始化异常

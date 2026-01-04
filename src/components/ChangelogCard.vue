@@ -15,7 +15,10 @@
     <div class="changelog-content">
       <div v-if="entry.title" class="changelog-title">{{ entry.title }}</div>
 
-      <div v-if="entry.features && entry.features.length" class="change-section">
+      <div
+        v-if="entry.features && entry.features.length"
+        class="change-section"
+      >
         <h4 class="section-title">
           <i class="icon-sparkles">✨</i>
           新功能
@@ -27,13 +30,19 @@
         </ul>
       </div>
 
-      <div v-if="entry.improvements && entry.improvements.length" class="change-section">
+      <div
+        v-if="entry.improvements && entry.improvements.length"
+        class="change-section"
+      >
         <h4 class="section-title">
           <i class="icon-arrow-up">⬆️</i>
           改进优化
         </h4>
         <ul class="change-list">
-          <li v-for="(item, idx) in entry.improvements" :key="`improvement-${idx}`">
+          <li
+            v-for="(item, idx) in entry.improvements"
+            :key="`improvement-${idx}`"
+          >
             {{ item }}
           </li>
         </ul>
@@ -51,7 +60,10 @@
         </ul>
       </div>
 
-      <div v-if="entry.breaking && entry.breaking.length" class="change-section breaking">
+      <div
+        v-if="entry.breaking && entry.breaking.length"
+        class="change-section breaking"
+      >
         <h4 class="section-title">
           <i class="icon-warning">⚠️</i>
           重大变更
@@ -67,45 +79,45 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from "vue";
 
 const props = defineProps({
   entry: {
     type: Object,
     required: true,
     validator: (value) => {
-      return value.version && value.date && value.type
-    }
-  }
-})
+      return value.version && value.date && value.type;
+    },
+  },
+});
 
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffTime = now - date
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = now - date;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return '今天'
-  if (diffDays === 1) return '昨天'
-  if (diffDays < 7) return `${diffDays}天前`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}周前`
+  if (diffDays === 0) return "今天";
+  if (diffDays === 1) return "昨天";
+  if (diffDays < 7) return `${diffDays}天前`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}周前`;
 
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
 const getTypeLabel = (type) => {
   const labels = {
-    major: '主要版本',
-    minor: '次要版本',
-    patch: '补丁版本',
-    hotfix: '热修复'
-  }
-  return labels[type] || type
-}
+    major: "主要版本",
+    minor: "次要版本",
+    patch: "补丁版本",
+    hotfix: "热修复",
+  };
+  return labels[type] || type;
+};
 </script>
 
 <style scoped>
@@ -247,7 +259,7 @@ const getTypeLabel = (type) => {
 }
 
 .change-list li::before {
-  content: '•';
+  content: "•";
   position: absolute;
   left: 8px;
   color: var(--primary-color);
