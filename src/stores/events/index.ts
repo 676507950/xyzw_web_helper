@@ -127,6 +127,19 @@ onSome(["bosstower_getinforesp", "bosstower_getinfo"], (data: Session) => {
   data.gameData.value.lastUpdated = new Date().toISOString();
 });
 
+onSome(['evotowerinforesp', 'evotower_getinforesp', 'evotower_getinfo'], (data: Session) => {
+  gameLogger.verbose(`收到怪异塔信息事件: ${data.tokenId}`, data);
+  const { body } = data;
+  console.log("🚀 ~ body:", body)
+  if (!body) {
+    gameLogger.debug('怪异塔响应为空');
+    return;
+  }
+
+  data.gameData.value.evoTowerInfo = body;
+  data.gameData.value.lastUpdated = new Date().toISOString()
+});
+
 onSome(
   [
     "team_getteaminfo",

@@ -450,7 +450,7 @@ const exportToImage = async () => {
     const link = document.createElement('a');
     link.href = imgUrl;
     console.log()
-    link.download = queryDate.value.replace("/",'月').replace("/",'日')+'盐场战报.png'; // 下载文件名
+    link.download = queryDate.value.replace("/",'年').replace("/",'月')+'日盐场战报.png'; // 下载文件名
     document.body.appendChild(link);
     link.click(); // 触发点击下载
     document.body.removeChild(link); // 下载后清理DOM

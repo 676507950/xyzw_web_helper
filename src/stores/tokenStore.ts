@@ -68,6 +68,7 @@ export const useTokenStore = defineStore("tokens", () => {
     legionInfo: null,
     commonActivityInfo: null, // 消耗活动进度
     bossTowerInfo: null, //宝库
+    evoTowerInfo: null, //怪异塔
     presetTeam: null,
     battleVersion: null as number | null, // 战斗版本号
     studyStatus: {
@@ -638,6 +639,7 @@ export const useTokenStore = defineStore("tokens", () => {
         }
         updateCrossTabConnectionState(tokenId, "connected");
         releaseConnectionLock(tokenId, "connect");
+        localStorage.removeItem("xyzw_chat_msg_list");
         try {
           wsClient.send("role_getroleinfo");
         } catch (error) {

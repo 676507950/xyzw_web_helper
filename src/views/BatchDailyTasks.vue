@@ -7,19 +7,10 @@
         <div class="page-header">
           <h2>批量日常任务</h2>
           <div class="actions">
-            <n-button
-              type="primary"
-              @click="startBatch"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button type="primary" @click="startBatch" :disabled="isRunning || selectedTokens.length === 0">
               {{ isRunning ? "执行中..." : "开始执行" }}
             </n-button>
-            <n-button
-              @click="stopBatch"
-              :disabled="!isRunning"
-              type="error"
-              style="margin-left: 12px"
-            >
+            <n-button @click="stopBatch" :disabled="!isRunning" type="error" style="margin-left: 12px">
               停止
             </n-button>
           </div>
@@ -28,189 +19,93 @@
         <!-- Token Selection -->
         <n-card title="账号列表" class="token-list-card">
           <n-space style="margin-bottom: 12px">
-            <n-button
-              size="small"
-              @click="claimHangUpRewards"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="claimHangUpRewards" :disabled="isRunning || selectedTokens.length === 0">
               领取挂机
             </n-button>
-            <n-button
-              size="small"
-              @click="batchAddHangUpTime"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="batchAddHangUpTime" :disabled="isRunning || selectedTokens.length === 0">
               一键加钟
             </n-button>
-            <n-button
-              size="small"
-              @click="resetBottles"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="resetBottles" :disabled="isRunning || selectedTokens.length === 0">
               重置罐子
             </n-button>
-            <n-button
-              size="small"
-              @click="batchlingguanzi"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="batchlingguanzi" :disabled="isRunning || selectedTokens.length === 0">
               一键领取罐子
             </n-button>
-            <n-button
-              size="small"
-              @click="climbTower"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="climbTower" :disabled="isRunning || selectedTokens.length === 0">
               一键爬塔
             </n-button>
-            <n-button
-              size="small"
-              @click="batchStudy"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="batchStudy" :disabled="isRunning || selectedTokens.length === 0">
               一键答题
             </n-button>
-            <n-button
-              size="small"
-              @click="batchSmartSendCar"
-              :disabled="
-                isRunning || selectedTokens.length === 0 || !isCarActivityOpen
-              "
-            >
+            <n-button size="small" @click="batchSmartSendCar" :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen
+              ">
               智能发车
             </n-button>
-            <n-button
-              size="small"
-              @click="batchClaimCars"
-              :disabled="
-                isRunning || selectedTokens.length === 0 || !isCarActivityOpen
-              "
-            >
+            <n-button size="small" @click="batchClaimCars" :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen
+              ">
               一键收车
             </n-button>
-            <n-button
-              size="small"
-              @click="openHelperModal('box')"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="openHelperModal('box')" :disabled="isRunning || selectedTokens.length === 0">
               批量开箱
             </n-button>
-            <n-button
-              size="small"
-              @click="batchClaimBoxPointReward"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="batchClaimBoxPointReward"
+              :disabled="isRunning || selectedTokens.length === 0">
               领取宝箱积分
             </n-button>
-            <n-button
-              size="small"
-              @click="openHelperModal('fish')"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="openHelperModal('fish')"
+              :disabled="isRunning || selectedTokens.length === 0">
               批量钓鱼
             </n-button>
-            <n-button
-              size="small"
-              @click="openHelperModal('recruit')"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="openHelperModal('recruit')"
+              :disabled="isRunning || selectedTokens.length === 0">
               批量招募
             </n-button>
-            <n-button
-              size="small"
-              @click="batchbaoku13"
-              :disabled="
-                isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen
-              "
-            >
+            <n-button size="small" @click="batchbaoku13" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen
+              ">
               一键宝库前3层
             </n-button>
-            <n-button
-              size="small"
-              @click="batchbaoku45"
-              :disabled="
-                isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen
-              "
-            >
+            <n-button size="small" @click="batchbaoku45" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen
+              ">
               一键宝库4,5层
             </n-button>
-            <n-button
-              size="small"
-              @click="batchmengjing"
-              :disabled="
-                isRunning ||
-                selectedTokens.length === 0 ||
-                !ismengjingActivityOpen
-              "
-            >
+            <n-button size="small" @click="batchmengjing" :disabled="isRunning ||
+              selectedTokens.length === 0 ||
+              !ismengjingActivityOpen
+              ">
               一键梦境
             </n-button>
-            <n-button
-              size="small"
-              @click="batchclubsign"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="batchclubsign" :disabled="isRunning || selectedTokens.length === 0">
               一键俱乐部签到
             </n-button>
-            <n-button
-              size="small"
-              @click="batcharenafight"
-              :disabled="
-                isRunning || selectedTokens.length === 0 || !isarenaActivityOpen
-              "
-            >
+            <n-button size="small" @click="batcharenafight" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen
+              ">
               一键竞技场战斗3次
             </n-button>
-            <n-button
-              size="small"
-              @click="batchTopUpFish"
-              :disabled="isRunning || selectedTokens.length === 0"
-            >
+            <n-button size="small" @click="batchTopUpFish" :disabled="isRunning || selectedTokens.length === 0">
               一键钓鱼补齐
             </n-button>
-            <n-button
-              size="small"
-              @click="batchTopUpArena"
-              :disabled="
-                isRunning || selectedTokens.length === 0 || !isarenaActivityOpen
-              "
-            >
+            <n-button size="small" @click="batchTopUpArena" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen
+              ">
               一键竞技场补齐
             </n-button>
           </n-space>
           <n-space vertical>
-            <n-checkbox
-              :checked="isAllSelected"
-              :indeterminate="isIndeterminate"
-              @update:checked="handleSelectAll"
-            >
+            <n-checkbox :checked="isAllSelected" :indeterminate="isIndeterminate" @update:checked="handleSelectAll">
               全选
             </n-checkbox>
             <n-checkbox-group v-model:value="selectedTokens">
               <n-grid :x-gap="12" :y-gap="8" :cols="2">
                 <n-grid-item v-for="token in tokens" :key="token.id">
                   <div class="token-row">
-                    <n-checkbox
-                      :value="token.id"
-                      :label="token.name"
-                      style="flex: 1"
-                    >
+                    <n-checkbox :value="token.id" :label="token.name" style="flex: 1">
                       <div class="token-item">
                         <span>{{ token.name }}</span>
-                        <n-tag
-                          size="small"
-                          :type="getStatusType(token.id)"
-                          style="margin-left: 8px"
-                        >
+                        <n-tag size="small" :type="getStatusType(token.id)" style="margin-left: 8px">
                           {{ getStatusText(token.id) }}
                         </n-tag>
                       </div>
                     </n-checkbox>
-                    <n-button
-                      size="tiny"
-                      circle
-                      @click.stop="openSettings(token)"
-                    >
+                    <n-button size="tiny" circle @click.stop="openSettings(token)">
                       <template #icon>
                         <n-icon>
                           <Settings />
@@ -225,11 +120,7 @@
         </n-card>
 
         <!-- Scheduled Tasks -->
-        <n-card
-          title="定时任务"
-          class="scheduled-tasks-card"
-          style="margin-top: 16px"
-        >
+        <n-card title="定时任务" class="scheduled-tasks-card" style="margin-top: 16px">
           <n-space style="margin-bottom: 12px">
             <n-button type="primary" size="small" @click="openTaskModal">
               新增定时任务
@@ -257,15 +148,13 @@
               border-radius: 6px;
               box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             ">
-              <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">{{ shortestCountdownTask.task.name }}</div>
-              <div 
-                style="
+              <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">{{ shortestCountdownTask.task.name }}
+              </div>
+              <div style="
                   font-size: 24px;
                   font-weight: bold;
                   color: #1677ff;
-                "
-                :style="{ color: shortestCountdownTask.countdown.isNearExecution ? '#ff4d4f' : '#1677ff' }"
-              >
+                " :style="{ color: shortestCountdownTask.countdown.isNearExecution ? '#ff4d4f' : '#1677ff' }">
                 {{ shortestCountdownTask.countdown.formatted }}
               </div>
             </div>
@@ -291,14 +180,10 @@
 
       <!-- Right Column - Execution Log -->
       <div class="right-column">
-        <n-card
-          :title="
-            currentRunningTokenName
-              ? `正在执行: ${currentRunningTokenName}`
-              : '执行日志'
-          "
-          class="log-card"
-        >
+        <n-card :title="currentRunningTokenName
+          ? `正在执行: ${currentRunningTokenName}`
+          : '执行日志'
+          " class="log-card">
           <template #header-extra>
             <div class="log-header-controls">
               <n-checkbox v-model:checked="autoScrollLog" size="small">
@@ -309,19 +194,9 @@
               </n-button>
             </div>
           </template>
-          <n-progress
-            type="line"
-            :percentage="currentProgress"
-            :indicator-placement="'inside'"
-            processing
-          />
+          <n-progress type="line" :percentage="currentProgress" :indicator-placement="'inside'" processing />
           <div class="log-container" ref="logContainer">
-            <div
-              v-for="(log, index) in logs"
-              :key="index"
-              class="log-item"
-              :class="log.type"
-            >
+            <div v-for="(log, index) in logs" :key="index" class="log-item" :class="log.type">
               <span class="time">{{ log.time }}</span>
               <span class="message">{{ log.message }}</span>
             </div>
@@ -331,66 +206,43 @@
     </div>
 
     <!-- Settings Modal -->
-    <n-modal
-      v-model:show="showSettingsModal"
-      preset="card"
-      :title="`任务设置 - ${currentSettingsTokenName}`"
-      style="width: 90%; max-width: 400px"
-    >
+    <n-modal v-model:show="showSettingsModal" preset="card" :title="`任务设置 - ${currentSettingsTokenName}`"
+      style="width: 90%; max-width: 400px">
       <div class="settings-content">
         <div class="settings-grid">
           <div class="setting-item">
             <label class="setting-label">竞技场阵容</label>
-            <n-select
-              v-model:value="currentSettings.arenaFormation"
-              :options="formationOptions"
-              size="small"
-            />
+            <n-select v-model:value="currentSettings.arenaFormation" :options="formationOptions" size="small" />
           </div>
           <div class="setting-item">
             <label class="setting-label">BOSS阵容</label>
-            <n-select
-              v-model:value="currentSettings.bossFormation"
-              :options="formationOptions"
-              size="small"
-            />
+            <n-select v-model:value="currentSettings.bossFormation" :options="formationOptions" size="small" />
           </div>
           <div class="setting-item">
             <label class="setting-label">BOSS次数</label>
-            <n-select
-              v-model:value="currentSettings.bossTimes"
-              :options="bossTimesOptions"
-              size="small"
-            />
+            <n-select v-model:value="currentSettings.bossTimes" :options="bossTimesOptions" size="small" />
           </div>
           <div class="setting-switches">
             <div class="switch-row">
-              <span class="switch-label">领罐子</span
-              ><n-switch v-model:value="currentSettings.claimBottle" />
+              <span class="switch-label">领罐子</span><n-switch v-model:value="currentSettings.claimBottle" />
             </div>
             <div class="switch-row">
-              <span class="switch-label">领挂机</span
-              ><n-switch v-model:value="currentSettings.claimHangUp" />
+              <span class="switch-label">领挂机</span><n-switch v-model:value="currentSettings.claimHangUp" />
             </div>
             <div class="switch-row">
-              <span class="switch-label">竞技场</span
-              ><n-switch v-model:value="currentSettings.arenaEnable" />
+              <span class="switch-label">竞技场</span><n-switch v-model:value="currentSettings.arenaEnable" />
             </div>
             <div class="switch-row">
-              <span class="switch-label">开宝箱</span
-              ><n-switch v-model:value="currentSettings.openBox" />
+              <span class="switch-label">开宝箱</span><n-switch v-model:value="currentSettings.openBox" />
             </div>
             <div class="switch-row">
-              <span class="switch-label">领取邮件奖励</span
-              ><n-switch v-model:value="currentSettings.claimEmail" />
+              <span class="switch-label">领取邮件奖励</span><n-switch v-model:value="currentSettings.claimEmail" />
             </div>
             <div class="switch-row">
-              <span class="switch-label">黑市购买物品</span
-              ><n-switch v-model:value="currentSettings.blackMarketPurchase" />
+              <span class="switch-label">黑市购买物品</span><n-switch v-model:value="currentSettings.blackMarketPurchase" />
             </div>
             <div class="switch-row">
-              <span class="switch-label">付费招募</span
-              ><n-switch v-model:value="currentSettings.payRecruit" />
+              <span class="switch-label">付费招募</span><n-switch v-model:value="currentSettings.payRecruit" />
             </div>
           </div>
         </div>
@@ -401,82 +253,47 @@
     </n-modal>
 
     <!-- Helper Modal (开箱/钓鱼/招募) -->
-    <n-modal
-      v-model:show="showHelperModal"
-      preset="card"
-      :title="helperModalTitle"
-      style="width: 90%; max-width: 400px"
-    >
+    <n-modal v-model:show="showHelperModal" preset="card" :title="helperModalTitle"
+      style="width: 90%; max-width: 400px">
       <div class="settings-content">
         <div class="settings-grid">
           <div class="setting-item" v-if="helperType === 'box'">
             <label class="setting-label">宝箱类型</label>
-            <n-select
-              v-model:value="helperSettings.boxType"
-              :options="boxTypeOptions"
-              size="small"
-            />
+            <n-select v-model:value="helperSettings.boxType" :options="boxTypeOptions" size="small" />
           </div>
           <div class="setting-item" v-if="helperType === 'fish'">
             <label class="setting-label">鱼竿类型</label>
-            <n-select
-              v-model:value="helperSettings.fishType"
-              :options="fishTypeOptions"
-              size="small"
-            />
+            <n-select v-model:value="helperSettings.fishType" :options="fishTypeOptions" size="small" />
           </div>
           <div class="setting-item">
             <label class="setting-label">消耗数量（10的倍数）</label>
-            <n-input-number
-              v-model:value="helperSettings.count"
-              :min="10"
-              :max="10000"
-              :step="10"
-              size="small"
-            />
+            <n-input-number v-model:value="helperSettings.count" :min="10" :max="10000" :step="10" size="small" />
           </div>
         </div>
         <div class="modal-actions" style="margin-top: 20px; text-align: right">
-          <n-button @click="showHelperModal = false" style="margin-right: 12px"
-            >取消</n-button
-          >
+          <n-button @click="showHelperModal = false" style="margin-right: 12px">取消</n-button>
           <n-button type="primary" @click="executeHelper">开始执行</n-button>
         </div>
       </div>
     </n-modal>
 
     <!-- Tasks List Modal -->
-    <n-modal
-      v-model:show="showTasksModal"
-      preset="card"
-      title="定时任务列表"
-      style="width: 90%; max-width: 800px"
-    >
+    <n-modal v-model:show="showTasksModal" preset="card" title="定时任务列表" style="width: 90%; max-width: 800px">
       <div class="tasks-list" style="max-height: 600px; overflow-y: auto">
-        <div
-          v-for="task in scheduledTasks"
-          :key="task.id"
-          class="task-item"
-          style="
+        <div v-for="task in scheduledTasks" :key="task.id" class="task-item" style="
             margin-bottom: 16px;
             padding: 12px;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
-          "
-        >
-          <div
-            style="
+          ">
+          <div style="
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 8px;
-            "
-          >
+            ">
             <div style="font-weight: bold">{{ task.name }}</div>
-            <n-switch
-              v-model:value="task.enabled"
-              @update:value="toggleTaskEnabled(task.id, $event)"
-            >
+            <n-switch v-model:value="task.enabled" @update:value="toggleTaskEnabled(task.id, $event)">
             </n-switch>
           </div>
           <div style="margin-bottom: 4px">
@@ -493,12 +310,10 @@
           </div>
           <div style="margin-bottom: 4px">
             <span style="color: #6b7280">下次执行：</span>
-            <span
-              :style="{
-                fontWeight: 'bold',
-                color: taskCountdowns[task.id]?.isNearExecution ? '#ff4d4f' : '#1677ff'
-              }"
-            >
+            <span :style="{
+              fontWeight: 'bold',
+              color: taskCountdowns[task.id]?.isNearExecution ? '#ff4d4f' : '#1677ff'
+            }">
               {{ taskCountdowns[task.id]?.formatted || '计算中...' }}
             </span>
           </div>
@@ -517,37 +332,24 @@
             </n-button>
           </div>
         </div>
-        <div
-          v-if="scheduledTasks.length === 0"
-          style="text-align: center; padding: 24px; color: #6b7280"
-        >
+        <div v-if="scheduledTasks.length === 0" style="text-align: center; padding: 24px; color: #6b7280">
           暂无定时任务
         </div>
       </div>
     </n-modal>
 
     <!-- Task Modal -->
-    <n-modal
-      v-model:show="showTaskModal"
-      preset="card"
-      :title="editingTask ? '编辑定时任务' : '新增定时任务'"
-      style="width: 90%; max-width: 600px"
-    >
+    <n-modal v-model:show="showTaskModal" preset="card" :title="editingTask ? '编辑定时任务' : '新增定时任务'"
+      style="width: 90%; max-width: 600px">
       <div class="settings-content">
         <div class="settings-grid">
           <div class="setting-item">
             <label class="setting-label">任务名称</label>
-            <n-input
-              v-model:value="taskForm.name"
-              placeholder="请输入任务名称"
-            />
+            <n-input v-model:value="taskForm.name" placeholder="请输入任务名称" />
           </div>
           <div class="setting-item">
             <label class="setting-label">运行类型</label>
-            <n-radio-group
-              v-model:value="taskForm.runType"
-              @update:value="resetRunType"
-            >
+            <n-radio-group v-model:value="taskForm.runType" @update:value="resetRunType">
               <n-radio value="daily">每天固定时间</n-radio>
               <n-radio value="cron">Cron表达式</n-radio>
             </n-radio-group>
@@ -558,20 +360,15 @@
           </div>
           <div class="setting-item" v-if="taskForm.runType === 'cron'">
             <label class="setting-label">Cron表达式</label>
-            <n-input
-              v-model:value="taskForm.cronExpression"
-              placeholder="请输入Cron表达式"
-            />
+            <n-input v-model:value="taskForm.cronExpression" placeholder="请输入Cron表达式" />
           </div>
           <div class="setting-item">
-            <div
-              style="
+            <div style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 8px;
-              "
-            >
+              ">
               <label class="setting-label">选择账号</label>
               <n-space size="small">
                 <n-button size="small" @click="selectAllTokens">
@@ -591,14 +388,12 @@
             </n-checkbox-group>
           </div>
           <div class="setting-item">
-            <div
-              style="
+            <div style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 8px;
-              "
-            >
+              ">
               <label class="setting-label">选择任务</label>
               <n-space size="small">
                 <n-button size="small" @click="selectAllTasks"> 全选 </n-button>
@@ -617,9 +412,7 @@
           </div>
         </div>
         <div class="modal-actions" style="margin-top: 20px; text-align: right">
-          <n-button @click="showTaskModal = false" style="margin-right: 12px"
-            >取消</n-button
-          >
+          <n-button @click="showTaskModal = false" style="margin-right: 12px">取消</n-button>
           <n-button type="primary" @click="saveTask">保存</n-button>
         </div>
       </div>
@@ -844,23 +637,23 @@ const editTask = (task) => {
 // Validate cron expression
 const validateCronExpression = (expression) => {
   if (!expression) return { valid: false, message: "Cron表达式不能为空" };
-  
+
   const cronParts = expression.split(" ").filter(Boolean);
   if (cronParts.length !== 5) {
     return { valid: false, message: "Cron表达式必须包含5个字段：分 时 日 月 周" };
   }
-  
+
   const [minute, hour, dayOfMonth, month, dayOfWeek] = cronParts;
-  
+
   // 定义通用的cron字段验证函数
   const validateCronField = (field, min, max, fieldName) => {
     // 支持：* / */5 / 0/1 / 1-5 / 1,3,5 / 1-10/2
     const cronFieldRegex = new RegExp(`^(?:\\*|\\*/\\d+|[0-9]+/\\d+|(?:[0-9]+-?)*[0-9]+(?:,[0-9]+-?)*[0-9]+(?:/\\d+)?)$`);
-    
+
     if (!cronFieldRegex.test(field)) {
       return { valid: false, message: `${fieldName}字段格式错误` };
     }
-    
+
     // 如果是简单数字，验证范围
     if (/^\d+$/.test(field)) {
       const num = parseInt(field);
@@ -868,40 +661,40 @@ const validateCronExpression = (expression) => {
         return { valid: false, message: `${fieldName}字段必须在${min}-${max}之间` };
       }
     }
-    
+
     return { valid: true };
   };
-  
+
   // Validate minute (0-59)
   const minuteValidation = validateCronField(minute, 0, 59, "分钟");
   if (!minuteValidation.valid) {
     return minuteValidation;
   }
-  
+
   // Validate hour (0-23)
   const hourValidation = validateCronField(hour, 0, 23, "小时");
   if (!hourValidation.valid) {
     return hourValidation;
   }
-  
+
   // Validate dayOfMonth (1-31)
   const dayOfMonthValidation = validateCronField(dayOfMonth, 1, 31, "日期");
   if (!dayOfMonthValidation.valid) {
     return dayOfMonthValidation;
   }
-  
+
   // Validate month (1-12)
   const monthValidation = validateCronField(month, 1, 12, "月份");
   if (!monthValidation.valid) {
     return monthValidation;
   }
-  
+
   // Validate dayOfWeek (0-7, where 0 and 7 both represent Sunday)
   const dayOfWeekValidation = validateCronField(dayOfWeek, 0, 7, "星期");
   if (!dayOfWeekValidation.valid) {
     return dayOfWeekValidation;
   }
-  
+
   return { valid: true, message: "Cron表达式格式正确" };
 };
 
@@ -922,7 +715,7 @@ const saveTask = () => {
       message.warning("请输入Cron表达式");
       return;
     }
-    
+
     // Validate cron expression
     const validation = validateCronExpression(taskForm.cronExpression);
     if (!validation.valid) {
@@ -964,7 +757,7 @@ const saveTask = () => {
   };
 
   let isNew = !editingTask.value;
-  
+
   if (editingTask.value) {
     // Update existing task
     const index = scheduledTasks.value.findIndex(
@@ -984,10 +777,10 @@ const saveTask = () => {
     scheduledTasks.value.length,
   );
   console.log("Scheduled tasks:", scheduledTasks.value);
-  
+
   // Add log entry for task save
   addTaskSaveLog(taskData, isNew);
-  
+
   showTaskModal.value = false;
   message.success("定时任务已保存");
 };
@@ -1093,7 +886,7 @@ const deselectAllTasks = () => {
 // 解析cron字段，返回可能的值数组
 const parseCronField = (field, min, max) => {
   const values = new Set();
-  
+
   // 处理星号
   if (field === '*') {
     for (let i = min; i <= max; i++) {
@@ -1101,15 +894,15 @@ const parseCronField = (field, min, max) => {
     }
     return Array.from(values);
   }
-  
+
   // 处理步长，如 */5 或 0/1
   if (field.includes('/')) {
     const [range, step] = field.split('/');
     const stepNum = parseInt(step);
-    
+
     let start = min;
     let end = max;
-    
+
     // 处理范围部分
     if (range !== '*') {
       if (range.includes('-')) {
@@ -1121,14 +914,14 @@ const parseCronField = (field, min, max) => {
         end = max;
       }
     }
-    
+
     // 生成步长值
     for (let i = start; i <= end; i += stepNum) {
       values.add(i);
     }
     return Array.from(values);
   }
-  
+
   // 处理范围，如 1-5
   if (field.includes('-')) {
     const [start, end] = field.split('-').map(Number);
@@ -1137,7 +930,7 @@ const parseCronField = (field, min, max) => {
     }
     return Array.from(values);
   }
-  
+
   // 处理列表，如 1,3,5
   if (field.includes(',')) {
     const parts = field.split(',');
@@ -1146,72 +939,72 @@ const parseCronField = (field, min, max) => {
     }
     return Array.from(values);
   }
-  
+
   // 处理单个数字
   return [parseInt(field)];
 };
 
 const calculateNextExecutionTime = (task) => {
   const now = new Date();
-  
+
   if (task.runType === 'daily') {
     // For daily tasks, parse the runTime and calculate next execution
     const [hours, minutes] = task.runTime.split(':').map(Number);
     const nextRun = new Date(now);
     nextRun.setHours(hours, minutes, 0, 0);
-    
+
     // If today's time has passed, schedule for tomorrow
     if (nextRun <= now) {
       nextRun.setDate(nextRun.getDate() + 1);
     }
-    
+
     return nextRun;
   } else if (task.runType === 'cron') {
     // For cron tasks, parse the cron expression
     const cronParts = task.cronExpression.split(' ').filter(Boolean);
     if (cronParts.length < 5) return null;
-    
+
     const [minuteField, hourField, dayOfMonthField, monthField, dayOfWeekField] = cronParts;
-    
+
     // 解析各个字段的可能值
     const possibleMinutes = parseCronField(minuteField, 0, 59);
     const possibleHours = parseCronField(hourField, 0, 23);
     const possibleDaysOfMonth = parseCronField(dayOfMonthField, 1, 31);
     const possibleMonths = parseCronField(monthField, 1, 12);
     const possibleDaysOfWeek = parseCronField(dayOfWeekField, 0, 7);
-    
+
     // 从当前时间开始，寻找下一个匹配的时间
     let nextRun = new Date(now);
     nextRun.setSeconds(0, 0);
     nextRun.setMinutes(nextRun.getMinutes() + 1); // 从下一分钟开始检查
-    
+
     // 最多检查未来一年
     const maxCheckTime = new Date(now);
     maxCheckTime.setFullYear(maxCheckTime.getFullYear() + 1);
-    
+
     while (nextRun <= maxCheckTime) {
       const minutes = nextRun.getMinutes();
       const hours = nextRun.getHours();
       const dayOfMonth = nextRun.getDate();
       const month = nextRun.getMonth() + 1; // JavaScript月份是0-based
       const dayOfWeek = nextRun.getDay(); // 0是周日
-      
+
       // 检查所有字段是否匹配
       if (possibleMinutes.includes(minutes) &&
-          possibleHours.includes(hours) &&
-          possibleDaysOfMonth.includes(dayOfMonth) &&
-          possibleMonths.includes(month) &&
-          possibleDaysOfWeek.includes(dayOfWeek)) {
+        possibleHours.includes(hours) &&
+        possibleDaysOfMonth.includes(dayOfMonth) &&
+        possibleMonths.includes(month) &&
+        possibleDaysOfWeek.includes(dayOfWeek)) {
         return nextRun;
       }
-      
+
       // 检查下一分钟
       nextRun.setMinutes(nextRun.getMinutes() + 1);
     }
-    
+
     return null;
   }
-  
+
   return null;
 };
 
@@ -1221,17 +1014,17 @@ const formatTimeDifference = (ms) => {
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   const remainingHours = hours % 24;
   const remainingMinutes = minutes % 60;
   const remainingSeconds = seconds % 60;
-  
+
   let result = '';
   if (days > 0) result += `${days}天`;
   if (remainingHours > 0 || days > 0) result += `${remainingHours}小时`;
   if (remainingMinutes > 0 || remainingHours > 0 || days > 0) result += `${remainingMinutes}分`;
   result += `${remainingSeconds}秒`;
-  
+
   return result;
 };
 
@@ -1242,13 +1035,13 @@ const nextExecutionTimes = ref({});
 // Update countdowns for all tasks
 const updateCountdowns = () => {
   const now = Date.now();
-  
+
   scheduledTasks.value.forEach(task => {
     if (!nextExecutionTimes.value[task.id] || nextExecutionTimes.value[task.id] <= now) {
       // Calculate next execution time if not set or passed
       nextExecutionTimes.value[task.id] = calculateNextExecutionTime(task);
     }
-    
+
     if (nextExecutionTimes.value[task.id]) {
       const timeDiff = nextExecutionTimes.value[task.id] - now;
       taskCountdowns.value[task.id] = {
@@ -1263,10 +1056,10 @@ const updateCountdowns = () => {
 // 计算最短倒计时任务
 const shortestCountdownTask = computed(() => {
   if (scheduledTasks.value.length === 0) return null;
-  
+
   let shortestTask = null;
   let shortestTime = Infinity;
-  
+
   // 遍历所有任务，找到倒计时最短的任务
   scheduledTasks.value.forEach(task => {
     const countdown = taskCountdowns.value[task.id];
@@ -1278,7 +1071,7 @@ const shortestCountdownTask = computed(() => {
       };
     }
   });
-  
+
   return shortestTask;
 });
 
@@ -1290,10 +1083,10 @@ const startCountdown = () => {
   if (countdownInterval) {
     clearInterval(countdownInterval);
   }
-  
+
   // Update countdowns immediately
   updateCountdowns();
-  
+
   // Update countdowns every second
   countdownInterval = setInterval(updateCountdowns, 1000);
 };
@@ -1359,11 +1152,11 @@ const scheduleTaskExecution = () => {
     message: "=== 定时任务调度服务已启动 ===",
     type: "info",
   });
-  
+
   // Store interval ID for cleanup
   let intervalId = null;
   let lastTaskExecution = null;
-  
+
   // Health check for the scheduler
   const healthCheck = () => {
     console.log(`[${new Date().toISOString()}] Task scheduler health check - running: ${intervalId !== null}`);
@@ -1372,7 +1165,7 @@ const scheduleTaskExecution = () => {
       console.error(`[${new Date().toISOString()}] Task scheduler interval is not running, restarting...`);
       startScheduler();
     }
-    
+
     // Add a safety mechanism to prevent isRunning from being stuck
     if (isRunning.value) {
       const now = Date.now();
@@ -1388,14 +1181,14 @@ const scheduleTaskExecution = () => {
       }
     }
   };
-  
+
   // Start the scheduler
   const startScheduler = () => {
     // Clear any existing interval first
     if (intervalId) {
       clearInterval(intervalId);
     }
-    
+
     // Check every 10 seconds instead of 60 seconds for more timely task execution
     intervalId = setInterval(() => {
       try {
@@ -1409,22 +1202,22 @@ const scheduleTaskExecution = () => {
 
         // Log the current check time for debugging
         console.log(`[${new Date().toISOString()}] Checking scheduled tasks...`);
-        
+
         // Add detailed log about scheduler status (commented out for cleaner logs)
         // addLog({
         //   time: currentTime,
         //   message: `=== 定时任务调度服务检查中，isRunning: ${isRunning.value}，任务数量: ${scheduledTasks.value.length} ===`,
         //   type: "info",
         // });
-        
+
         // Don't skip all tasks if isRunning is true, just skip individual task execution if already running
         const tasksToRun = scheduledTasks.value.filter(task => task.enabled);
-        
+
         if (tasksToRun.length === 0) {
           console.log(`[${new Date().toISOString()}] No enabled tasks to check`);
           return;
         }
-        
+
         tasksToRun.forEach((task) => {
           let shouldRun = false;
           let reason = '';
@@ -1443,7 +1236,7 @@ const scheduleTaskExecution = () => {
             // Improved cron expression parsing
             try {
               const cronParts = task.cronExpression.split(" ").filter(Boolean);
-              
+
               if (cronParts.length < 5) {
                 console.error(`[${new Date().toISOString()}] Invalid cron expression: ${task.cronExpression}, must have at least 5 parts`);
                 addLog({
@@ -1453,23 +1246,23 @@ const scheduleTaskExecution = () => {
                 });
                 return;
               }
-              
+
               const [minuteField, hourField, dayOfMonthField, monthField, dayOfWeekField] = cronParts;
-              
+
               // 使用之前定义的parseCronField函数解析cron字段
               const possibleMinutes = parseCronField(minuteField, 0, 59);
               const possibleHours = parseCronField(hourField, 0, 23);
               const possibleDaysOfMonth = parseCronField(dayOfMonthField, 1, 31);
               const possibleMonths = parseCronField(monthField, 1, 12);
               const possibleDaysOfWeek = parseCronField(dayOfWeekField, 0, 7);
-              
+
               // 检查当前时间是否匹配cron表达式
               const matchesMinute = possibleMinutes.includes(now.getMinutes());
               const matchesHour = possibleHours.includes(now.getHours());
               const matchesDayOfMonth = possibleDaysOfMonth.includes(now.getDate());
               const matchesMonth = possibleMonths.includes(now.getMonth() + 1); // months are 0-based in JS
               const matchesDayOfWeek = possibleDaysOfWeek.includes(now.getDay()); // 0是周日
-              
+
               shouldRun = matchesMinute && matchesHour && matchesDayOfMonth && matchesMonth && matchesDayOfWeek;
               reason = `minute=${matchesMinute}, hour=${matchesHour}, dayOfMonth=${matchesDayOfMonth}, month=${matchesMonth}, dayOfWeek=${matchesDayOfWeek}`;
             } catch (error) {
@@ -1482,7 +1275,7 @@ const scheduleTaskExecution = () => {
               return;
             }
           }
-          
+
           // Add detailed log about task check result (commented out for cleaner logs)
           console.log(`[${new Date().toISOString()}] Task ${task.name}: shouldRun=${shouldRun}, reason=${reason}`);
           // addLog({
@@ -1495,11 +1288,11 @@ const scheduleTaskExecution = () => {
             // Check if the task was already executed in the last minute to avoid duplicate execution
             const taskExecutionKey = `${task.id}_${now.getDate()}_${now.getHours()}_${now.getMinutes()}`;
             const lastExecutionKey = localStorage.getItem(`lastTaskExecution_${task.id}`);
-            
+
             if (lastExecutionKey !== taskExecutionKey) {
               // Update last execution time
               localStorage.setItem(`lastTaskExecution_${task.id}`, taskExecutionKey);
-              
+
               // Execute the task
               console.log(`[${new Date().toISOString()}] Executing task ${task.name}`);
               lastTaskExecution = Date.now();
@@ -1523,19 +1316,19 @@ const scheduleTaskExecution = () => {
         });
       }
     }, 10000); // Check every 10 seconds
-    
+
     console.log(`[${new Date().toISOString()}] Task scheduler started with interval ID: ${intervalId}`);
   };
-  
+
   // Start the scheduler
   startScheduler();
-  
+
   // Health check every 5 minutes instead of 1 hour for more frequent safety checks
   setInterval(healthCheck, 5 * 60 * 1000);
-  
+
   // Initial health check
   healthCheck();
-  
+
   // Cleanup on component unmount
   onBeforeUnmount(() => {
     console.log(`[${new Date().toISOString()}] Cleaning up task scheduler...`);
@@ -1558,7 +1351,7 @@ const verifyTaskDependencies = async (task) => {
     message: `=== 开始验证定时任务 ${task.name} 的依赖 ===`,
     type: "info",
   });
-  
+
   // Verify localStorage is available
   try {
     localStorage.setItem("test", "test");
@@ -1576,7 +1369,7 @@ const verifyTaskDependencies = async (task) => {
     });
     return false;
   }
-  
+
   // Verify token store is available
   if (!tokenStore || !tokenStore.gameTokens) {
     addLog({
@@ -1586,7 +1379,7 @@ const verifyTaskDependencies = async (task) => {
     });
     return false;
   }
-  
+
   // Verify task functions exist
   for (const taskName of task.selectedTasks) {
     const taskFunction = eval(taskName);
@@ -1599,7 +1392,7 @@ const verifyTaskDependencies = async (task) => {
       return false;
     }
   }
-  
+
   // WebSocket connection check with retry and manual connect mechanism
   const checkWebSocketWithRetry = async (tokenId, maxRetries = 3, retryDelay = 1000) => {
     for (let i = 0; i < maxRetries; i++) {
@@ -1608,30 +1401,30 @@ const verifyTaskDependencies = async (task) => {
       if (status === "connected") {
         return true;
       }
-      
+
       // 尝试手动触发WebSocket连接
       if (i < maxRetries) {
         const tokenName = tokenStore.gameTokens.find(t => t.id === tokenId)?.name || tokenId;
-        
+
         try {
           addLog({
             time: new Date().toLocaleTimeString(),
-            message: `⏳ 账号 ${tokenName} WebSocket未连接，尝试手动连接... (${i+1}/${maxRetries})`,
+            message: `⏳ 账号 ${tokenName} WebSocket未连接，尝试手动连接... (${i + 1}/${maxRetries})`,
             type: "warning",
           });
-          
+
           // 获取token的完整信息
           const token = tokenStore.gameTokens.find(t => t.id === tokenId);
           if (token && token.token) {
             // 尝试使用createWebSocketConnection方法手动连接
             if (typeof tokenStore.createWebSocketConnection === 'function') {
               tokenStore.createWebSocketConnection(tokenId, token.token);
-            } 
+            }
             // 如果createWebSocketConnection方法不存在，尝试使用selectToken方法
             else if (typeof tokenStore.selectToken === 'function') {
               tokenStore.selectToken(tokenId, true); // forceReconnect为true
             }
-            
+
             // 等待一段时间让连接建立
             await new Promise(resolve => setTimeout(resolve, retryDelay));
           } else {
@@ -1654,26 +1447,26 @@ const verifyTaskDependencies = async (task) => {
         }
       }
     }
-    
+
     // 最后再次检查连接状态
     return tokenStore.getWebSocketStatus(tokenId) === "connected";
   };
-  
+
   // Check WebSocket connections with retry
   const connectedTokens = [];
   const disconnectedTokens = [];
-  
+
   for (const tokenId of task.selectedTokens) {
     const tokenName = tokenStore.gameTokens.find(t => t.id === tokenId)?.name || tokenId;
     const isConnected = await checkWebSocketWithRetry(tokenId);
-    
+
     if (isConnected) {
       connectedTokens.push({ id: tokenId, name: tokenName });
     } else {
       disconnectedTokens.push({ id: tokenId, name: tokenName });
     }
   }
-  
+
   // Log connection status
   if (connectedTokens.length > 0) {
     addLog({
@@ -1682,7 +1475,7 @@ const verifyTaskDependencies = async (task) => {
       type: "info",
     });
   }
-  
+
   if (disconnectedTokens.length > 0) {
     addLog({
       time: new Date().toLocaleTimeString(),
@@ -1690,7 +1483,7 @@ const verifyTaskDependencies = async (task) => {
       type: "warning",
     });
   }
-  
+
   // If no tokens are connected, return false
   if (connectedTokens.length === 0) {
     addLog({
@@ -1700,10 +1493,10 @@ const verifyTaskDependencies = async (task) => {
     });
     return false;
   }
-  
+
   // Store connected tokens for execution
   task.connectedTokens = connectedTokens.map(t => t.id);
-  
+
   addLog({
     time: new Date().toLocaleTimeString(),
     message: `=== 定时任务 ${task.name} 的依赖验证通过，将执行 ${connectedTokens.length} 个账号 ===`,
@@ -1731,7 +1524,7 @@ const executeScheduledTask = async (task) => {
       });
       return;
     }
-    
+
     // Set selected tokens from the task - use selectedTokens if connectedTokens is not available
     selectedTokens.value = [...(task.connectedTokens || task.selectedTokens)];
 
@@ -1976,7 +1769,7 @@ const copyLogs = () => {
     });
 };
 
-const waitForConnection = async (tokenId, timeout = 10000) => {
+const waitForConnection = async (tokenId, timeout = 2000) => {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     const status = tokenStore.getWebSocketStatus(tokenId);
@@ -2744,7 +2537,7 @@ const climbTower = async () => {
       // 模仿 TowerStatus.vue 的逻辑，同时请求 tower_getinfo 和 role_getroleinfo
       await tokenStore
         .sendMessageWithPromise(tokenId, "tower_getinfo", {}, 5000)
-        .catch(() => {});
+        .catch(() => { });
       let roleInfo = await tokenStore.sendGetRoleInfo(tokenId);
       let energy = roleInfo?.role?.tower?.energy || 0;
       addLog({
@@ -3082,7 +2875,7 @@ const batchTopUpFish = async () => {
         try {
           const roleInfo = await tokenStore.sendGetRoleInfo(tokenId);
           role = roleInfo?.role;
-        } catch {}
+        } catch { }
       }
       let freeUsed = 0;
       const lastFreeTime = Number(
@@ -3611,7 +3404,7 @@ const batchSmartSendCar = async () => {
           message: `剩余车票: ${refreshTickets}`,
           type: "info",
         });
-      } catch (_) {}
+      } catch (_) { }
 
       // 3. Process Cars
       for (const car of carList) {
@@ -3704,7 +3497,7 @@ const batchSmartSendCar = async () => {
             refreshTickets = Number(
               roleRes?.role?.items?.[35002]?.quantity || 0,
             );
-          } catch (_) {}
+          } catch (_) { }
 
           // Check if good enough now
           if (shouldSendCar(car, refreshTickets)) {
@@ -4382,9 +4175,11 @@ const stopBatch = () => {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -4503,9 +4298,12 @@ const stopBatch = () => {
 }
 
 @keyframes progressPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -4621,7 +4419,7 @@ const stopBatch = () => {
     padding: 6px 12px !important;
     font-size: 12px !important;
   }
-  
+
   :deep(.n-button) {
     background-size: 200% 100% !important;
   }
@@ -4632,7 +4430,7 @@ const stopBatch = () => {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
-  
+
   .token-list-card :deep(.n-button) {
     min-width: auto;
     flex: 1;
@@ -4676,7 +4474,7 @@ const stopBatch = () => {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 40px);
+  height: 90%;
 }
 
 .page-header {
@@ -4930,8 +4728,13 @@ const stopBatch = () => {
 
 /* Loading spinner animation */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-spinner {
@@ -4945,7 +4748,7 @@ const stopBatch = () => {
 
 /* Enhanced progress bar animation */
 :deep(.n-progress__indicator--processing) {
-  animation: 
+  animation:
     progressPulse 2s ease-in-out infinite,
     progressSlide 1s linear infinite;
 }
@@ -4954,6 +4757,7 @@ const stopBatch = () => {
   0% {
     background-position: 0% 50%;
   }
+
   100% {
     background-position: 200% 50%;
   }

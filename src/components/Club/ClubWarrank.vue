@@ -689,7 +689,8 @@ const getHeroInfo = (heroObj) => {
         HolyBeast: hero.hB?.active === true,   //激活四圣
         // 添加英雄详情信息
         skillList: hero.skillList || [],
-        attributeList: hero.attributeList || []
+        attributeList: hero.attributeList || [],
+        battleTeamSlot: hero.battleTeamSlot,   //阵容站位
       };
       
       // 只添加有效的英雄
@@ -707,7 +708,7 @@ const getHeroInfo = (heroObj) => {
     console.error('处理英雄信息时发生错误:', error);
     heroList = [];
   }
-  
+  heroList.sort((a, b) => a.battleTeamSlot - b.battleTeamSlot);
   return { redCount, holeCount, heroList };
 }
 

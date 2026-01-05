@@ -70,18 +70,18 @@ const climbTimeout = ref(null); // 用于超时重置状态
 const lastClimbResult = ref(null); // 最后一次爬塔结果
 
 // 计算属性 - 从gameData中获取塔相关信息
-const roleInfo = computed(() => {
-  const data = tokenStore.gameData?.roleInfo || null;
-  return data;
-});
+const evoTowerInfo = computed(() => {
+  const data = tokenStore.gameData?.evoTowerInfo || null
+  return data
+})
 
 const weirdTowerData = computed(() => {
-  return roleInfo.value?.role?.evoTower || null;
-});
+  return evoTowerInfo.value?.evoTower || null
+})
 
 const currentTowerId = computed(() => {
-  return weirdTowerData.value?.towerId || 0;
-});
+  return weirdTowerData.value?.towerId || 0
+})
 
 const displayFloor = computed(() => {
   const towerId = currentTowerId.value;

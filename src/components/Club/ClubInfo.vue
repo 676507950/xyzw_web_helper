@@ -129,6 +129,14 @@
           >
             <ClubHistoryRecords inline />
           </n-tab-pane>
+
+          <n-tab-pane
+            name="weirdtower"
+            tab="俱乐部怪异塔数据"
+            display-directive="show:lazy"
+          >
+            <ClubWeirdTowerInfo inline />
+          </n-tab-pane>=
         </n-tabs>
       </div>
     </template>
@@ -141,6 +149,7 @@ import { useMessage } from "naive-ui";
 import { useTokenStore } from "@/stores/tokenStore";
 import ClubBattleRecords from "./ClubBattleRecords.vue";
 import ClubHistoryRecords from "./ClubHistoryRecords.vue";
+import ClubWeirdTowerInfo from './ClubWeirdTowerInfo.vue';
 
 const tokenStore = useTokenStore();
 const message = useMessage();
