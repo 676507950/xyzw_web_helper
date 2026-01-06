@@ -88,6 +88,9 @@
               ">
               一键竞技场补齐
             </n-button>
+            <n-button size="small" @click="batchClaimFreeEnergy" :disabled="isRunning || selectedTokens.length === 0 || !isWeirdTowerActivityOpen">
+              一键领取怪异塔免费道具
+            </n-button>
           </n-space>
           <n-space vertical>
             <n-checkbox :checked="isAllSelected" :indeterminate="isIndeterminate" @update:checked="handleSelectAll">
@@ -450,7 +453,30 @@ const isbaokuActivityOpen = computed(() => {
 });
 const isarenaActivityOpen = computed(() => {
   const hour = new Date().getHours();
-  return hour > 8 && hour < 22;
+  return hour >= 6 && hour < 22;
+});
+const getCurrentActivityWeek = computed(() => {
+  const now = new Date();
+  const start = new Date('2025-12-12T12:00:00'); // 起始时间：黑市周开始
+  const weekDuration = 7 * 24 * 60 * 60 * 1000; // 一周毫秒数
+  const cycleDuration = 3 * weekDuration; // 三周期毫秒数
+  
+  const elapsed = now - start;
+  if (elapsed < 0) return null; // 活动开始前
+  
+  const cyclePosition = elapsed % cycleDuration;
+  
+  if (cyclePosition < weekDuration) {
+    return '黑市周';
+  } else if (cyclePosition < 2 * weekDuration) {
+    return '招募周';
+  } else {
+    return '宝箱周';
+  }
+});
+
+const isWeirdTowerActivityOpen = computed(() => {
+  return getCurrentActivityWeek.value === '黑市周';
 });
 
 const selectedTokens = ref([]);
@@ -510,6 +536,7 @@ const taskForm = reactive({
 
 // Available tasks for scheduling - Maps task function names to display labels
 const availableTasks = [
+  { label: "日常任务", value: "startBatch" },
   { label: "领取挂机", value: "claimHangUpRewards" },
   { label: "一键加钟", value: "batchAddHangUpTime" },
   { label: "重置罐子", value: "resetBottles" },
@@ -527,6 +554,9 @@ const availableTasks = [
   { label: "一键梦境", value: "batchmengjing" },
   { label: "一键俱乐部签到", value: "batchclubsign" },
   { label: "一键竞技场战斗3次", value: "batcharenafight" },
+  { label: "一键钓鱼补齐", value: "batchTopUpFish" },
+  { label: "一键竞技场补齐", value: "batchTopUpArena" },
+  { label: "一键领取怪异塔免费道具", value: "batchClaimFreeEnergy" },
 ];
 
 // Task table columns configuration for the tasks list modal
@@ -4149,6 +4179,84 @@ const batchRecruit = async () => {
   message.success("批量招募结束");
 };
 
+const batchClaimFreeEnergy = async () => {
+  if (selectedTokens.value.length === 0) return;
+  isRunning.value = true;
+  shouldStop.value = false;
+  
+  // Reset status
+  selectedTokens.value.forEach((id) => {
+    tokenStatus.value[id] = "waiting";
+  });
+  
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+    
+    const token = tokens.value.find((t) => t.id === tokenId);
+    try {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 开始领取怪异塔免费道具: ${token.name} ===`,
+        type: "info",
+      });
+      
+      await ensureConnection(tokenId);
+      
+      // 获取免费道具数量
+      const freeEnergyResult = await tokenStore.sendMessageWithPromise(
+        tokenId,
+        'mergebox_getinfo',
+        {
+          actType: 1
+        },
+        5000
+      );
+      
+      if (freeEnergyResult && freeEnergyResult.mergeBox.freeEnergy > 0) {
+        // 领取免费道具
+        await tokenStore.sendMessageWithPromise(
+          tokenId,
+          'mergebox_claimfreeenergy',
+          {
+            actType: 1
+          },
+          5000
+        );
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== ${token.name} 成功领取免费道具${freeEnergyResult.mergeBox.freeEnergy}个`,
+          type: "success"
+        });
+      } else {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `===  ${token.name} 暂无免费道具可领取`,
+          type: "success"
+        });
+      }
+      
+      tokenStatus.value[tokenId] = "completed";
+    } catch (error) {
+      console.error(error);
+      tokenStatus.value[tokenId] = "failed";
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== ${token.name} 领取免费道具失败: ${error.message || "未知错误"}`,
+        type: "error",
+      });
+    }
+    currentProgress.value = 100;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  
+  isRunning.value = false;
+  currentRunningTokenId.value = null;
+  message.success("批量领取怪异塔免费道具结束");
+};
+
 const stopBatch = () => {
   shouldStop.value = true;
   addLog({
@@ -4165,281 +4273,13 @@ const stopBatch = () => {
   height: 100vh;
   box-sizing: border-box;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  animation: gradientShift 8s ease infinite;
-  background-size: 200% 200%;
-}
-
-/* Smooth gradient animation */
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* Global transition effects */
-.n-button,
-.n-checkbox,
-.n-select,
-.n-switch,
-.n-card,
-.token-item,
-.log-item,
-.switch-row {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* Smooth hover effects for interactive elements */
-.n-button:hover,
-.n-button:focus,
-.n-checkbox:hover,
-.n-select:hover,
-.n-switch:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
-}
-
-/* Enhanced checkbox styles */
-:deep(.n-checkbox) {
-  font-weight: 500 !important;
-  color: #495057 !important;
-}
-
-:deep(.n-checkbox__box) {
-  border-radius: 4px !important;
-  border: 2px solid #e9ecef !important;
-  background: white !important;
-  transition: all 0.3s ease !important;
-}
-
-:deep(.n-checkbox__input:checked + .n-checkbox__box) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border-color: #667eea !important;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
-}
-
-/* Enhanced select styles */
-:deep(.n-select) {
-  border-radius: 8px !important;
-  border: 2px solid #e9ecef !important;
-  background: white !important;
-  transition: all 0.3s ease !important;
-}
-
-:deep(.n-select:hover),
-:deep(.n-select:focus) {
-  border-color: #667eea !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
-}
-
-:deep(.n-select__menu) {
-  border-radius: 8px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
-  border: none !important;
-}
-
-:deep(.n-select-option--selected) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-}
-
-:deep(.n-select-option--selected:hover) {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
-}
-
-/* Enhanced switch styles */
-:deep(.n-switch) {
-  border-radius: 16px !important;
-  transition: all 0.3s ease !important;
-}
-
-:deep(.n-switch__rail) {
-  background: #e9ecef !important;
-  border-radius: 16px !important;
-  transition: all 0.3s ease !important;
-}
-
-:deep(.n-switch__rail--active) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-}
-
-:deep(.n-switch__button) {
-  background: white !important;
-  border-radius: 50% !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-  transition: all 0.3s ease !important;
-}
-
-:deep(.n-switch__button--active) {
-  transform: translateX(18px) !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
-}
-
-/* Enhanced progress bar styles */
-:deep(.n-progress--line) {
-  margin: 8px 0 !important;
-}
-
-:deep(.n-progress__indicator) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border-radius: 4px !important;
-}
-
-:deep(.n-progress__indicator--processing) {
-  animation: progressPulse 2s ease-in-out infinite !important;
-}
-
-@keyframes progressPulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.7;
-  }
 }
 
 .main-layout {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   height: 100%;
   overflow: hidden;
-}
-
-/* Enhanced button styles */
-:deep(.n-button) {
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-  padding: 8px 16px !important;
-  font-size: 14px !important;
-  border: none !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative;
-  overflow: hidden;
-  background-size: 200% 100% !important;
-  background-position: 0% 50% !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Primary button enhancements */
-:deep(.n-button--primary) {
-  background: linear-gradient(90deg, #4a6cf7 0%, #1e3a8a 100%) !important;
-  color: white !important;
-}
-
-:deep(.n-button--primary:hover),
-:deep(.n-button--primary:focus) {
-  background: linear-gradient(90deg, #1e3a8a 0%, #4a6cf7 100%) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-  box-shadow: 0 8px 20px rgba(74, 108, 247, 0.4) !important;
-  background-position: 100% 50% !important;
-}
-
-/* Error button enhancements */
-:deep(.n-button--error) {
-  background: linear-gradient(90deg, #ef4444 0%, #991b1b 100%) !important;
-  color: white !important;
-}
-
-:deep(.n-button--error:hover),
-:deep(.n-button--error:focus) {
-  background: linear-gradient(90deg, #991b1b 0%, #ef4444 100%) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4) !important;
-  background-position: 100% 50% !important;
-}
-
-/* Default button enhancements */
-:deep(.n-button--default) {
-  background: linear-gradient(90deg, #6b7280 0%, #374151 100%) !important;
-  color: white !important;
-}
-
-:deep(.n-button--default:hover),
-:deep(.n-button--default:focus) {
-  background: linear-gradient(90deg, #374151 0%, #6b7280 100%) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-  box-shadow: 0 8px 20px rgba(107, 114, 128, 0.4) !important;
-  background-position: 100% 50% !important;
-}
-
-/* Small button enhancements */
-:deep(.n-button--small) {
-  padding: 6px 12px !important;
-  font-size: 12px !important;
-}
-
-/* Button active state for click feedback */
-:deep(.n-button:active) {
-  transform: translateY(0) scale(0.98) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Disabled button styles */
-:deep(.n-button:disabled) {
-  background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 100%) !important;
-  color: #9ca3af !important;
-  transform: none !important;
-  box-shadow: none !important;
-  cursor: not-allowed !important;
-  opacity: 0.7 !important;
-}
-
-/* Token list card button container */
-.token-list-card :deep(.n-space) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px !important;
-  margin-bottom: 20px !important;
-}
-
-/* Task button specific enhancements */
-.token-list-card :deep(.n-button) {
-  min-width: 100px;
-  text-align: center;
-  font-weight: 600 !important;
-  letter-spacing: 0.5px !important;
-}
-
-/* Responsive button adjustments */
-@media (max-width: 768px) {
-  .token-list-card :deep(.n-button) {
-    min-width: 80px;
-    padding: 6px 12px !important;
-    font-size: 12px !important;
-  }
-
-  :deep(.n-button) {
-    background-size: 200% 100% !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .token-list-card :deep(.n-space) {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
-  }
-
-  .token-list-card :deep(.n-button) {
-    min-width: auto;
-    flex: 1;
-  }
-}
-
-/* Button group container */
-:deep(.n-space) {
-  gap: 10px !important;
 }
 
 .left-column {
@@ -4447,52 +4287,21 @@ const stopBatch = () => {
   overflow-y: auto;
   min-width: 0;
   padding-right: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: #667eea #f5f5f5;
-}
-
-.left-column::-webkit-scrollbar {
-  width: 6px;
-}
-
-.left-column::-webkit-scrollbar-track {
-  background: #f5f5f5;
-  border-radius: 3px;
-}
-
-.left-column::-webkit-scrollbar-thumb {
-  background: #667eea;
-  border-radius: 3px;
-}
-
-.left-column::-webkit-scrollbar-thumb:hover {
-  background: #5a6fd8;
 }
 
 .right-column {
-  width: 420px;
+  width: 400px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  height: 90%;
+  height: 700px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.page-header h2 {
-  margin: 0;
-  color: #333;
-  font-size: 24px;
-  font-weight: 600;
+  margin-bottom: 20px;
 }
 
 .token-item {
@@ -4504,16 +4313,6 @@ const stopBatch = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  background: white;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.log-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
 }
 
 .log-card :deep(.n-card__content) {
@@ -4521,106 +4320,49 @@ const stopBatch = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 0 !important;
-}
-
-.log-card :deep(.n-card__header) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white !important;
-  border-radius: 12px 12px 0 0;
-  padding: 16px 20px !important;
-}
-
-.log-card :deep(.n-card__title) {
-  color: white !important;
-  font-weight: 600 !important;
 }
 
 .log-header-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  gap: 8px;
 }
 
 .log-container {
   flex: 1;
   overflow-y: auto;
-  background: #f8f9fa;
-  padding: 16px 20px;
-  margin: 0;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  font-family: monospace;
   min-height: 200px;
-  scrollbar-width: thin;
-  scrollbar-color: #667eea #e9ecef;
-}
-
-.log-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.log-container::-webkit-scrollbar-track {
-  background: #e9ecef;
-  border-radius: 3px;
-}
-
-.log-container::-webkit-scrollbar-thumb {
-  background: #667eea;
-  border-radius: 3px;
-}
-
-.log-container::-webkit-scrollbar-thumb:hover {
-  background: #5a6fd8;
 }
 
 .log-item {
-  margin-bottom: 8px;
-  font-size: 13px;
-  line-height: 1.5;
-  padding: 6px 12px;
-  border-radius: 6px;
-  background: white;
-  border-left: 3px solid transparent;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-}
-
-.log-item:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 4px;
+  font-size: 12px;
 }
 
 .log-item.error {
-  color: #dc3545;
-  border-left-color: #dc3545;
-  background: #fff5f5;
+  color: #d03050;
 }
 
 .log-item.success {
-  color: #28a745;
-  border-left-color: #28a745;
-  background: #f0fff4;
+  color: #18a058;
 }
 
 .log-item.warning {
-  color: #ffc107;
-  border-left-color: #ffc107;
-  background: #fff8e1;
+  color: #f0a020;
 }
 
 .log-item.info {
-  color: #495057;
-  border-left-color: #667eea;
-  background: #f8f9ff;
+  color: #333;
 }
 
 .time {
-  color: #6c757d;
-  margin-right: 12px;
-  font-weight: 500;
-  font-size: 12px;
-  opacity: 0.8;
+  color: #999;
+  margin-right: 8px;
 }
 
 .token-row {
@@ -4630,215 +4372,45 @@ const stopBatch = () => {
   padding-right: 8px;
 }
 
-/* Token List Card Styles */
-.token-list-card {
-  border-radius: 12px !important;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  background: white;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  margin-bottom: 24px;
-}
-
-.token-list-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
-}
-
-.token-list-card :deep(.n-card__header) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white !important;
-  border-radius: 12px 12px 0 0;
-  padding: 16px 20px !important;
-}
-
-.token-list-card :deep(.n-card__title) {
-  color: white !important;
-  font-weight: 600 !important;
-}
-
-.token-list-card :deep(.n-card__content) {
-  padding: 20px !important;
-}
-
-/* Button Container Styles */
-.token-list-card :deep(.n-space) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px !important;
-}
-
-/* Token Item Styles */
-.token-item {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  position: relative;
-  background: white;
-  border: 1px solid #e9ecef;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.token-item:hover {
-  background-color: #f8f9ff;
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-  transform: translateX(4px);
-}
-
-/* Token status indicators */
-.token-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  margin-left: auto;
-  transition: all 0.3s ease;
-}
-
-.token-status.running {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-  color: #495057;
-  box-shadow: 0 2px 6px rgba(168, 237, 234, 0.3);
-}
-
-.token-status.completed {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-  color: #28a745;
-  box-shadow: 0 2px 6px rgba(168, 237, 234, 0.3);
-}
-
-.token-status.failed {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  box-shadow: 0 2px 6px rgba(245, 87, 108, 0.3);
-}
-
-.token-status.waiting {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  color: #495057;
-  box-shadow: 0 2px 6px rgba(252, 182, 159, 0.3);
-}
-
-/* Loading spinner animation */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 0.8s linear infinite;
-}
-
-/* Enhanced progress bar animation */
-:deep(.n-progress__indicator--processing) {
-  animation:
-    progressPulse 2s ease-in-out infinite,
-    progressSlide 1s linear infinite;
-}
-
-@keyframes progressSlide {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  100% {
-    background-position: 200% 50%;
-  }
-}
-
-/* Add background size for progress bar */
-:deep(.n-progress__indicator) {
-  background-size: 200% 200% !important;
-}
-
-/* Modal enhancements */
-:deep(.n-modal) {
-  border-radius: 12px !important;
-  overflow: hidden !important;
-}
-
-:deep(.n-modal__content) {
-  border-radius: 12px !important;
-}
-
-:deep(.n-modal__header) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  border-radius: 12px 12px 0 0 !important;
-}
-
-:deep(.n-modal__title) {
-  color: white !important;
-  font-weight: 600 !important;
-}
-
 /* Settings Modal Styles */
 .settings-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .setting-item {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .setting-label {
   font-size: 14px;
-  font-weight: 500;
-  color: #495057;
+  color: #666;
 }
 
 .setting-switches {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .switch-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: #f8f9fa;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-}
-
-.switch-row:hover {
-  background: #e9ecef;
-  border-color: #667eea;
-  transform: translateX(4px);
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
 }
 
 .switch-row:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .switch-label {
   font-size: 14px;
-  font-weight: 500;
-  color: #495057;
+  color: #666;
 }
 
 /* Responsive Design */
@@ -4852,14 +4424,12 @@ const stopBatch = () => {
   .batch-daily-tasks {
     height: auto;
     overflow: visible;
-    padding: 16px;
   }
 
   .main-layout {
     flex-direction: column;
     height: auto;
     overflow: visible;
-    gap: 16px;
   }
 
   .left-column {
@@ -4874,8 +4444,8 @@ const stopBatch = () => {
   }
 
   .log-container {
-    height: 400px;
-    min-height: 400px;
+    height: 300px;
+    min-height: 300px;
   }
 }
 
@@ -4885,14 +4455,12 @@ const stopBatch = () => {
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
 
   .main-layout {
     height: auto;
     overflow: visible;
     flex-direction: column;
-    gap: 16px;
   }
 
   .left-column {
@@ -4910,20 +4478,13 @@ const stopBatch = () => {
 
   .page-header {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     align-items: stretch;
-    padding: 16px;
   }
 
   .page-header .actions {
     display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-
-  .page-header h2 {
-    font-size: 20px;
-    text-align: center;
+    gap: 8px;
   }
 
   .log-card {
@@ -4944,66 +4505,8 @@ const stopBatch = () => {
 
   .log-header-controls {
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-  }
-
-  .right-column {
-    height: auto;
-  }
-
-  .token-list-card {
-    margin-bottom: 16px;
-  }
-
-  .token-list-card :deep(.n-card__content) {
-    padding: 16px !important;
-  }
-
-  .token-list-card :deep(.n-space) {
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .batch-daily-tasks {
-    padding: 8px;
-  }
-
-  .page-header {
-    padding: 12px;
-  }
-
-  .page-header h2 {
-    font-size: 18px;
-  }
-
-  .page-header .actions {
-    flex-direction: column;
-  }
-
-  .token-list-card :deep(.n-card__content) {
-    padding: 12px !important;
-  }
-
-  .token-list-card :deep(.n-space) {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .log-container {
-    height: 250px;
-    min-height: 250px;
-    padding: 10px 12px;
-    font-size: 12px;
-  }
-
-  .log-header-controls {
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
+    align-items: flex-start;
+    gap: 4px;
   }
 }
 </style>

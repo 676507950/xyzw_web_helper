@@ -444,6 +444,7 @@ const editRules = {
 };
 
 const bulkOptions = [
+  { label: '刷新所有Token', key: 'refreshAll' },
   { label: "导出所有Token", key: "export" },
   { label: "导入Token文件", key: "import" },
   { label: "清理过期Token", key: "clean" },
@@ -772,8 +773,85 @@ const deleteToken = (token) => {
   });
 };
 
+// 批量刷新所有URLToken
+const refreshAllTokens = async () => {
+  if (!tokenStore.gameTokens.length) {
+    message.warning('没有可刷新的Token')
+    return
+  }
+
+  const tokensToRefresh = tokenStore.gameTokens.filter(token => token.sourceUrl)
+  const manualTokens = tokenStore.gameTokens.filter(token => !token.sourceUrl)
+
+  if (tokensToRefresh.length === 0) {
+    message.warning('没有支持自动刷新的Token')
+    return
+  }
+
+  // 显示确认对话框
+  dialog.warning({
+    title: '批量刷新Token',
+    content: '确定要刷新所有支持自动刷新的Token吗?',
+    positiveText: '开始刷新',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        let successCount = 0
+        let failCount = 0
+        
+        // 显示进度提示
+        const loadingMessage = message.loading(`正在批量刷新Token (0/${tokensToRefresh.length})`, {
+          duration: 0
+        })
+
+        for (let i = 0; i < tokensToRefresh.length; i++) {
+          const token = tokensToRefresh[i]
+          
+          try {
+            // 更新进度显示
+            loadingMessage.content = `正在刷新Token (${i + 1}/${tokensToRefresh.length}): ${token.name}`
+            
+            // 调用单个刷新函数
+            await refreshToken(token)
+            successCount++
+          } catch (error) {
+            console.error(`刷新Token "${token.name}" 失败:`, error)
+            failCount++
+          }
+          
+          // 添加短暂延迟避免请求过于频繁
+          if (i < tokensToRefresh.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+        }
+
+        // 关闭进度提示
+        loadingMessage.destroy()
+
+        // 显示结果
+        if (failCount === 0) {
+          message.success(`批量刷新完成！成功刷新 ${successCount} 个Token`)
+        } else {
+          message.warning(`批量刷新完成，成功 ${successCount} 个，失败 ${failCount} 个`)
+        }
+
+        // 如果有手动导入的Token，提示用户
+        if (manualTokens.length > 0) {
+          message.info(`${manualTokens.length} 个手动导入的Token需要手动刷新`)
+        }
+
+      } catch (error) {
+        message.error('批量刷新过程中发生错误: ' + error.message)
+      }
+    }
+  })
+}
+
 const handleBulkAction = (key) => {
   switch (key) {
+    case 'refreshAll':
+      refreshAllTokens()
+      break
     case "export":
       exportTokens();
       break;

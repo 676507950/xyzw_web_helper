@@ -52,7 +52,7 @@
             </template>导出</n-button>
           <n-button type="info" size="small" :disabled="!battleRecords1 || loading1" @click="hcSort" class="action-btn sort-btn">
             红淬排序</n-button>
-          <n-button type="info" size="small" :disabled="!battleRecords1 || loading1" @click="scoreSort" class="action-btn sort-btn">
+          <n-button type="info" size="small" :disabled="!battleRecords1 || loading1" @click="scoreSort" class="action-btn sort-btn" v-if="ScoreShow === 1">
             积分排序</n-button>
         </div>
       </div>
@@ -110,7 +110,7 @@
             <div class="table-cell alliance">联盟</div>
             <div class="table-cell avatar">头像</div>
             <div class="table-cell name">名称</div>
-            <div class="table-cell score">积分</div>
+            <div class="table-cell score" v-if="ScoreShow === 1">积分</div>
             <div class="table-cell red-quench">红淬</div>
             <div class="table-cell first-3">前三车头</div>
             <div class="table-cell power">战力</div>
@@ -140,7 +140,7 @@
               <div v-else class="member-avatar-placeholder">{{ member.name?.charAt(0) || '?' }}</div>
             </div>
             <div class="table-cell name">{{ member.name }}</div>
-            <div class="table-cell score">{{ formatScore(member.sRScore) || 0 }}</div>
+            <div class="table-cell score" v-if="member.sRScore !== -1">{{ formatScore(member.sRScore) || 0 }}</div>
             <div class="table-cell red-quench">{{ member.redQuench || 0 }}</div>
             <div class="table-cell first-3">
               <div class="hero-avatars">
@@ -534,6 +534,8 @@ import {
 } from '@/utils/clubBattleUtils'
 import { gettoday, formatWarrankRecordsForExport, allianceincludes } from '@/utils/clubWarrankUtils'
 import { HERO_DICT, HeroFillInfo } from '@/utils/HeroList'
+
+const ScoreShow = ref(1);
 
 const props = defineProps({
   visible: {
@@ -1216,6 +1218,7 @@ const fetchBattleRecords1 = async () => {
         message.warning('未查询到盐场匹配数据');
         return;
       }
+      ScoreShow.value = 1;
       const detailPromises = result.opponentList.map(async (club) => {
         try {
           const detail = await tokenStore.sendMessageWithPromise(
@@ -1396,6 +1399,7 @@ const fetchBattleRecords1 = async () => {
         message.warning('未查询到盐场匹配数据');
         return;
       }
+      ScoreShow.value = 0;
       const detailPromises = result.legionRankList.map(async (club) => {
         try {
           const detail = await tokenStore.sendMessageWithPromise(

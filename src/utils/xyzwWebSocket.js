@@ -181,6 +181,8 @@ export function registerDefaultCommands(reg) {
     .register("evotower_getlegionjoinmembers")
     .register("evotower_readyfight")
     .register("evotower_claimreward")
+    .register("mergebox_getinfo")
+    .register("mergebox_claimfreeenergy")
 
     // 瓶子机器人
     .register("bottlehelper_claim")
@@ -245,6 +247,7 @@ export function registerDefaultCommands(reg) {
     .register("car_claim", { carId: 0 })
     .register("car_send", { carId: 0, helperId: 0, text: "" })
     .register("car_getmemberhelpingcnt")
+    .register("car_getmemberrank")
 
     // 咸王宝库
     .register("matchteam_getroleteaminfo")
@@ -910,6 +913,8 @@ export class XyzwWebSocketClient {
       evotowerinforesp: "evotower_getinfo",
       evotower_fightresp: "evotower_fight",
       evotower_getlegionjoinmembersresp: 'evotower_getlegionjoinmembers',
+      mergebox_getinforesp: 'mergebox_getinfo',
+      mergebox_claimfreeenergyresp: 'mergebox_claimfreeenergy',
       item_openpackresp: "item_openpack",
       // 咸王宝库
       matchteam_getroleteaminforesp: "matchteam_getroleteaminfo",
@@ -930,6 +935,7 @@ export class XyzwWebSocketClient {
       car_claimresp: "car_claim",
       car_sendresp: "car_send",
       car_getmemberhelpingcntresp: "car_getmemberhelpingcnt",
+      car_getmemberrankresp: "car_getmemberrank",
       role_gettargetteamresp: "role_gettargetteam",
       activity_warorderclaimresp: "activity_recyclewarorderrewardclaim",
       arena_getarearankresp: "arena_getarearank",

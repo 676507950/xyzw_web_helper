@@ -132,10 +132,18 @@
 
           <n-tab-pane
             name="weirdtower"
-            tab="俱乐部怪异塔数据"
+            tab="怪异塔信息"
             display-directive="show:lazy"
           >
             <ClubWeirdTowerInfo inline />
+          </n-tab-pane>=
+          
+          <n-tab-pane
+            name="carsocre"
+            tab="赛车积分信息"
+            display-directive="show:lazy"
+          >
+            <CarScoreInfo inline />
           </n-tab-pane>=
         </n-tabs>
       </div>
@@ -150,6 +158,7 @@ import { useTokenStore } from "@/stores/tokenStore";
 import ClubBattleRecords from "./ClubBattleRecords.vue";
 import ClubHistoryRecords from "./ClubHistoryRecords.vue";
 import ClubWeirdTowerInfo from './ClubWeirdTowerInfo.vue';
+import CarScoreInfo from './CarScoreInfo.vue'
 
 const tokenStore = useTokenStore();
 const message = useMessage();

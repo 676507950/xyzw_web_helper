@@ -107,13 +107,42 @@ const canClimb = computed(() => {
   return hasEnergy && notClimbing;
 });
 
+const getCurrentActivityWeek = computed(() => {
+  const now = new Date();
+  const start = new Date('2025-12-12T12:00:00'); // 起始时间：黑市周开始
+  const weekDuration = 7 * 24 * 60 * 60 * 1000; // 一周毫秒数
+  const cycleDuration = 3 * weekDuration; // 三周期毫秒数
+  
+  const elapsed = now - start;
+  if (elapsed < 0) return null; // 活动开始前
+  
+  const cyclePosition = elapsed % cycleDuration;
+  
+  if (cyclePosition < weekDuration) {
+    return '黑市周';
+  } else if (cyclePosition < 2 * weekDuration) {
+    return '招募周';
+  } else {
+    return '宝箱周';
+  }
+});
+
+const isWeirdTowerActivityOpen = computed(() => {
+  return getCurrentActivityWeek.value === '黑市周';
+});
+
 // 方法
 const startTowerClimb = async () => {
   if (!tokenStore.selectedToken) {
     message.warning("请先选择Token");
     return;
   }
-
+  
+  if (!isWeirdTowerActivityOpen.value) {
+    message.warning("怪异塔活动未开始或已结束");
+    return;
+  }
+  
   if (!canClimb.value) {
     message.warning("体力不足或正在爬塔中");
     return;
@@ -177,9 +206,8 @@ const startTowerClimb = async () => {
       const floor = (towerId % 10) + 1;
       if (
         fightResult &&
-        fightResult._rawData &&
-        fightResult._rawData.winList &&
-        fightResult._rawData.winList[0] === true &&
+        fightResult.winList &&
+        fightResult.winList[0] === true &&
         floor === 1
       ) {
         // 领取通关奖励
@@ -194,6 +222,28 @@ const startTowerClimb = async () => {
 
       await new Promise((res) => setTimeout(res, 400)); // 每次间隔400毫秒
     }
+    // 获取免费道具数量
+    const freeEnergyResult = await tokenStore.sendMessageWithPromise(
+      tokenId,
+      'mergebox_getinfo',
+      {
+        actType: 1
+      },
+      5000
+    );
+    if (freeEnergyResult && freeEnergyResult.mergeBox.freeEnergy > 0) {
+      // 领取免费道具
+      await tokenStore.sendMessageWithPromise(
+        tokenId,
+        'mergebox_claimfreeenergy',
+        {
+          actType: 1
+        },
+        5000
+      );
+      message.success(`成功领取免费道具${freeEnergyResult.mergeBox.freeEnergy}个！`);
+    }
+    await new Promise((res) => setTimeout(res, 500));
     message.success(`已自动爬塔${climbCount}次，体力已耗尽或达到上限。`);
   } catch (error) {
     message.error("批量爬塔失败: " + (error.message || "未知错误"));

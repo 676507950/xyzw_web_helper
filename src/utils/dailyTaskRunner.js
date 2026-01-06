@@ -340,8 +340,8 @@ export class DailyTaskRunner {
         execute: async () => {
           this.log("开始竞技场战斗流程");
           const hour = new Date().getHours();
-          if (hour < 8) {
-            this.log("当前时间未到8点，跳过竞技场战斗", "warning");
+          if (hour < 6) {
+            this.log("当前时间未到6点，跳过竞技场战斗", "warning");
             return;
           }
           if (hour > 22) {
@@ -647,6 +647,16 @@ export class DailyTaskRunner {
             "task_claimweekreward",
             {},
             "领取周常任务奖励",
+          ),
+      },
+      {
+        name: "领取通行证奖励",
+        execute: () =>
+          this.executeGameCommand(
+            tokenId,
+            "activity_recyclewarorderrewardclaim",
+            { actId: 1 },
+            "领取通行证奖励",
           ),
       },
     );

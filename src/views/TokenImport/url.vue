@@ -142,6 +142,8 @@ const handleUrlImport = async () => {
         server: urlForm.server || "未知",
         wsUrl: urlForm.wsUrl || "",
         id: Date.now().toString(),
+        sourceUrl: urlForm.url,
+        importMethod: 'url'
       };
       tokenStore.addToken(newToken);
       message.success("Token添加成功");

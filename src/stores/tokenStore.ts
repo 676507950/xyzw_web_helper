@@ -18,6 +18,8 @@ declare interface TokenData {
   token: string; // 原始Base64 token
   wsUrl: string | null; // 可选的自定义WebSocket URL
   server: string;
+  importMethod?: 'bin' | 'url'; // 导入方式：bin文件或url链接
+  sourceUrl?: string; // 当importMethod为url时，存储url链接
 }
 
 declare interface WebSocketConnection {
@@ -309,15 +311,33 @@ export const useTokenStore = defineStore("tokens", () => {
           const gameToken = gameTokens.value.find((t) => t.id === tokenId);
           console.log(gameToken);
           if (gameToken) {
-            console.log("getArrayBuffer", await getArrayBuffer("小鱼"));
-            const userToken: ArrayBuffer | null = await getArrayBuffer(
-              gameToken.name,
-            );
-            console.log("读取到的ArrayBuffer:", gameToken.name, userToken);
-            if (userToken) {
-              const token = await transformToken(userToken);
-              updateToken(tokenId, { ...gameToken, token });
-              console.log(gameToken);
+            if (gameToken.importMethod === 'url' && gameToken.sourceUrl) {
+              // URL形式token刷新
+              try {
+                const response = await fetch(gameToken.sourceUrl);
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.token) {
+                    // 直接使用返回的token，无需transformToken
+                    updateToken(tokenId, { ...gameToken, token: data.token });
+                    console.log("从URL获取token成功:", gameToken.name);
+                  }
+                }
+              } catch (error) {
+                console.error("从URL获取token失败:", error);
+              }
+            } else {
+              // Bin形式token刷新（原有逻辑）
+              console.log("getArrayBuffer", await getArrayBuffer("小鱼"));
+              const userToken: ArrayBuffer | null = await getArrayBuffer(
+                gameToken.name,
+              );
+              console.log("读取到的ArrayBuffer:", gameToken.name, userToken);
+              if (userToken) {
+                const token = await transformToken(userToken);
+                updateToken(tokenId, { ...gameToken, token });
+                console.log(gameToken);
+              }
             }
           }
           wsLogger.error(`Token 已过期，需要重新导入 [${tokenId}]`);
