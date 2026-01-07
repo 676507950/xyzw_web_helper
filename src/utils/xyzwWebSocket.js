@@ -148,6 +148,7 @@ export function registerDefaultCommands(reg) {
     .register("legion_signin")
     .register("legion_getwarrank")
     .register("legionwar_getdetails")
+    .register("legion_storebuygoods")
 
     //盐场
     .register("legion_getinfobyid")

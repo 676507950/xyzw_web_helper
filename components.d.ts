@@ -37,6 +37,7 @@ declare module 'vue' {
     DailyTaskCard: typeof import('./src/components/Daily/DailyTaskCard.vue')['default']
     DailyTaskStatus: typeof import('./src/components/Daily/DailyTaskStatus.vue')['default']
     DreamHelperCard: typeof import('./src/components/cards/DreamHelperCard.vue')['default']
+    EquipmentRefineModule: typeof import('./src/components/EquipmentRefineModule.vue')['default']
     FightHelperCard: typeof import('./src/components/cards/FightHelperCard.vue')['default']
     FightPvp: typeof import('./src/components/cards/FightPvp.vue')['default']
     FishHelperCard: typeof import('./src/components/cards/FishHelperCard.vue')['default']

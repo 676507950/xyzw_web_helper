@@ -250,6 +250,21 @@ export class GameCommands {
   }
 
   /**
+   * 军团商店购买商品
+   */
+  legion_storebuygoods(ack = 0, seq = 0, params = {}) {
+    return {
+      ack,
+      body: this.g_utils.bon.encode({
+        ...params,
+      }),
+      cmd: "legion_storebuygoods",
+      seq,
+      time: Date.now(),
+    };
+  }
+
+  /**
    * 商店刷新
    */
   store_refresh(ack = 0, seq = 0, params = {}) {
@@ -658,6 +673,21 @@ export class GameCommands {
         ...params,
       }),
       cmd: "legionwar_getdetails",
+      seq,
+      time: Date.now(),
+    };
+  }
+
+  /**
+   * 领取珍宝阁每日免费奖励
+   */
+  collection_claimfreereward(ack = 0, seq = 0, params = {}) {
+    return {
+      ack,
+      body: this.g_utils.bon.encode({
+        ...params,
+      }),
+      cmd: "collection_claimfreereward",
       seq,
       time: Date.now(),
     };

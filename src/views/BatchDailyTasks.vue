@@ -91,6 +91,15 @@
             <n-button size="small" @click="batchClaimFreeEnergy" :disabled="isRunning || selectedTokens.length === 0 || !isWeirdTowerActivityOpen">
               一键领取怪异塔免费道具
             </n-button>
+            <n-button size="small" @click="legion_storebuygoods" :disabled="isRunning || selectedTokens.length === 0">
+              一键购买四圣碎片
+            </n-button>
+            <n-button size="small" @click="store_purchase" :disabled="isRunning || selectedTokens.length === 0">
+              一键黑市采购
+            </n-button>
+            <n-button size="small" @click="collection_claimfreereward" :disabled="isRunning || selectedTokens.length === 0">
+              免费领取珍宝阁
+            </n-button>
           </n-space>
           <n-space vertical>
             <n-checkbox :checked="isAllSelected" :indeterminate="isIndeterminate" @update:checked="handleSelectAll">
@@ -557,6 +566,9 @@ const availableTasks = [
   { label: "一键钓鱼补齐", value: "batchTopUpFish" },
   { label: "一键竞技场补齐", value: "batchTopUpArena" },
   { label: "一键领取怪异塔免费道具", value: "batchClaimFreeEnergy" },
+  { label: "一键购买四圣碎片", value: "legion_storebuygoods" },
+  { label: "一键黑市采购", value: "store_purchase" },
+  { label: "免费领取珍宝阁", value: "collection_claimfreereward" },
 ];
 
 // Task table columns configuration for the tasks list modal
@@ -906,6 +918,256 @@ const selectAllTasks = () => {
 // Deselect all tasks
 const deselectAllTasks = () => {
   taskForm.selectedTasks = [];
+};
+
+// 一键购买四圣碎片
+const legion_storebuygoods = async () => {
+  if (selectedTokens.value.length === 0) return;
+
+  isRunning.value = true;
+  shouldStop.value = false;
+
+  // Reset status
+  selectedTokens.value.forEach((id) => {
+    tokenStatus.value[id] = "waiting";
+  });
+
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+
+    const token = tokens.value.find((t) => t.id === tokenId);
+
+    try {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 开始购买四圣碎片: ${token.name} ===`,
+        type: "info",
+      });
+
+      await ensureConnection(tokenId);
+
+      // Execute purchase command
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `发送购买请求...`,
+        type: "info",
+      });
+      const result = await tokenStore.sendMessageWithPromise(
+        tokenId,
+        "legion_storebuygoods",
+        { "id": 6 },
+        5000,
+      );
+
+      await new Promise((r) => setTimeout(r, 500));
+
+      // Handle result
+      if (result.error) {
+        if (result.error.includes("俱乐部商品购买数量超出上限")) {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `本周已购买过四圣碎片，跳过`,
+            type: "info",
+          });
+        } else if (result.error.includes("物品不存在")) {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `盐锭不足或未加入军团，购买失败`,
+            type: "error",
+          });
+          tokenStatus.value[tokenId] = "failed";
+        } else {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `购买失败: ${result.error}`,
+            type: "error",
+          });
+          tokenStatus.value[tokenId] = "failed";
+        }
+      } else {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `购买成功，获得四圣碎片`,
+          type: "success",
+        });
+        tokenStatus.value[tokenId] = "completed";
+      }
+
+      currentProgress.value = 100;
+    } catch (error) {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `购买过程出错: ${error.message}`,
+        type: "error",
+      });
+      tokenStatus.value[tokenId] = "failed";
+    } finally {
+      await new Promise((r) => setTimeout(r, 1000)); // Add a small delay between accounts
+    }
+  }
+
+  currentRunningTokenId.value = null;
+  isRunning.value = false;
+  shouldStop.value = false;
+};
+
+// 免费领取珍宝阁每日奖励
+const collection_claimfreereward = async () => {
+  if (selectedTokens.value.length === 0) return;
+  isRunning.value = true;
+  shouldStop.value = false;
+  selectedTokens.value.forEach((id) => { tokenStatus.value[id] = "waiting"; });
+  
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+    
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+
+    const token = tokens.value.find((t) => t.id === tokenId);
+
+    try {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 开始免费领取珍宝阁: ${token.name} ===`,
+        type: "info",
+      });
+
+      await ensureConnection(tokenId);
+
+      // Execute claim free reward command
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `发送珍宝阁免费领取请求...`,
+        type: "info",
+      });
+      const result = await tokenStore.sendMessageWithPromise(
+        tokenId,
+        "collection_claimfreereward",
+        {}, // Empty body as specified in the JSON template
+        5000,
+      );
+
+      await new Promise((r) => setTimeout(r, 500));
+
+      // Handle result
+      if (result.error) {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `珍宝阁领取失败: ${result.error}`,
+          type: "error",
+        });
+        tokenStatus.value[tokenId] = "failed";
+      } else {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `珍宝阁领取成功`,
+          type: "success",
+        });
+        tokenStatus.value[tokenId] = "completed";
+      }
+
+      currentProgress.value = 100;
+    } catch (error) {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `珍宝阁领取过程出错: ${error.message}`,
+        type: "error",
+      });
+      tokenStatus.value[tokenId] = "failed";
+    } finally {
+      await new Promise((r) => setTimeout(r, 1000)); // Add a small delay between accounts
+    }
+  }
+
+  currentRunningTokenId.value = null;
+  isRunning.value = false;
+  shouldStop.value = false;
+};
+
+// 黑市一键采购
+const store_purchase = async () => {
+  if (selectedTokens.value.length === 0) return;
+
+  isRunning.value = true;
+  shouldStop.value = false;
+
+  // Reset status
+  selectedTokens.value.forEach((id) => {
+    tokenStatus.value[id] = "waiting";
+  });
+
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+
+    const token = tokens.value.find((t) => t.id === tokenId);
+
+    try {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 开始黑市一键采购: ${token.name} ===`,
+        type: "info",
+      });
+
+      await ensureConnection(tokenId);
+
+      // Execute purchase command
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `发送黑市采购请求...`,
+        type: "info",
+      });
+      const result = await tokenStore.sendMessageWithPromise(
+        tokenId,
+        "store_purchase",
+        {}, // Empty body as specified in the JSON template
+        5000,
+      );
+
+      await new Promise((r) => setTimeout(r, 500));
+
+      // Handle result
+      if (result.error) {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `黑市采购失败: ${result.error}`,
+          type: "error",
+        });
+        tokenStatus.value[tokenId] = "failed";
+      } else {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `黑市采购成功`,
+          type: "success",
+        });
+        tokenStatus.value[tokenId] = "completed";
+      }
+
+      currentProgress.value = 100;
+    } catch (error) {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `黑市采购过程出错: ${error.message}`,
+        type: "error",
+      });
+      tokenStatus.value[tokenId] = "failed";
+    } finally {
+      await new Promise((r) => setTimeout(r, 1000)); // Add a small delay between accounts
+    }
+  }
+
+  currentRunningTokenId.value = null;
+  isRunning.value = false;
+  shouldStop.value = false;
 };
 
 // ======================
