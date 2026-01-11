@@ -251,7 +251,10 @@ export const useTokenStore = defineStore("tokens", () => {
 
     // 更新最后使用时间
     updateToken(tokenId, { lastUsed: new Date().toISOString() });
-
+    //避免点击断开链接
+    if (isConnected) {
+      return token;
+    }
     // 智能连接判断
     const shouldCreateConnection =
       forceReconnect || // 强制重连

@@ -90,8 +90,7 @@ const my_routes = [
           requiresToken: true,
         },
       },
-      // 增加自动路由引用
-      ...generatedRoutes,
+      // 自动路由引用已移至最外层
     ],
   },
   {
