@@ -19,6 +19,7 @@
       <n-tab-pane name="activity" tab="活动" />
       <n-tab-pane v-if="ENABLE_TOOLS_TAB" name="tools" tab="工具" />
       <n-tab-pane name="warrank" tab="盐场" />
+      <n-tab-pane name="peach" tab="蟠桃园" />
       <n-tab-pane name="toprank" tab="巅峰榜" />
       <n-tab-pane name="topclubrank" tab="俱乐部榜" />
       <n-tab-pane name="goldclubrank" tab="黄金积分榜" />
@@ -173,6 +174,9 @@
 
     <!-- 切磋（提取组件） -->
     <fightPvp v-if="activeSection === 'fightPvp'" />
+
+    <!-- 蟠桃园（提取组件） -->
+    <PeachinfoCard v-if="activeSection === 'peach'" />
   </div>
 </template>
 
@@ -205,6 +209,7 @@ import RefineHelperCard from "./cards/RefineHelperCard.vue";
 import TowerStatus from "./Tower/TowerStatus.vue";
 import WeirdTowerStatus from "./Tower/WeirdTowerStatus.vue";
 import BossTower from "./Tower/BossTower.vue";
+import PeachinfoCard from "./Club/PeachInfo.vue";
 const tokenStore = useTokenStore();
 const message = useMessage();
 

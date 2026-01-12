@@ -97,7 +97,7 @@ export function formatWarrankRecordsForExport(legionRankList, queryDate) {
         "大联盟：" + totalbig + "家",
         "正义联盟：" + totalzhengyi + "家",
         "龙盟：" + totallong + "家",
-        "未知：" + totalweizhi + "家",
+        "未知联盟：" + totalweizhi + "家",
       ],
     ],
     { origin: -1 },
@@ -150,10 +150,6 @@ const allianceConfig = [
   {
     keywords: ["大联盟"],
     value: "大联盟",
-  },
-  {
-    keywords: ["新正义"],
-    value: "新正义",
   },
   {
     keywords: ["正义"],

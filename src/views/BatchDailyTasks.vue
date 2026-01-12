@@ -571,6 +571,15 @@ const availableTasks = [
   { label: "免费领取珍宝阁", value: "collection_claimfreereward" },
 ];
 
+const CarresearchItem = [
+  20, 21, 22, 23, 24, 26, 28, 30, 32, 34,
+  36, 38, 40, 42, 44, 47, 50, 53, 56, 59,
+  62, 65, 68, 71, 74, 78, 82, 86, 90, 94,
+  99, 104, 109, 114, 119, 126, 133, 140, 147, 154,
+  163, 172, 181, 190, 199, 210, 221, 232, 243, 369,
+  393, 422, 457, 498, 548, 607, 678, 763, 865, 1011
+];
+
 // Task table columns configuration for the tasks list modal
 const taskColumns = [
   { title: "任务名称", key: "name", width: 150 },
@@ -3911,7 +3920,8 @@ const batchClaimCars = async () => {
         10000,
       );
       let carList = normalizeCars(res?.body ?? res);
-
+      let refreshlevel = res?.roleCar?.research?.[1] || 0;
+      
       // 2. Claim Cars
       let claimedCount = 0;
       for (const car of carList) {
@@ -3929,6 +3939,47 @@ const batchClaimCars = async () => {
               message: `收车成功: ${gradeLabel(car.color)}`,
               type: "success",
             });
+            const roleRes = await tokenStore.sendMessageWithPromise(
+              tokenId,
+              "role_getroleinfo",
+              {},
+              5000,
+            );
+            let refreshpieces = Number(
+              roleRes?.role?.items?.[35009]?.quantity || 0,
+            );
+            while (refreshlevel < CarresearchItem.length && refreshpieces >= CarresearchItem[refreshlevel]) {
+              try {
+                await tokenStore.sendMessageWithPromise(tokenId, 'car_research', { researchId: 1 }, 5000);
+                refreshlevel++;
+                
+                // 更新refreshpieces数量
+                const updatedRoleRes = await tokenStore.sendMessageWithPromise(
+                  tokenId,
+                  "role_getroleinfo",
+                  {},
+                  5000,
+                );
+                refreshpieces = Number(
+                  updatedRoleRes?.role?.items?.[35009]?.quantity || 0,
+                );
+                
+                addLog({
+                  time: new Date().toLocaleTimeString(),
+                  message: `执行车辆改装升级，当前等级: ${refreshlevel}`,
+                  type: "success",
+                });
+
+                await new Promise((r) => setTimeout(r, 300));
+              } catch (e) {
+                addLog({
+                  time: new Date().toLocaleTimeString(),
+                  message: `车辆改装升级失败: ${e.message}`,
+                  type: "error",
+                });
+                break; // 升级失败时跳出循环
+              }
+            }
           } catch (e) {
             addLog({
               time: new Date().toLocaleTimeString(),

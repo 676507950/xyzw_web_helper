@@ -29,14 +29,13 @@ export function formatWarrankRecordsForExport(legionRankList, queryDate) {
   }
   // 构造工作表数据
   const worksheetData = [
-    ['查询日期', '排名', 'ID' , '区服', '俱乐部名', '战力', '红淬','前三红淬', '黄金积分', '联盟','公告'],
+    ['排名', 'ID' , '区服', '俱乐部名', '战力', '红淬','前三红淬', '黄金积分', '联盟','公告'],
     ...legionRankList
       .sort((a, b) => (a.rank || 0) - (b.rank || 0))
       .map((member, index) => [
-        queryDate,
         member.rank,
-	   member.id,
-	   member.ServerId,
+	      member.id,
+	      member.ServerId,
         member.Clubname,
         formatPower(member.power),
         member.redQuench,
@@ -102,7 +101,7 @@ export function formatWarrankRecordsForExport(legionRankList, queryDate) {
   ], { origin: -1 });
   
   // 设置列宽
-  worksheet['!cols'] = [{wch:12}, {wch:8}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:80}];
+  worksheet['!cols'] = [{wch:8}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:80}];
 
   // 添加到工作簿
   XLSX.utils.book_append_sheet(workbook, worksheet, '黄金积分详情');
@@ -135,18 +134,29 @@ const connectstr = (str1,str2,str3) => {
   return str1 + ',' + str2 + ',' +str3
 }
 
+const allianceConfig = [
+  {
+    keywords: ["大联盟"],
+    value: "大联盟",
+  },
+  {
+    keywords: ["正义"],
+    value: "正义联盟",
+  },
+  {
+    keywords: ["龙盟", "龍盟"],
+    value: "龙盟",  
+  },
+  {
+    keywords: ["梦", "梦盟", "梦想之盟"],
+    value: "梦盟",
+  },
+];
+
 export const allianceincludes = (str1) => {
-	if (str1.includes("梦盟") || str1.includes("梦想之盟") || str1.includes("梦")){
-		return ("梦盟")
-	}
-	else if(str1.includes("大联盟")){
-		return ("大联盟")
-	}
-	else if(str1.includes("正义")){
-		return ("正义联盟")
-	}
-	else if(str1.includes("龙盟") || str1.includes("龍盟")){
-		return ("龙盟")
-	}
-	else { return ("未知") }
-}
+  const matchedItem = allianceConfig.find((item) => {
+    return item.keywords.some((keyword) => str1.includes(keyword));
+  });
+
+  return matchedItem ? matchedItem.value : "未知联盟";
+};

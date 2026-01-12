@@ -76,9 +76,9 @@
             <span class="tab-text">梦盟</span>
             <span class="tab-count">{{ getActiveAllianceCount('梦盟') }}</span>
           </div>
-          <div class="alliance-tab" :class="{ active: activeAlliance === '新正义' }" @click="setActiveAlliance('新正义')">
-            <span class="tab-text">新正义</span>
-            <span class="tab-count">{{ getActiveAllianceCount('新正义') }}</span>
+          <div class="alliance-tab" :class="{ active: activeAlliance === '正义联盟' }" @click="setActiveAlliance('正义联盟')">
+            <span class="tab-text">正义联盟</span>
+            <span class="tab-count">{{ getActiveAllianceCount('正义联盟') }}</span>
           </div>
           <div class="alliance-tab" :class="{ active: activeAlliance === '龙盟' }" @click="setActiveAlliance('龙盟')">
             <span class="tab-text">龙盟</span>
@@ -1143,7 +1143,7 @@ const getAllianceClass = (alliance) => {
       return 'alliance-large';
     case '梦盟':
       return 'alliance-dream';
-    case '新正义':
+    case '正义联盟':
       return 'alliance-xin-justice';
     case '龙盟':
       return 'alliance-dragon';
