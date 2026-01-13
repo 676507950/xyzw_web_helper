@@ -11,6 +11,7 @@ declare module 'vue' {
     ABadge: typeof import('@arco-design/web-vue')['Badge']
     AButton: typeof import('@arco-design/web-vue')['Button']
     ACard: typeof import('@arco-design/web-vue')['Card']
+    ADatePicker: typeof import('@arco-design/web-vue')['DatePicker']
     AEmpty: typeof import('@arco-design/web-vue')['Empty']
     AList: typeof import('@arco-design/web-vue')['List']
     AListItem: typeof import('@arco-design/web-vue')['ListItem']

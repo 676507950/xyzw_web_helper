@@ -14,12 +14,7 @@
       </div>
 
       <!-- Token导入区域 -->
-      <a-modal
-        v-model:visible="showImportForm"
-        width="40rem"
-        :footer="false"
-        :default-visible="!tokenStore.hasTokens"
-      >
+      <a-modal v-model:visible="showImportForm" width="40rem" :footer="false" :default-visible="!tokenStore.hasTokens">
         <template #title>
           <h2>
             <n-icon>
@@ -30,32 +25,19 @@
         </template>
         <div class="card-header">
           <!-- 导入方式选择 -->
-          <n-radio-group
-            v-model:value="importMethod"
-            class="import-method-tabs"
-            size="small"
-          >
+          <n-radio-group v-model:value="importMethod" class="import-method-tabs" size="small">
             <n-radio-button value="manual"> 手动输入 </n-radio-button>
             <n-radio-button value="url"> URL获取 </n-radio-button>
             <n-radio-button value="bin"> BIN获取 </n-radio-button>
           </n-radio-group>
         </div>
         <div class="card-body">
-          <manual-token-form
-            @cancel="() => (showImportForm = false)"
-            @ok="() => (showImportForm = false)"
-            v-if="importMethod === 'manual'"
-          />
-          <url-token-form
-            @cancel="() => (showImportForm = false)"
-            @ok="() => (showImportForm = false)"
-            v-if="importMethod === 'url'"
-          />
-          <bin-token-form
-            @cancel="() => (showImportForm = false)"
-            @ok="() => (showImportForm = false)"
-            v-if="importMethod === 'bin'"
-          />
+          <manual-token-form @cancel="() => (showImportForm = false)" @ok="() => (showImportForm = false)"
+            v-if="importMethod === 'manual'" />
+          <url-token-form @cancel="() => (showImportForm = false)" @ok="() => (showImportForm = false)"
+            v-if="importMethod === 'url'" />
+          <bin-token-form @cancel="() => (showImportForm = false)" @ok="() => (showImportForm = false)"
+            v-if="importMethod === 'bin'" />
         </div>
       </a-modal>
 
@@ -70,11 +52,7 @@
             </n-radio-group>
           </n-space>
           <div class="header-actions">
-            <n-button
-              v-if="tokenStore.selectedToken"
-              type="success"
-              @click="goToDashboard"
-            >
+            <n-button v-if="tokenStore.selectedToken" type="success" @click="goToDashboard">
               <template #icon>
                 <n-icon>
                   <Home />
@@ -83,11 +61,7 @@
               返回控制台
             </n-button>
 
-            <n-button
-              v-if="!showImportForm"
-              type="primary"
-              @click="showImportForm = true"
-            >
+            <n-button v-if="!showImportForm" type="primary" @click="showImportForm = true">
               <template #icon>
                 <n-icon>
                   <Add />
@@ -110,15 +84,12 @@
         </div>
 
         <div class="tokens-grid" v-if="viewMode === 'card'">
-          <a-card
-            v-for="token in tokenStore.gameTokens"
-            :key="token.id"
-            :class="{
+          <a-card v-for="(token, index) in tokenStore.gameTokens" :key="token.id" draggable="true"
+            @dragstart="handleDragStart(index, $event)" @dragover="handleDragOver($event)"
+            @drop="handleDrop(index, $event)" :class="{
               'token-card': true,
               active: selectedTokenId === token.id,
-            }"
-            @click="selectToken(token)"
-          >
+            }" @click="selectToken(token)">
             <template #title>
               <a-space class="token-name">
                 {{ token.name }}
@@ -126,10 +97,7 @@
                   token.server
                 }}</a-tag>
                 <!-- 连接状态指示器 -->
-                <a-badge
-                  :status="getTokenStyle(token.id)"
-                  :text="getConnectionStatusText(token.id)"
-                />
+                <a-badge :status="getTokenStyle(token.id)" :text="getConnectionStatusText(token.id)" />
                 <!-- 连接状态文字 -->
                 <!-- <a-tag color="green">
                   {{ getConnectionStatusText(token.id) }}
@@ -137,10 +105,7 @@
               </a-space>
             </template>
             <template #extra>
-              <n-dropdown
-                :options="getTokenActions(token)"
-                @select="(key) => handleTokenAction(key, token)"
-              >
+              <n-dropdown :options="getTokenActions(token)" @select="(key) => handleTokenAction(key, token)">
                 <n-button text>
                   <template #icon>
                     <n-icon>
@@ -156,10 +121,7 @@
                 <span class="token-label">Token:</span>
                 <code class="token-value">{{ maskToken(token.token) }}</code>
               </div>
-              <a-button
-                :loading="refreshingTokens.has(token.id)"
-                @click.stop="refreshToken(token)"
-              >
+              <a-button :loading="refreshingTokens.has(token.id)" @click.stop="refreshToken(token)">
                 <template #icon>
                   <n-icon>
                     <Refresh />
@@ -187,25 +149,14 @@
               <div class="storage-info">
                 <div class="storage-item">
                   <span class="storage-label">存储类型：</span>
-                  <n-tag
-                    size="small"
-                    :type="token.importMethod === 'url' ? 'success' : 'warning'"
-                  >
+                  <n-tag size="small" :type="token.importMethod === 'url' ? 'success' : 'warning'">
                     {{ token.importMethod === "url" ? "长期有效" : "临时存储" }}
                   </n-tag>
                 </div>
 
                 <!-- 升级选项（仅对临时存储的token显示） -->
-                <div
-                  v-if="token.importMethod !== 'url'"
-                  class="storage-upgrade"
-                >
-                  <n-button
-                    size="tiny"
-                    type="success"
-                    ghost
-                    @click.stop="upgradeTokenToPermanent(token)"
-                  >
+                <div v-if="token.importMethod !== 'url'" class="storage-upgrade">
+                  <n-button size="tiny" type="success" ghost @click.stop="upgradeTokenToPermanent(token)">
                     <template #icon>
                       <n-icon>
                         <Star />
@@ -217,13 +168,8 @@
               </div>
             </template>
             <template #actions>
-              <n-button
-                type="primary"
-                size="large"
-                block
-                :loading="connectingTokens.has(token.id)"
-                @click="startTaskManagement(token)"
-              >
+              <n-button type="primary" size="large" block :loading="connectingTokens.has(token.id)"
+                @click="startTaskManagement(token)">
                 <template #icon>
                   <n-icon>
                     <Home />
@@ -237,55 +183,37 @@
 
         <!-- List View -->
         <div class="tokens-list" v-else>
-          <n-card
-            v-for="token in tokenStore.gameTokens"
-            :key="token.id"
-            size="small"
-            style="margin-bottom: 8px"
-            hoverable
-            @click="selectToken(token)"
-            :class="{ active: selectedTokenId === token.id }"
-          >
+          <n-card v-for="(token, index) in tokenStore.gameTokens" :key="token.id" draggable="true"
+            @dragstart="handleDragStart(index, $event)" @dragover="handleDragOver($event)"
+            @drop="handleDrop(index, $event)" size="small" style="margin-bottom: 8px" hoverable
+            @click="selectToken(token)" :class="{ active: selectedTokenId === token.id }">
             <n-space justify="space-between" align="center">
               <!-- Info -->
               <n-space align="center" :size="24">
                 <div style="min-width: 120px">
-                  <span
-                    style="
+                  <span style="
                       font-weight: bold;
                       font-size: 1.1em;
                       margin-right: 8px;
-                    "
-                    >{{ token.name }}</span
-                  >
+                    ">{{ token.name }}</span>
                   <n-tag size="small" type="error" v-if="token.server">{{
                     token.server
                   }}</n-tag>
                 </div>
 
                 <div style="min-width: 100px">
-                  <a-badge
-                    :status="getTokenStyle(token.id)"
-                    :text="getConnectionStatusText(token.id)"
-                  />
+                  <a-badge :status="getTokenStyle(token.id)" :text="getConnectionStatusText(token.id)" />
                 </div>
 
-                <n-tag
-                  size="small"
-                  :type="token.importMethod === 'url' ? 'success' : 'warning'"
-                >
+                <n-tag size="small" :type="token.importMethod === 'url' ? 'success' : 'warning'">
                   {{ token.importMethod === "url" ? "长期" : "临时" }}
                 </n-tag>
               </n-space>
 
               <!-- Actions -->
               <n-space>
-                <n-button
-                  size="small"
-                  type="primary"
-                  :loading="connectingTokens.has(token.id)"
-                  @click.stop="startTaskManagement(token)"
-                >
+                <n-button size="small" type="primary" :loading="connectingTokens.has(token.id)"
+                  @click.stop="startTaskManagement(token)">
                   <template #icon>
                     <n-icon>
                       <Home />
@@ -293,11 +221,7 @@
                   </template>
                   管理
                 </n-button>
-                <n-button
-                  size="small"
-                  @click.stop="refreshToken(token)"
-                  :loading="refreshingTokens.has(token.id)"
-                >
+                <n-button size="small" @click.stop="refreshToken(token)" :loading="refreshingTokens.has(token.id)">
                   <template #icon>
                     <n-icon>
                       <Refresh />
@@ -305,10 +229,7 @@
                   </template>
                   刷新
                 </n-button>
-                <n-dropdown
-                  :options="getTokenActions(token)"
-                  @select="(key) => handleTokenAction(key, token)"
-                >
+                <n-dropdown :options="getTokenActions(token)" @select="(key) => handleTokenAction(key, token)">
                   <n-button size="small" circle @click.stop>
                     <template #icon>
                       <n-icon>
@@ -329,37 +250,18 @@
           <i class="mdi:bed-empty"></i>
         </template>
         还没有导入任何Token
-        <a-button type="link" @click="openshowImportForm"
-          >打开Token管理</a-button
-        >
+        <a-button type="link" @click="openshowImportForm">打开Token管理</a-button>
       </a-empty>
     </div>
 
     <!-- 编辑Token模态框 -->
-    <n-modal
-      v-model:show="showEditModal"
-      preset="card"
-      title="编辑Token"
-      style="width: 500px"
-    >
-      <n-form
-        ref="editFormRef"
-        :model="editForm"
-        :rules="editRules"
-        label-placement="left"
-        label-width="80px"
-      >
+    <n-modal v-model:show="showEditModal" preset="card" title="编辑Token" style="width: 500px">
+      <n-form ref="editFormRef" :model="editForm" :rules="editRules" label-placement="left" label-width="80px">
         <n-form-item label="名称" path="name">
           <n-input v-model:value="editForm.name" />
         </n-form-item>
         <n-form-item label="Token字符串" path="token">
-          <n-input
-            v-model:value="editForm.token"
-            type="textarea"
-            :rows="3"
-            placeholder="粘贴Token字符串..."
-            clearable
-          />
+          <n-input v-model:value="editForm.token" type="textarea" :rows="3" placeholder="粘贴Token字符串..." clearable />
         </n-form-item>
         <n-form-item label="服务器">
           <n-input v-model:value="editForm.server" />
@@ -429,6 +331,35 @@ const importMethod = ref("manual");
 const refreshingTokens = ref(new Set());
 const connectingTokens = ref(new Set());
 const viewMode = ref("card");
+const dragIndex = ref(null);
+
+const handleDragStart = (index, event) => {
+  dragIndex.value = index;
+  event.dataTransfer.effectAllowed = "move";
+  // 可以在这里设置拖拽时的预览图等
+};
+
+const handleDragOver = (event) => {
+  event.preventDefault(); // 允许放置
+  event.dataTransfer.dropEffect = "move";
+};
+
+const handleDrop = (index, event) => {
+  event.preventDefault();
+  if (dragIndex.value === null || dragIndex.value === index) return;
+
+  const tokens = [...tokenStore.gameTokens];
+  const draggedItem = tokens[dragIndex.value];
+
+  // 移动元素
+  tokens.splice(dragIndex.value, 1);
+  tokens.splice(index, 0, draggedItem);
+
+  // 更新 store
+  tokenStore.gameTokens = tokens;
+  dragIndex.value = null;
+  message.success("Token 顺序已更新");
+};
 
 // 编辑表单
 const editForm = reactive({
@@ -798,7 +729,7 @@ const refreshAllTokens = async () => {
       try {
         let successCount = 0
         let failCount = 0
-        
+
         // 显示进度提示
         const loadingMessage = message.loading(`正在批量刷新Token (0/${tokensToRefresh.length})`, {
           duration: 0
@@ -806,11 +737,11 @@ const refreshAllTokens = async () => {
 
         for (let i = 0; i < tokensToRefresh.length; i++) {
           const token = tokensToRefresh[i]
-          
+
           try {
             // 更新进度显示
             loadingMessage.content = `正在刷新Token (${i + 1}/${tokensToRefresh.length}): ${token.name}`
-            
+
             // 调用单个刷新函数
             await refreshToken(token)
             successCount++
@@ -818,7 +749,7 @@ const refreshAllTokens = async () => {
             console.error(`刷新Token "${token.name}" 失败:`, error)
             failCount++
           }
-          
+
           // 添加短暂延迟避免请求过于频繁
           if (i < tokensToRefresh.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 500))
@@ -1534,6 +1465,7 @@ onMounted(async () => {
 }
 
 @keyframes pulse-green {
+
   0%,
   100% {
     opacity: 1;
@@ -1545,6 +1477,7 @@ onMounted(async () => {
 }
 
 @keyframes pulse-yellow {
+
   0%,
   100% {
     opacity: 1;
@@ -1556,6 +1489,7 @@ onMounted(async () => {
 }
 
 @keyframes pulse-red {
+
   0%,
   100% {
     opacity: 1;
