@@ -88,16 +88,22 @@
               ">
               一键竞技场补齐
             </n-button>
-            <n-button size="small" @click="batchClaimFreeEnergy" :disabled="isRunning || selectedTokens.length === 0 || !isWeirdTowerActivityOpen">
+            <n-button size="small" @click="batchClaimFreeEnergy"
+              :disabled="isRunning || selectedTokens.length === 0 || !isWeirdTowerActivityOpen">
               一键领取怪异塔免费道具
             </n-button>
             <n-button size="small" @click="legion_storebuygoods" :disabled="isRunning || selectedTokens.length === 0">
               一键购买四圣碎片
             </n-button>
+            <n-button size="small" @click="legionStoreBuySkinCoins"
+              :disabled="isRunning || selectedTokens.length === 0">
+              一键购买俱乐部5皮肤币
+            </n-button>
             <n-button size="small" @click="store_purchase" :disabled="isRunning || selectedTokens.length === 0">
               一键黑市采购
             </n-button>
-            <n-button size="small" @click="collection_claimfreereward" :disabled="isRunning || selectedTokens.length === 0">
+            <n-button size="small" @click="collection_claimfreereward"
+              :disabled="isRunning || selectedTokens.length === 0">
               免费领取珍宝阁
             </n-button>
           </n-space>
@@ -312,13 +318,13 @@
             <span style="color: #6b7280">运行类型：</span>
             <span>{{
               task.runType === "daily" ? "每天固定时间" : "Cron表达式"
-            }}</span>
+              }}</span>
           </div>
           <div style="margin-bottom: 4px">
             <span style="color: #6b7280">运行时间：</span>
             <span>{{
               task.runType === "daily" ? task.runTime : task.cronExpression
-            }}</span>
+              }}</span>
           </div>
           <div style="margin-bottom: 4px">
             <span style="color: #6b7280">下次执行：</span>
@@ -469,12 +475,12 @@ const getCurrentActivityWeek = computed(() => {
   const start = new Date('2025-12-12T12:00:00'); // 起始时间：黑市周开始
   const weekDuration = 7 * 24 * 60 * 60 * 1000; // 一周毫秒数
   const cycleDuration = 3 * weekDuration; // 三周期毫秒数
-  
+
   const elapsed = now - start;
   if (elapsed < 0) return null; // 活动开始前
-  
+
   const cyclePosition = elapsed % cycleDuration;
-  
+
   if (cyclePosition < weekDuration) {
     return '黑市周';
   } else if (cyclePosition < 2 * weekDuration) {
@@ -1024,16 +1030,114 @@ const legion_storebuygoods = async () => {
   shouldStop.value = false;
 };
 
+// 一键购买俱乐部5皮肤币
+const legionStoreBuySkinCoins = async () => {
+  if (selectedTokens.value.length === 0) return;
+
+  isRunning.value = true;
+  shouldStop.value = false;
+
+  // Reset status
+  selectedTokens.value.forEach((id) => {
+    tokenStatus.value[id] = "waiting";
+  });
+
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+
+    const token = tokens.value.find((t) => t.id === tokenId);
+
+    try {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 开始购买俱乐部5皮肤币: ${token.name} ===`,
+        type: "info",
+      });
+
+      await ensureConnection(tokenId);
+
+      // Execute purchase command
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `发送购买请求...`,
+        type: "info",
+      });
+
+      for (let i = 0; i < 5; i++) {
+        const result = await tokenStore.sendMessageWithPromise(
+          tokenId,
+          "legion_storebuygoods",
+          { "id": 1 },
+          5000,
+        );
+
+        await new Promise((r) => setTimeout(r, 500));
+      }
+
+      // Handle result
+      if (result.error) {
+        if (result.error.includes("俱乐部商品购买数量超出上限")) {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `本周已购买过皮肤币，跳过`,
+            type: "info",
+          });
+        } else if (result.error.includes("物品不存在")) {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `盐锭不足或未加入军团，购买失败`,
+            type: "error",
+          });
+          tokenStatus.value[tokenId] = "failed";
+        } else {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `购买失败: ${result.error}`,
+            type: "error",
+          });
+          tokenStatus.value[tokenId] = "failed";
+        }
+      } else {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `购买成功，获得皮肤币`,
+          type: "success",
+        });
+        tokenStatus.value[tokenId] = "completed";
+      }
+
+      currentProgress.value = 100;
+    } catch (error) {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `购买过程出错: ${error.message}`,
+        type: "error",
+      });
+      tokenStatus.value[tokenId] = "failed";
+    } finally {
+      await new Promise((r) => setTimeout(r, 1000)); // Add a small delay between accounts
+    }
+  }
+
+  currentRunningTokenId.value = null;
+  isRunning.value = false;
+  shouldStop.value = false;
+};
+
 // 免费领取珍宝阁每日奖励
 const collection_claimfreereward = async () => {
   if (selectedTokens.value.length === 0) return;
   isRunning.value = true;
   shouldStop.value = false;
   selectedTokens.value.forEach((id) => { tokenStatus.value[id] = "waiting"; });
-  
+
   for (const tokenId of selectedTokens.value) {
     if (shouldStop.value) break;
-    
+
     currentRunningTokenId.value = tokenId;
     tokenStatus.value[tokenId] = "running";
     currentProgress.value = 0;
@@ -4496,18 +4600,18 @@ const batchClaimFreeEnergy = async () => {
   if (selectedTokens.value.length === 0) return;
   isRunning.value = true;
   shouldStop.value = false;
-  
+
   // Reset status
   selectedTokens.value.forEach((id) => {
     tokenStatus.value[id] = "waiting";
   });
-  
+
   for (const tokenId of selectedTokens.value) {
     if (shouldStop.value) break;
     currentRunningTokenId.value = tokenId;
     tokenStatus.value[tokenId] = "running";
     currentProgress.value = 0;
-    
+
     const token = tokens.value.find((t) => t.id === tokenId);
     try {
       addLog({
@@ -4515,9 +4619,9 @@ const batchClaimFreeEnergy = async () => {
         message: `=== 开始领取怪异塔免费道具: ${token.name} ===`,
         type: "info",
       });
-      
+
       await ensureConnection(tokenId);
-      
+
       // 获取免费道具数量
       const freeEnergyResult = await tokenStore.sendMessageWithPromise(
         tokenId,
@@ -4527,7 +4631,7 @@ const batchClaimFreeEnergy = async () => {
         },
         5000
       );
-      
+
       if (freeEnergyResult && freeEnergyResult.mergeBox.freeEnergy > 0) {
         // 领取免费道具
         await tokenStore.sendMessageWithPromise(
@@ -4550,7 +4654,7 @@ const batchClaimFreeEnergy = async () => {
           type: "success"
         });
       }
-      
+
       tokenStatus.value[tokenId] = "completed";
     } catch (error) {
       console.error(error);
@@ -4564,7 +4668,7 @@ const batchClaimFreeEnergy = async () => {
     currentProgress.value = 100;
     await new Promise((r) => setTimeout(r, 500));
   }
-  
+
   isRunning.value = false;
   currentRunningTokenId.value = null;
   message.success("批量领取怪异塔免费道具结束");
