@@ -54,7 +54,7 @@
         </h4>
         <div class="game-tokens-list">
           <div
-            v-for="(tokenData, roleId) in gameTokens"
+            v-for="(tokenData, roleId) in localTokenStore.gameTokens"
             :key="roleId"
             class="game-token-item"
           >
@@ -597,6 +597,12 @@ const clearAllTokens = () => {
     color: var(--text-primary);
     font-size: var(--font-size-md);
   }
+}
+
+.game-tokens-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
 .token-item {

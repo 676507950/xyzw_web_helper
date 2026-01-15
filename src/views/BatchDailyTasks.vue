@@ -378,7 +378,27 @@
           </div>
           <div class="setting-item" v-if="taskForm.runType === 'cron'">
             <label class="setting-label">Cron表达式</label>
-            <n-input v-model:value="taskForm.cronExpression" placeholder="请输入Cron表达式" />
+            <n-input v-model:value="taskForm.cronExpression" placeholder="请输入Cron表达式" @input="parseCronExpression" />
+            
+            <!-- Cron表达式解析结果 -->
+            <div class="cron-parser" v-if="taskForm.cronExpression">
+              <div v-if="cronValidation.valid" class="cron-validation success">
+                <n-text type="success">✓ {{ cronValidation.message }}</n-text>
+              </div>
+              <div v-else class="cron-validation error">
+                <n-text type="error">✗ {{ cronValidation.message }}</n-text>
+              </div>
+              
+              <!-- 未来执行时间 -->
+              <div v-if="cronValidation.valid && cronNextRuns.length > 0" class="cron-next-runs">
+                <h4>未来5次执行时间：</h4>
+                <ul>
+                  <li v-for="(run, index) in cronNextRuns" :key="index">
+                    {{ run }}
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
           <div class="setting-item">
             <div style="
@@ -549,6 +569,10 @@ const taskForm = reactive({
   enabled: true, // Whether the task is enabled
 });
 
+// Cron表达式解析相关变量
+const cronValidation = ref({ valid: true, message: "" });
+const cronNextRuns = ref([]);
+
 // Available tasks for scheduling - Maps task function names to display labels
 const availableTasks = [
   { label: "日常任务", value: "startBatch" },
@@ -628,17 +652,17 @@ const taskColumns = [
 const loadScheduledTasks = () => {
   try {
     const saved = localStorage.getItem("scheduledTasks");
-    console.log("Raw localStorage data:", saved);
+
     if (saved) {
       const parsed = JSON.parse(saved);
-      console.log("Parsed data:", parsed);
-      console.log("Is array:", Array.isArray(parsed));
+
+
       // Ensure we have an array
       scheduledTasks.value = Array.isArray(parsed) ? parsed : [];
-      console.log("Loaded scheduled tasks:", scheduledTasks.value);
-      console.log("Loaded tasks count:", scheduledTasks.value.length);
+
+
     } else {
-      console.log("No saved tasks in localStorage");
+
       scheduledTasks.value = [];
     }
   } catch (error) {
@@ -651,13 +675,13 @@ const loadScheduledTasks = () => {
 const saveScheduledTasks = () => {
   try {
     const dataToSave = JSON.stringify(scheduledTasks.value);
-    console.log("Saving to localStorage:", dataToSave);
+
     localStorage.setItem("scheduledTasks", dataToSave);
     // Verify save was successful
     const saved = localStorage.getItem("scheduledTasks");
-    console.log("Verified saved data:", saved);
-    console.log("Saved scheduled tasks:", scheduledTasks.value);
-    console.log("Saved tasks count:", scheduledTasks.value.length);
+
+
+
   } catch (error) {
     console.error("Failed to save scheduled tasks:", error);
   }
@@ -702,23 +726,115 @@ const validateCronExpression = (expression) => {
 
   const [minute, hour, dayOfMonth, month, dayOfWeek] = cronParts;
 
-  // 定义通用的cron字段验证函数
+  // 定义通用的cron字段验证函数，不使用正则表达式
   const validateCronField = (field, min, max, fieldName) => {
-    // 支持：* / */5 / 0/1 / 1-5 / 1,3,5 / 1-10/2
-    const cronFieldRegex = new RegExp(`^(?:\\*|\\*/\\d+|[0-9]+/\\d+|(?:[0-9]+-?)*[0-9]+(?:,[0-9]+-?)*[0-9]+(?:/\\d+)?)$`);
-
-    if (!cronFieldRegex.test(field)) {
-      return { valid: false, message: `${fieldName}字段格式错误` };
+    // 处理星号
+    if (field === '*') {
+      return { valid: true };
     }
-
-    // 如果是简单数字，验证范围
-    if (/^\d+$/.test(field)) {
-      const num = parseInt(field);
-      if (num < min || num > max) {
-        return { valid: false, message: `${fieldName}字段必须在${min}-${max}之间` };
+    
+    // 处理步长格式，如 */5 或 0/1
+    if (field.includes('/')) {
+      const parts = field.split('/');
+      if (parts.length !== 2) {
+        return { valid: false, message: `${fieldName}字段步长格式错误` };
       }
+      const [range, stepStr] = parts;
+      const step = parseInt(stepStr);
+      if (isNaN(step) || step <= 0) {
+        return { valid: false, message: `${fieldName}字段步长必须是正整数` };
+      }
+      
+      // 验证范围部分
+      if (range !== '*') {
+        // 范围部分可能是列表或单个范围
+        if (range.includes(',')) {
+          const rangeItems = range.split(',');
+          for (const item of rangeItems) {
+            if (item.includes('-')) {
+              // 处理范围，如 1-5
+              const rangeParts = item.split('-');
+              if (rangeParts.length !== 2) {
+                return { valid: false, message: `${fieldName}字段范围格式错误` };
+              }
+              const [start, end] = rangeParts.map(Number);
+              if (isNaN(start) || isNaN(end) || start < min || end > max || start > end) {
+                return { valid: false, message: `${fieldName}字段范围必须在${min}-${max}之间，且开始值小于等于结束值` };
+              }
+            } else {
+              // 处理单个数字
+              const num = parseInt(item);
+              if (isNaN(num) || num < min || num > max) {
+                return { valid: false, message: `${fieldName}字段必须在${min}-${max}之间` };
+              }
+            }
+          }
+        } else if (range.includes('-')) {
+          // 处理范围，如 1-5
+          const rangeParts = range.split('-');
+          if (rangeParts.length !== 2) {
+            return { valid: false, message: `${fieldName}字段范围格式错误` };
+          }
+          const [start, end] = rangeParts.map(Number);
+          if (isNaN(start) || isNaN(end) || start < min || end > max || start > end) {
+            return { valid: false, message: `${fieldName}字段范围必须在${min}-${max}之间，且开始值小于等于结束值` };
+          }
+        } else {
+          // 处理单个数字
+          const num = parseInt(range);
+          if (isNaN(num) || num < min || num > max) {
+            return { valid: false, message: `${fieldName}字段必须在${min}-${max}之间` };
+          }
+        }
+      }
+      return { valid: true };
     }
-
+    
+    // 处理列表格式，如 1,3,5 或 1-5,7-9
+    if (field.includes(',')) {
+      const items = field.split(',');
+      for (const item of items) {
+        const trimmedItem = item.trim();
+        if (trimmedItem.includes('-')) {
+          // 处理范围，如 1-5
+          const rangeParts = trimmedItem.split('-');
+          if (rangeParts.length !== 2) {
+            return { valid: false, message: `${fieldName}字段范围格式错误` };
+          }
+          const [start, end] = rangeParts.map(Number);
+          if (isNaN(start) || isNaN(end) || start < min || end > max || start > end) {
+            return { valid: false, message: `${fieldName}字段范围必须在${min}-${max}之间，且开始值小于等于结束值` };
+          }
+        } else {
+          // 处理单个数字
+          const num = parseInt(trimmedItem);
+          if (isNaN(num) || num < min || num > max) {
+            return { valid: false, message: `${fieldName}字段必须在${min}-${max}之间` };
+          }
+        }
+      }
+      return { valid: true };
+    }
+    
+    // 处理范围格式，如 1-5
+    if (field.includes('-')) {
+      const rangeParts = field.split('-');
+      if (rangeParts.length !== 2) {
+        return { valid: false, message: `${fieldName}字段范围格式错误` };
+      }
+      const [start, end] = rangeParts.map(Number);
+      if (isNaN(start) || isNaN(end) || start < min || end > max || start > end) {
+        return { valid: false, message: `${fieldName}字段范围必须在${min}-${max}之间，且开始值小于等于结束值` };
+      }
+      return { valid: true };
+    }
+    
+    // 处理单个数字
+    const num = parseInt(field);
+    if (isNaN(num) || num < min || num > max) {
+      return { valid: false, message: `${fieldName}字段必须在${min}-${max}之间` };
+    }
+    
     return { valid: true };
   };
 
@@ -753,6 +869,90 @@ const validateCronExpression = (expression) => {
   }
 
   return { valid: true, message: "Cron表达式格式正确" };
+};
+
+// Parse cron expression and calculate next execution times
+const parseCronExpression = (expression) => {
+  // Validate the expression first
+  const validation = validateCronExpression(expression);
+  cronValidation.value = validation;
+  
+  if (!validation.valid) {
+    cronNextRuns.value = [];
+    return;
+  }
+  
+  // Parse the expression and calculate next runs
+  const cronParts = expression.split(" ").filter(Boolean);
+  const [minuteField, hourField, dayOfMonthField, monthField, dayOfWeekField] = cronParts;
+  
+  // Calculate next 5 execution times
+  const nextRuns = calculateNextRuns(minuteField, hourField, dayOfMonthField, monthField, dayOfWeekField, 5);
+  cronNextRuns.value = nextRuns;
+};
+
+// Calculate next execution times for a cron expression
+const calculateNextRuns = (minuteField, hourField, dayOfMonthField, monthField, dayOfWeekField, count = 5) => {
+  const now = new Date();
+  const nextRuns = [];
+  let current = new Date(now);
+  current.setMilliseconds(0);
+  current.setSeconds(0);
+  current.setMinutes(current.getMinutes() + 1); // Start from next minute
+  
+  // Limit the search to 1 year to prevent infinite loops
+  const maxDate = new Date(now);
+  maxDate.setFullYear(maxDate.getFullYear() + 1);
+  
+  while (nextRuns.length < count && current <= maxDate) {
+    // Parse each field
+    const possibleMinutes = parseCronField(minuteField, 0, 59);
+    const possibleHours = parseCronField(hourField, 0, 23);
+    const possibleDaysOfMonth = parseCronField(dayOfMonthField, 1, 31);
+    const possibleMonths = parseCronField(monthField, 1, 12);
+    const possibleDaysOfWeek = parseCronField(dayOfWeekField, 0, 7);
+    
+    // Check if current time matches all fields
+    const matchesMinute = possibleMinutes.includes(current.getMinutes());
+    const matchesHour = possibleHours.includes(current.getHours());
+    const matchesDayOfMonth = possibleDaysOfMonth.includes(current.getDate());
+    const matchesMonth = possibleMonths.includes(current.getMonth() + 1); // months are 0-based in JS
+    const matchesDayOfWeek = possibleDaysOfWeek.includes(current.getDay()); // 0 is Sunday
+    
+    // Special handling: if dayOfWeek is specified, it should match either dayOfMonth or dayOfWeek
+    const isDayOfWeekSpecified = dayOfWeekField !== '*';
+    const isDayOfMonthSpecified = dayOfMonthField !== '*';
+    
+    let matchesDay;
+    if (isDayOfWeekSpecified && isDayOfMonthSpecified) {
+      // If both are specified, match either
+      matchesDay = matchesDayOfMonth || matchesDayOfWeek;
+    } else {
+      // If only one is specified, match that one
+      matchesDay = matchesDayOfMonth && matchesDayOfWeek;
+    }
+    
+    if (matchesMinute && matchesHour && matchesDay && matchesMonth) {
+      // Format the date in a readable format with year, month, day, hour, minute, second
+      const formatted = current.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      nextRuns.push(formatted);
+      // Move to next minute for next iteration
+      current.setMinutes(current.getMinutes() + 1);
+    } else {
+      // Move to next minute if no match
+      current.setMinutes(current.getMinutes() + 1);
+    }
+  }
+  
+  return nextRuns;
 };
 
 // Save task (create or update)
@@ -829,11 +1029,6 @@ const saveTask = () => {
   }
 
   saveScheduledTasks();
-  console.log(
-    "After saving task, scheduledTasks.length:",
-    scheduledTasks.value.length,
-  );
-  console.log("Scheduled tasks:", scheduledTasks.value);
 
   // Add log entry for task save
   addTaskSaveLog(taskData, isNew);
@@ -1292,6 +1487,17 @@ const store_purchase = async () => {
 const parseCronField = (field, min, max) => {
   const values = new Set();
 
+  // 处理列表，如 1,3,5 或 1-3,5-7
+  if (field.includes(',')) {
+    const parts = field.split(',');
+    for (const part of parts) {
+      // 递归处理每个列表项
+      const partValues = parseCronField(part.trim(), min, max);
+      partValues.forEach(value => values.add(value));
+    }
+    return Array.from(values);
+  }
+
   // 处理星号
   if (field === '*') {
     for (let i = min; i <= max; i++) {
@@ -1300,7 +1506,7 @@ const parseCronField = (field, min, max) => {
     return Array.from(values);
   }
 
-  // 处理步长，如 */5 或 0/1
+  // 处理步长，如 */5 或 0/1 或 1-10/2
   if (field.includes('/')) {
     const [range, step] = field.split('/');
     const stepNum = parseInt(step);
@@ -1336,17 +1542,12 @@ const parseCronField = (field, min, max) => {
     return Array.from(values);
   }
 
-  // 处理列表，如 1,3,5
-  if (field.includes(',')) {
-    const parts = field.split(',');
-    for (const part of parts) {
-      values.add(parseInt(part));
-    }
-    return Array.from(values);
-  }
-
   // 处理单个数字
-  return [parseInt(field)];
+  const num = parseInt(field);
+  if (!isNaN(num)) {
+    values.add(num);
+  }
+  return Array.from(values);
 };
 
 const calculateNextExecutionTime = (task) => {
@@ -1395,11 +1596,26 @@ const calculateNextExecutionTime = (task) => {
       const dayOfWeek = nextRun.getDay(); // 0是周日
 
       // 检查所有字段是否匹配
-      if (possibleMinutes.includes(minutes) &&
-        possibleHours.includes(hours) &&
-        possibleDaysOfMonth.includes(dayOfMonth) &&
-        possibleMonths.includes(month) &&
-        possibleDaysOfWeek.includes(dayOfWeek)) {
+      const matchesMinute = possibleMinutes.includes(minutes);
+      const matchesHour = possibleHours.includes(hours);
+      const matchesDayOfMonth = possibleDaysOfMonth.includes(dayOfMonth);
+      const matchesMonth = possibleMonths.includes(month);
+      const matchesDayOfWeek = possibleDaysOfWeek.includes(dayOfWeek);
+      
+      // Special handling: if both dayOfMonth and dayOfWeek are specified, they are OR'ed
+      const isDayOfWeekSpecified = dayOfWeekField !== '*';
+      const isDayOfMonthSpecified = dayOfMonthField !== '*';
+      
+      let matchesDay;
+      if (isDayOfWeekSpecified && isDayOfMonthSpecified) {
+        // If both are specified, match either
+        matchesDay = matchesDayOfMonth || matchesDayOfWeek;
+      } else {
+        // If only one is specified, match that one
+        matchesDay = matchesDayOfMonth && matchesDayOfWeek;
+      }
+      
+      if (matchesMinute && matchesHour && matchesDay && matchesMonth) {
         return nextRun;
       }
 
@@ -1507,8 +1723,7 @@ loadScheduledTasks();
 watch(
   scheduledTasks,
   (newVal) => {
-    console.log("scheduledTasks changed:", newVal.length);
-    console.log("New value:", newVal);
+    
     // Reset countdowns when tasks change
     nextExecutionTimes.value = {};
     taskCountdowns.value = {};
@@ -1528,13 +1743,165 @@ watch(
   }
 );
 
+// Task scheduler variables - moved to component level scope
+let schedulerIntervalId = null;
+let lastTaskExecution = null;
+let healthCheckInterval = null;
+
+// Health check for the scheduler
+const healthCheck = () => {
+  // If interval is not running, restart it
+  if (!schedulerIntervalId) {
+    console.error(`[${new Date().toISOString()}] Task scheduler interval is not running, restarting...`);
+    startScheduler();
+  }
+
+  // Add a safety mechanism to prevent isRunning from being stuck
+  if (isRunning.value) {
+    const now = Date.now();
+    const tenMinutesAgo = now - 10 * 60 * 1000; // 10 minutes ago
+    if (lastTaskExecution && lastTaskExecution < tenMinutesAgo) {
+      console.error(`[${new Date().toISOString()}] isRunning has been true for more than 10 minutes, resetting to false`);
+      isRunning.value = false;
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: "=== 检测到任务执行超时，已重置isRunning状态 ===",
+        type: "warning",
+      });
+    }
+  }
+};
+
+// Start the scheduler
+const startScheduler = () => {
+  // Clear any existing interval first
+  if (schedulerIntervalId) {
+    clearInterval(schedulerIntervalId);
+  }
+
+  // Check every 10 seconds instead of 60 seconds for more timely task execution
+  schedulerIntervalId = setInterval(() => {
+    try {
+      const now = new Date();
+      const currentTime = now.toLocaleTimeString("zh-CN", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      // Don't skip all tasks if isRunning is true, just skip individual task execution if already running
+      const tasksToRun = scheduledTasks.value.filter(task => task.enabled);
+
+      if (tasksToRun.length === 0) {
+        return;
+      }
+
+      tasksToRun.forEach((task) => {
+        let shouldRun = false;
+        let reason = '';
+
+        if (task.runType === "daily") {
+          // Check if current time matches the scheduled time
+          const taskTime = task.runTime;
+          const nowTime = now.toLocaleTimeString("zh-CN", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          shouldRun = nowTime === taskTime;
+          reason = `currentTime=${nowTime}, taskTime=${taskTime}, match=${shouldRun}`;
+        } else if (task.runType === "cron") {
+          // Improved cron expression parsing
+          try {
+            const cronParts = task.cronExpression.split(" ").filter(Boolean);
+
+            if (cronParts.length < 5) {
+              console.error(`[${new Date().toISOString()}] Invalid cron expression: ${task.cronExpression}, must have at least 5 parts`);
+              addLog({
+                time: currentTime,
+                message: `=== 定时任务 ${task.name} 的Cron表达式无效: ${task.cronExpression}，必须包含至少5个字段 ===`,
+                type: "error",
+              });
+              return;
+            }
+
+            const [minuteField, hourField, dayOfMonthField, monthField, dayOfWeekField] = cronParts;
+
+            // 使用之前定义的parseCronField函数解析cron字段
+            const possibleMinutes = parseCronField(minuteField, 0, 59);
+            const possibleHours = parseCronField(hourField, 0, 23);
+            const possibleDaysOfMonth = parseCronField(dayOfMonthField, 1, 31);
+            const possibleMonths = parseCronField(monthField, 1, 12);
+            const possibleDaysOfWeek = parseCronField(dayOfWeekField, 0, 7);
+
+            // 检查当前时间是否匹配cron表达式
+            const matchesMinute = possibleMinutes.includes(now.getMinutes());
+            const matchesHour = possibleHours.includes(now.getHours());
+            const matchesDayOfMonth = possibleDaysOfMonth.includes(now.getDate());
+            const matchesMonth = possibleMonths.includes(now.getMonth() + 1); // months are 0-based in JS
+            const matchesDayOfWeek = possibleDaysOfWeek.includes(now.getDay()); // 0是周日
+
+            // Special handling: if both dayOfMonth and dayOfWeek are specified, they are OR'ed
+            const isDayOfWeekSpecified = dayOfWeekField !== '*';
+            const isDayOfMonthSpecified = dayOfMonthField !== '*';
+            
+            let matchesDay;
+            if (isDayOfWeekSpecified && isDayOfMonthSpecified) {
+              // If both are specified, match either
+              matchesDay = matchesDayOfMonth || matchesDayOfWeek;
+            } else {
+              // If only one is specified, match that one
+              matchesDay = matchesDayOfMonth && matchesDayOfWeek;
+            }
+
+            shouldRun = matchesMinute && matchesHour && matchesDay && matchesMonth;
+            reason = `minute=${matchesMinute}, hour=${matchesHour}, dayOfMonth=${matchesDayOfMonth}, dayOfWeek=${matchesDayOfWeek}, month=${matchesMonth}, matchesDay=${matchesDay}`;
+          } catch (error) {
+            console.error(`[${new Date().toISOString()}] Error parsing cron expression ${task.cronExpression}:`, error);
+            addLog({
+              time: currentTime,
+              message: `=== 解析定时任务 ${task.name} 的Cron表达式失败: ${error.message} ===`,
+              type: "error",
+            });
+            return;
+          }
+        }
+
+        if (shouldRun) {
+          // Check if the task was already executed in the last minute to avoid duplicate execution
+          const taskExecutionKey = `${task.id}_${now.getDate()}_${now.getHours()}_${now.getMinutes()}`;
+          const lastExecutionKey = localStorage.getItem(`lastTaskExecution_${task.id}`);
+
+          if (lastExecutionKey !== taskExecutionKey) {
+            // Update last execution time
+            localStorage.setItem(`lastTaskExecution_${task.id}`, taskExecutionKey);
+
+            // Execute the task
+            lastTaskExecution = Date.now();
+            executeScheduledTask(task);
+          } else {
+            addLog({
+              time: currentTime,
+              message: `=== 任务 ${task.name} 本分钟内已执行，跳过 ===`,
+              type: "info",
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] Error in task scheduler:`, error);
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 定时任务调度服务发生错误: ${error.message} ===`,
+        type: "error",
+      });
+    }
+  }, 10000); // Check every 10 seconds
+};
+
 // Debug: Log initial state when component mounts
 onMounted(() => {
-  console.log(
-    "Component mounted, initial scheduledTasks:",
-    scheduledTasks.value,
-  );
-  console.log("Initial scheduledTasks length:", scheduledTasks.value.length);
   // Start the task scheduler after all functions are initialized
   scheduleTaskExecution();
   // Start countdown timer
@@ -1547,9 +1914,26 @@ onBeforeUnmount(() => {
     clearInterval(countdownInterval);
     countdownInterval = null;
   }
+  
+  // Cleanup task scheduler intervals
+  if (schedulerIntervalId) {
+    clearInterval(schedulerIntervalId);
+    schedulerIntervalId = null;
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: "=== 定时任务调度服务已停止 ===",
+      type: "info",
+    });
+  }
+  
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = null;
+  }
 });
 
 // Task scheduler - ensure it runs properly
+// 删除旧的scheduleTaskExecution函数，使用组件级别的实现
 const scheduleTaskExecution = () => {
   // Log the start of the scheduler
   addLog({
@@ -1558,15 +1942,15 @@ const scheduleTaskExecution = () => {
     type: "info",
   });
 
-  // Store interval ID for cleanup
-  let intervalId = null;
+  // Store interval ID for cleanup using ref to persist across component lifecycle
+  const intervalId = ref(null);
   let lastTaskExecution = null;
 
   // Health check for the scheduler
   const healthCheck = () => {
-    console.log(`[${new Date().toISOString()}] Task scheduler health check - running: ${intervalId !== null}`);
+
     // If interval is not running, restart it
-    if (!intervalId) {
+    if (!intervalId.value) {
       console.error(`[${new Date().toISOString()}] Task scheduler interval is not running, restarting...`);
       startScheduler();
     }
@@ -1590,12 +1974,12 @@ const scheduleTaskExecution = () => {
   // Start the scheduler
   const startScheduler = () => {
     // Clear any existing interval first
-    if (intervalId) {
-      clearInterval(intervalId);
+    if (intervalId.value) {
+      clearInterval(intervalId.value);
     }
 
     // Check every 10 seconds instead of 60 seconds for more timely task execution
-    intervalId = setInterval(() => {
+    intervalId.value = setInterval(() => {
       try {
         const now = new Date();
         const currentTime = now.toLocaleTimeString("zh-CN", {
@@ -1606,7 +1990,7 @@ const scheduleTaskExecution = () => {
         });
 
         // Log the current check time for debugging
-        console.log(`[${new Date().toISOString()}] Checking scheduled tasks...`);
+
 
         // Add detailed log about scheduler status (commented out for cleaner logs)
         // addLog({
@@ -1619,7 +2003,6 @@ const scheduleTaskExecution = () => {
         const tasksToRun = scheduledTasks.value.filter(task => task.enabled);
 
         if (tasksToRun.length === 0) {
-          console.log(`[${new Date().toISOString()}] No enabled tasks to check`);
           return;
         }
 
@@ -1682,7 +2065,7 @@ const scheduleTaskExecution = () => {
           }
 
           // Add detailed log about task check result (commented out for cleaner logs)
-          console.log(`[${new Date().toISOString()}] Task ${task.name}: shouldRun=${shouldRun}, reason=${reason}`);
+
           // addLog({
           //   time: currentTime,
           //   message: `=== 检查任务 ${task.name}: 应该执行=${shouldRun}，原因=${reason} ===`,
@@ -1699,11 +2082,11 @@ const scheduleTaskExecution = () => {
               localStorage.setItem(`lastTaskExecution_${task.id}`, taskExecutionKey);
 
               // Execute the task
-              console.log(`[${new Date().toISOString()}] Executing task ${task.name}`);
+
               lastTaskExecution = Date.now();
               executeScheduledTask(task);
             } else {
-              console.log(`[${new Date().toISOString()}] Task ${task.name} already executed in this minute, skipping`);
+
               addLog({
                 time: currentTime,
                 message: `=== 任务 ${task.name} 本分钟内已执行，跳过 ===`,
@@ -1722,7 +2105,7 @@ const scheduleTaskExecution = () => {
       }
     }, 10000); // Check every 10 seconds
 
-    console.log(`[${new Date().toISOString()}] Task scheduler started with interval ID: ${intervalId}`);
+
   };
 
   // Start the scheduler
@@ -1736,10 +2119,10 @@ const scheduleTaskExecution = () => {
 
   // Cleanup on component unmount
   onBeforeUnmount(() => {
-    console.log(`[${new Date().toISOString()}] Cleaning up task scheduler...`);
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
+
+    if (intervalId.value) {
+      clearInterval(intervalId.value);
+      intervalId.value = null;
     }
     addLog({
       time: new Date().toLocaleTimeString(),
@@ -4730,6 +5113,52 @@ const stopBatch = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+/* Cron Parser Styles */
+.cron-parser {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.cron-validation {
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.cron-validation.success {
+  background-color: rgba(24, 160, 88, 0.12);
+}
+
+.cron-validation.error {
+  background-color: rgba(235, 87, 87, 0.12);
+}
+
+.cron-next-runs h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cron-next-runs ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cron-next-runs li {
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cron-next-runs li:last-child {
+  border-bottom: none;
 }
 
 .log-card :deep(.n-card__content) {

@@ -14,7 +14,7 @@
       </div>
 
       <!-- Token导入区域 -->
-      <a-modal v-model:visible="showImportForm" width="40rem" :footer="false" :default-visible="!tokenStore.hasTokens">
+      <a-modal class="token-import-modal" v-model:visible="showImportForm" width="40rem" :footer="false" :default-visible="!tokenStore.hasTokens">
         <template #title>
           <h2>
             <n-icon>
@@ -45,20 +45,41 @@
       <div v-if="tokenStore.hasTokens" class="tokens-section">
         <div class="section-header">
           <n-space align="center">
-            <h2>我的Token列表 ({{ tokenStore.gameTokens.length }}个)</h2>
-            <n-radio-group v-model:value="viewMode" size="small">
-              <n-radio-button value="card">卡片</n-radio-button>
-              <n-radio-button value="list">列表</n-radio-button>
-            </n-radio-group>
-          </n-space>
+              <h2>我的Token列表 ({{ tokenStore.gameTokens.length }}个)</h2>
+              <n-radio-group v-model:value="viewMode" size="small">
+                <n-radio-button value="list">列表</n-radio-button>
+                <n-radio-button value="card">卡片</n-radio-button>
+              </n-radio-group>
+              <n-divider vertical style="height: 24px;"></n-divider>
+              <n-button-group size="small">
+                <n-button 
+                  @click="toggleSort('name')"
+                  :type="sortConfig.field === 'name' ? 'primary' : 'default'"
+                >
+                  名称 {{ getSortIcon('name') }}
+                </n-button>
+                <n-button 
+                  @click="toggleSort('server')"
+                  :type="sortConfig.field === 'server' ? 'primary' : 'default'"
+                >
+                  服务器 {{ getSortIcon('server') }}
+                </n-button>
+                <n-button 
+                  @click="toggleSort('lastUsed')"
+                  :type="sortConfig.field === 'lastUsed' ? 'primary' : 'default'"
+                >
+                  最后使用 {{ getSortIcon('lastUsed') }}
+                </n-button>
+              </n-button-group>
+            </n-space>
           <div class="header-actions">
-            <n-button v-if="tokenStore.selectedToken" type="success" @click="goToDashboard">
+            <n-button type="success" @click="goToDashboard">
               <template #icon>
                 <n-icon>
-                  <Home />
+                  <List />
                 </n-icon>
               </template>
-              返回控制台
+              批量功能
             </n-button>
 
             <n-button v-if="!showImportForm" type="primary" @click="showImportForm = true">
@@ -71,20 +92,20 @@
             </n-button>
 
             <n-dropdown :options="bulkOptions" @select="handleBulkAction">
-              <n-button>
-                <template #icon>
-                  <n-icon>
-                    <Menu />
-                  </n-icon>
-                </template>
-                批量操作
-              </n-button>
-            </n-dropdown>
+                <n-button>
+                  <template #icon>
+                    <n-icon>
+                      <Menu />
+                    </n-icon>
+                  </template>
+                  批量操作
+                </n-button>
+              </n-dropdown>
           </div>
         </div>
 
         <div class="tokens-grid" v-if="viewMode === 'card'">
-          <a-card v-for="(token, index) in tokenStore.gameTokens" :key="token.id" draggable="true"
+          <a-card v-for="(token, index) in sortedTokens" :key="token.id" draggable="true"
             @dragstart="handleDragStart(index, $event)" @dragover="handleDragOver($event)"
             @drop="handleDrop(index, $event)" :class="{
               'token-card': true,
@@ -93,7 +114,7 @@
             <template #title>
               <a-space class="token-name">
                 {{ token.name }}
-                <a-tag color="red" v-if="token.server">{{
+                <a-tag :color="getServerTagColor(token.id)" v-if="token.server">{{
                   token.server
                 }}</a-tag>
                 <!-- 连接状态指示器 -->
@@ -121,6 +142,29 @@
                 <span class="token-label">Token:</span>
                 <code class="token-value">{{ maskToken(token.token) }}</code>
               </div>
+              
+              <!-- 备注信息 -->
+              <div v-if="editingRemark === token.id" class="token-remark token-remark-edit" @click.stop>
+                <span class="remark-label">备注：</span>
+                <n-input 
+                  v-model:value="tempRemarks[token.id]" 
+                  type="textarea" 
+                  :rows="2" 
+                  placeholder="添加备注信息..." 
+                  @blur="saveRemark(token)" 
+                  @keyup.enter="saveRemark(token)" 
+                  @keyup.esc="cancelEditRemark()" 
+                  autofocus
+                />
+              </div>
+              <div v-else class="token-remark" @click.stop="startEditRemark(token)">
+                <span class="remark-label">备注：</span>
+                <span class="remark-value">{{ token.remark || '点击添加备注' }}</span>
+                <n-icon style="margin-left: 4px; color: var(--text-tertiary);">
+                  <Create />
+                </n-icon>
+              </div>
+              
               <a-button :loading="refreshingTokens.has(token.id)" @click.stop="refreshToken(token)">
                 <template #icon>
                   <n-icon>
@@ -149,13 +193,13 @@
               <div class="storage-info">
                 <div class="storage-item">
                   <span class="storage-label">存储类型：</span>
-                  <n-tag size="small" :type="token.importMethod === 'url' ? 'success' : 'warning'">
-                    {{ token.importMethod === "url" ? "长期有效" : "临时存储" }}
+                  <n-tag size="small" :type="(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent) ? 'success' : 'warning'">
+                    {{ (token.importMethod === "url" || token.importMethod === "bin" || token.upgradedToPermanent) ? "长期有效" : "临时存储" }}
                   </n-tag>
                 </div>
 
                 <!-- 升级选项（仅对临时存储的token显示） -->
-                <div v-if="token.importMethod !== 'url'" class="storage-upgrade">
+                <div v-if="!(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent)" class="storage-upgrade">
                   <n-button size="tiny" type="success" ghost @click.stop="upgradeTokenToPermanent(token)">
                     <template #icon>
                       <n-icon>
@@ -175,7 +219,7 @@
                     <Home />
                   </n-icon>
                 </template>
-                开始任务管理
+                进入控制台
               </n-button>
             </template>
           </a-card>
@@ -183,35 +227,88 @@
 
         <!-- List View -->
         <div class="tokens-list" v-else>
-          <n-card v-for="(token, index) in tokenStore.gameTokens" :key="token.id" draggable="true"
+          <n-card v-for="(token, index) in sortedTokens" :key="token.id" draggable="true"
             @dragstart="handleDragStart(index, $event)" @dragover="handleDragOver($event)"
             @drop="handleDrop(index, $event)" size="small" style="margin-bottom: 8px" hoverable
             @click="selectToken(token)" :class="{ active: selectedTokenId === token.id }">
             <n-space justify="space-between" align="center">
               <!-- Info -->
-              <n-space align="center" :size="24">
-                <div style="min-width: 120px">
-                  <span style="
-                      font-weight: bold;
-                      font-size: 1.1em;
-                      margin-right: 8px;
-                    ">{{ token.name }}</span>
-                  <n-tag size="small" type="error" v-if="token.server">{{
-                    token.server
-                  }}</n-tag>
-                </div>
-
-                <div style="min-width: 100px">
+              <n-space align="center" :size="6">
+                <!-- 连接状态 - 移动到最前端显示 -->
+                <div style="min-width: 65px;">
                   <a-badge :status="getTokenStyle(token.id)" :text="getConnectionStatusText(token.id)" />
                 </div>
 
-                <n-tag size="small" :type="token.importMethod === 'url' ? 'success' : 'warning'">
-                  {{ token.importMethod === "url" ? "长期" : "临时" }}
-                </n-tag>
+                <!-- Token基本信息 -->
+                <div style="min-width: 100px;">
+                  <div style="display: flex;
+                              align-items: center;
+                              flex-wrap: wrap;
+                              gap: 2px;">
+                    <span style="
+                        font-weight: bold;
+                        font-size: 0.95em;
+                      ">{{ token.name }}</span>
+                    <n-tag size="small" :type="getServerTagType(token.id)" v-if="token.server">{{
+                      token.server
+                    }}</n-tag>
+                    <!-- 备注信息 - 显示在服务器信息后面 -->
+                    <div v-if="editingRemark === token.id" style="
+                        font-size: 0.75em;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                      " @click.stop>
+                      <i class="i-mdi:note-outline" style="margin-right: 1px;"></i>
+                      <n-input 
+                        v-model:value="tempRemarks[token.id]" 
+                        size="small" 
+                        placeholder="添加备注..." 
+                        @blur="saveRemark(token)" 
+                        @keyup.enter="saveRemark(token)" 
+                        @keyup.esc="cancelEditRemark()" 
+                        autofocus
+                        style="width: 150px;"
+                      />
+                    </div>
+                    <div v-else style="
+                        font-size: 0.75em;
+                        color: var(--text-secondary);
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                      " @click.stop="startEditRemark(token)">
+                      <i class="i-mdi:note-outline" style="margin-right: 1px;"></i>
+                      {{ token.remark || '点击添加备注' }}
+                      <n-icon style="font-size: 0.8em; color: var(--text-tertiary);">
+                        <Create />
+                      </n-icon>
+                    </div>
+                  </div>
+                </div>
               </n-space>
 
               <!-- Actions -->
               <n-space>
+                <!-- 存储类型 -->
+                <n-tag size="small" :type="token.importMethod === 'url' ? 'success' : 'warning'">
+                  {{ token.importMethod === "url" ? "长期" : "临时" }}
+                </n-tag>
+                
+                <!-- 升级选项（仅对临时存储的token显示） -->
+                <n-button v-if="token.importMethod !== 'url'" size="small" type="success" ghost @click.stop="upgradeTokenToPermanent(token)">
+                  <template #icon>
+                    <n-icon>
+                      <Star />
+                    </n-icon>
+                  </template>
+                  升级
+                </n-button>
+                
                 <n-button size="small" type="primary" :loading="connectingTokens.has(token.id)"
                   @click.stop="startTaskManagement(token)">
                   <template #icon>
@@ -219,7 +316,7 @@
                       <Home />
                     </n-icon>
                   </template>
-                  管理
+                  控制台
                 </n-button>
                 <n-button size="small" @click.stop="refreshToken(token)" :loading="refreshingTokens.has(token.id)">
                   <template #icon>
@@ -269,6 +366,9 @@
         <n-form-item label="WebSocket地址">
           <n-input v-model:value="editForm.wsUrl" />
         </n-form-item>
+        <n-form-item label="备注">
+          <n-input v-model:value="editForm.remark" type="textarea" :rows="2" placeholder="添加备注信息..." />
+        </n-form-item>
       </n-form>
 
       <template #footer>
@@ -292,6 +392,8 @@ import {
   Copy,
   Create,
   EllipsisHorizontal,
+  Grid,
+  List,
   Home,
   Key,
   Menu,
@@ -330,8 +432,85 @@ const editingToken = ref(null);
 const importMethod = ref("manual");
 const refreshingTokens = ref(new Set());
 const connectingTokens = ref(new Set());
-const viewMode = ref("card");
+// 从localStorage读取上次的视图模式，默认为列表视图
+const viewMode = ref(localStorage.getItem('tokenViewMode') || "list");
 const dragIndex = ref(null);
+
+// 备注编辑状态管理
+const editingRemark = ref(null); // 当前正在编辑备注的tokenId
+const tempRemarks = ref({}); // 临时保存编辑中的备注内容
+
+// 监听视图模式变化，保存到localStorage
+watch(viewMode, (newViewMode) => {
+  localStorage.setItem('tokenViewMode', newViewMode);
+});
+
+// 排序状态管理 - 从localStorage读取上次的排序设置
+const savedSortConfig = localStorage.getItem('tokenSortConfig');
+const sortConfig = ref(savedSortConfig ? JSON.parse(savedSortConfig) : {
+  field: 'name', // 排序字段：name, server, lastUsed
+  direction: 'asc' // 排序方向：asc, desc
+});
+
+// 排序后的游戏角色Token列表
+const sortedTokens = computed(() => {
+  return [...tokenStore.gameTokens].sort((tokenA, tokenB) => {
+    let valueA, valueB;
+    
+    // 根据排序字段获取比较值
+    switch (sortConfig.value.field) {
+      case 'name':
+        valueA = tokenA.name?.toLowerCase() || '';
+        valueB = tokenB.name?.toLowerCase() || '';
+        break;
+      case 'server':
+        valueA = tokenA.server?.toLowerCase() || '';
+        valueB = tokenB.server?.toLowerCase() || '';
+        break;
+      case 'createdAt':
+        valueA = new Date(tokenA.createdAt || 0).getTime();
+        valueB = new Date(tokenB.createdAt || 0).getTime();
+        break;
+      case 'lastUsed':
+        valueA = new Date(tokenA.lastUsed || 0).getTime();
+        valueB = new Date(tokenB.lastUsed || 0).getTime();
+        break;
+      default:
+        valueA = tokenA.name?.toLowerCase() || '';
+        valueB = tokenB.name?.toLowerCase() || '';
+    }
+    
+    // 根据排序方向比较值
+    if (valueA < valueB) {
+      return sortConfig.value.direction === 'asc' ? -1 : 1;
+    }
+    if (valueA > valueB) {
+      return sortConfig.value.direction === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+});
+
+// 切换排序
+const toggleSort = (field) => {
+  if (sortConfig.value.field === field) {
+    // 如果点击的是当前排序字段，则切换排序方向
+    sortConfig.value.direction = sortConfig.value.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    // 如果点击的是新的排序字段，则默认升序
+    sortConfig.value.field = field;
+    sortConfig.value.direction = 'asc';
+  }
+  
+  // 保存排序设置到localStorage
+  localStorage.setItem('tokenSortConfig', JSON.stringify(sortConfig.value));
+};
+
+// 获取排序图标
+const getSortIcon = (field) => {
+  if (sortConfig.value.field !== field) return null;
+  return sortConfig.value.direction === 'asc' ? '↑' : '↓';
+};
 
 const handleDragStart = (index, event) => {
   dragIndex.value = index;
@@ -367,6 +546,7 @@ const editForm = reactive({
   token: "",
   server: "",
   wsUrl: "",
+  remark: "",
 });
 
 const editRules = {
@@ -376,6 +556,7 @@ const editRules = {
 
 const bulkOptions = [
   { label: '刷新所有Token', key: 'refreshAll' },
+  { label: "更新token信息", key: "updateInfo" },
   { label: "导出所有Token", key: "export" },
   { label: "导入Token文件", key: "import" },
   { label: "清理过期Token", key: "clean" },
@@ -517,18 +698,38 @@ const upgradeTokenToPermanent = (token) => {
 };
 
 const selectToken = (token, forceReconnect = false) => {
+  // 如果有备注正在编辑，保存备注并取消编辑
+  if (editingRemark.value) {
+    saveCurrentRemark();
+    return;
+  }
+
   const isAlreadySelected = selectedTokenId.value === token.id;
   const connectionStatus = getConnectionStatus(token.id);
 
   // 降噪日志已移除
 
-  // 如果已经选中且已连接，不执行任何操作
+  // 如果已经选中且已连接，断开连接
   if (
     isAlreadySelected &&
     connectionStatus === "connected" &&
     !forceReconnect
   ) {
-    message.info(`${token.name} 已选中且已连接`);
+    // 断开连接
+    tokenStore.closeWebSocketConnection(token.id);
+    message.success(`已断开 ${token.name} 的连接`);
+    return;
+  }
+
+  // 如果未选中但已连接，断开连接
+  if (
+    !isAlreadySelected &&
+    connectionStatus === "connected" &&
+    !forceReconnect
+  ) {
+    // 断开连接
+    tokenStore.closeWebSocketConnection(token.id);
+    message.success(`已断开 ${token.name} 的连接`);
     return;
   }
 
@@ -578,12 +779,24 @@ const getTokenStyle = (tokenId) => {
   const status = getConnectionStatus(tokenId);
   const statusMap = {
     connected: "success",
-    connecting: "processing",
-    disconnected: "normal",
+    connecting: "warning",
+    disconnected: "danger",
     error: "danger",
     disconnecting: "warning",
   };
-  return statusMap[status] || "normal";
+  return statusMap[status] || "danger";
+};
+
+const getServerTagType = (tokenId) => {
+  const status = getConnectionStatus(tokenId);
+  // 连接成功时服务器标签使用绿色，其他状态保持红色
+  return status === "connected" ? "success" : "error";
+};
+
+const getServerTagColor = (tokenId) => {
+  const status = getConnectionStatus(tokenId);
+  // 连接成功时服务器标签使用绿色，其他状态保持红色
+  return status === "connected" ? "green" : "red";
 };
 
 const getTokenActions = (token) => {
@@ -657,6 +870,7 @@ const editToken = (token) => {
     token: token.token,
     server: token.server || "",
     wsUrl: token.wsUrl || "",
+    remark: token.remark || "",
   });
   showEditModal.value = true;
 };
@@ -672,6 +886,7 @@ const saveEdit = async () => {
       token: editForm.token,
       server: editForm.server,
       wsUrl: editForm.wsUrl,
+      remark: editForm.remark,
     });
 
     message.success("Token信息已更新");
@@ -689,6 +904,33 @@ const copyToken = async (token) => {
   } catch (error) {
     message.error("复制失败");
   }
+};
+
+// 快速编辑备注功能
+const startEditRemark = (token) => {
+  editingRemark.value = token.id;
+  tempRemarks.value[token.id] = token.remark || "";
+};
+
+// 保存备注的通用函数
+const saveCurrentRemark = () => {
+  if (!editingRemark.value) return;
+  
+  const editingTokenId = editingRemark.value;
+  const remark = tempRemarks.value[editingTokenId] || "";
+  tokenStore.updateToken(editingTokenId, {
+    remark: remark
+  });
+  editingRemark.value = null;
+  message.success("备注已保存");
+};
+
+const saveRemark = (token) => {
+  saveCurrentRemark();
+};
+
+const cancelEditRemark = () => {
+  editingRemark.value = null;
 };
 
 const deleteToken = (token) => {
@@ -783,6 +1025,9 @@ const handleBulkAction = (key) => {
     case 'refreshAll':
       refreshAllTokens()
       break
+    case "updateInfo":
+      updateAllTokenInfo();
+      break;
     case "export":
       exportTokens();
       break;
@@ -870,6 +1115,76 @@ const clearAllTokens = () => {
   });
 };
 
+// 一键连接更新所有token信息
+const updateAllTokenInfo = async () => {
+  if (tokenStore.gameTokens.length === 0) {
+    message.warning("没有可更新的Token");
+    return;
+  }
+  
+  dialog.warning({
+    title: "更新所有Token信息",
+    content: "此操作将逐个连接所有Token，获取最新的角色名称和服务器信息，完成后自动断开连接。\n\n预计耗时：约3-5秒/个Token",
+    positiveText: "开始更新",
+    negativeText: "取消",
+    onPositiveClick: async () => {
+      try {
+        let successCount = 0;
+        let failCount = 0;
+        const totalTokens = tokenStore.gameTokens.length;
+        
+        // 显示进度提示
+        const loadingMessage = message.loading(`正在更新Token信息 (0/${totalTokens})`, {
+          duration: 0
+        });
+        
+        // 顺序处理每个token
+        for (let i = 0; i < tokenStore.gameTokens.length; i++) {
+          const token = tokenStore.gameTokens[i];
+          
+          // 更新进度显示
+          loadingMessage.content = `正在更新Token信息 (${i + 1}/${totalTokens}): ${token.name}`;
+          
+          try {
+            // 连接token获取角色信息
+            await tokenStore.selectToken(token.id);
+            
+            // 等待1秒确保角色信息已获取（可根据实际情况调整）
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 断开连接
+            tokenStore.closeWebSocketConnection(token.id);
+            
+            successCount++;
+            message.success(`Token "${token.name}" 信息更新成功`);
+          } catch (error) {
+            console.error(`更新Token "${token.name}" 失败:`, error);
+            failCount++;
+            message.error(`Token "${token.name}" 信息更新失败`);
+          }
+          
+          // 添加短暂延迟，避免服务器压力过大
+          if (i < tokenStore.gameTokens.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+        
+        // 关闭进度提示
+        loadingMessage.destroy();
+        
+        // 显示结果
+        if (failCount === 0) {
+          message.success(`所有Token信息更新完成！成功更新 ${successCount} 个Token`);
+        } else {
+          message.warning(`Token信息更新完成，成功 ${successCount} 个，失败 ${failCount} 个`);
+        }
+      } catch (error) {
+        message.error('更新过程中发生错误: ' + error.message);
+      }
+    }
+  });
+};
+
 const maskToken = (token) => {
   if (!token) return "";
   const len = token.length;
@@ -882,28 +1197,16 @@ const formatTime = (timestamp) => {
 };
 
 const goToDashboard = () => {
-  router.push("/admin/dashboard");
+  router.push("/admin/batch-daily-tasks");
 };
 
-// 开始任务管理 - 包含连接探测
-const startTaskManagement = async (token) => {
-  connectingTokens.value.add(token.id);
-
-  try {
-    tokenStore.selectToken(token.id);
-
-    // 1. 检查当前连接状态
-    const connectionStatus = getConnectionStatus(token.id);
-
-    if (connectionStatus === "connected") {
-      // 已连接，直接跳转
-      message.success(`${token.name} 已连接，进入任务管理`);
-      router.push("/admin/dashboard");
-      return;
-    }
-  } finally {
-    connectingTokens.value.delete(token.id);
-  }
+// 开始任务管理 - 直接跳转到控制台
+const startTaskManagement = (token) => {
+  // 选择token
+  tokenStore.selectToken(token.id);
+  // 直接跳转到控制台，不等待连接
+  message.success(`正在进入 ${token.name} 的控制台`);
+  router.push("/admin/dashboard");
 };
 
 // URL参数处理函数
@@ -1223,6 +1526,9 @@ onMounted(async () => {
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-xl);
   box-shadow: var(--shadow-medium);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--spacing-2xl) * 4);
 }
 
 /* 深色主题下的列表区域背景 */
@@ -1231,11 +1537,25 @@ onMounted(async () => {
   color: #ffffff;
 }
 
+/* 深色主题下的固定头部 */
+[data-theme="dark"] .section-header {
+  background: rgba(45, 55, 72, 0.9);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-xl);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  padding: var(--spacing-lg) 0;
+  margin: -var(--spacing-xl) -var(--spacing-xl) var(--spacing-md);
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid var(--border-light);
 
   h2 {
     color: var(--text-primary);
@@ -1257,6 +1577,29 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: var(--spacing-lg);
+  overflow-y: auto;
+  padding-right: var(--spacing-sm);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) var(--bg-tertiary);
+  flex: 1;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
+  }
 }
 
 .token-card {
@@ -1278,6 +1621,32 @@ onMounted(async () => {
 
   &.connected {
     border-left: 4px solid var(--success-color);
+  }
+}
+
+.tokens-list {
+  overflow-y: auto;
+  padding-right: var(--spacing-sm);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) var(--bg-tertiary);
+  flex: 1;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
   }
 }
 
@@ -1375,6 +1744,46 @@ onMounted(async () => {
 .status-text {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+}
+
+.token-remark {
+  margin: var(--spacing-sm) 0;
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  
+  &:hover {
+    background: var(--bg-secondary);
+  }
+}
+
+.token-remark-edit {
+  cursor: default;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-medium);
+  
+  &:hover {
+    background: var(--bg-primary);
+  }
+}
+
+.remark-label {
+  font-weight: var(--font-weight-medium);
+  margin-right: var(--spacing-xs);
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.remark-value {
+  font-style: italic;
+  flex: 1;
 }
 
 .token-timestamps {
@@ -1568,5 +1977,13 @@ onMounted(async () => {
 
 .storage-upgrade {
   margin-top: var(--spacing-xs);
+}
+
+:global([data-theme="dark"] .token-import-modal .arco-modal){
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+[data-theme="dark"] .token-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;
 }
 </style>

@@ -18,8 +18,12 @@ declare interface TokenData {
   token: string; // 原始Base64 token
   wsUrl: string | null; // 可选的自定义WebSocket URL
   server: string;
-  importMethod?: 'bin' | 'url'; // 导入方式：bin文件或url链接
+  remark?: string; // 备注信息
+  importMethod?: 'manual' | 'bin' | 'url'; // 导入方式：manual（手动）、bin文件或url链接
   sourceUrl?: string; // 当importMethod为url时，存储url链接
+  upgradedToPermanent?: boolean; // 是否升级为长期有效
+  upgradedAt?: string; // 升级时间
+  updatedAt?: string; // 更新时间
 }
 
 declare interface WebSocketConnection {
@@ -184,6 +188,7 @@ export const useTokenStore = defineStore("tokens", () => {
       token: tokenData.token, // 保存原始Base64 token
       wsUrl: tokenData.wsUrl || null, // 可选的自定义WebSocket URL
       server: tokenData.server || "",
+      remark: tokenData.remark || "", // 备注信息
       level: tokenData.level || 1,
       profession: tokenData.profession || "",
       createdAt: new Date().toISOString(),
@@ -198,7 +203,7 @@ export const useTokenStore = defineStore("tokens", () => {
     return newToken;
   };
 
-  const updateToken = (tokenId: string, updates: TokenData) => {
+  const updateToken = (tokenId: string, updates: Partial<TokenData>) => {
     const index = gameTokens.value.findIndex((token) => token.id === tokenId);
     if (index !== -1) {
       gameTokens.value[index] = {
@@ -1028,8 +1033,9 @@ export const useTokenStore = defineStore("tokens", () => {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const cleanedTokens = gameTokens.value.filter((token) => {
-      // URL导入的token设为长期有效，不会过期
-      if (token.importMethod === "url") {
+      // URL和bin文件导入的token设为长期有效，不会过期
+      // 升级为长期有效的token也不会过期
+      if (token.importMethod === "url" || token.importMethod === "bin" || token.upgradedToPermanent) {
         return true;
       }
       // 手动导入的token按原逻辑处理（24小时过期）
@@ -1044,9 +1050,8 @@ export const useTokenStore = defineStore("tokens", () => {
   // 将现有token升级为长期有效
   const upgradeTokenToPermanent = (tokenId: string) => {
     const token = gameTokens.value.find((t) => t.id === tokenId);
-    if (token && token.importMethod !== "url") {
+    if (token && !token.upgradedToPermanent && token.importMethod !== "url" && token.importMethod !== "bin") {
       updateToken(tokenId, {
-        importMethod: "url",
         upgradedToPermanent: true,
         upgradedAt: new Date().toISOString(),
       });

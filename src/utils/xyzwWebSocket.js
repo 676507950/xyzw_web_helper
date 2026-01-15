@@ -869,9 +869,23 @@ export class XyzwWebSocketClient {
       if (packet.code === 0 || packet.code === undefined) {
         promiseData.resolve(responseBody || packet);
       } else {
+        // 错误码映射表
+        const errorCodeMap = {
+          700010: "任务未达成完成条件",
+          1400010: "没有购买该月卡,不能领取每日奖励",
+          12000116: "今日已领取免费奖励",
+          3300060: "扫荡条件不满足",
+          1300050: "请修改您的采购次数",
+          200020: "出了点小问题，请尝试重启游戏解决～",
+          3500020: "没有可领取的奖励"
+        };
+        
+        // 获取错误描述
+        const errorDesc = errorCodeMap[packet.code] || packet.hint || "未知错误";
+        
         promiseData.reject(
           new Error(
-            `服务器错误: ${packet.code} - ${packet.hint || "未知错误"}`,
+            `服务器错误: ${packet.code} - ${errorDesc}`,
           ),
         );
       }
@@ -988,14 +1002,28 @@ export class XyzwWebSocketClient {
               : packet.body;
 
         if (packet.code === 0 || packet.code === undefined) {
-          promiseData.resolve(responseBody || packet);
-        } else {
-          promiseData.reject(
-            new Error(
-              `服务器错误: ${packet.code} - ${packet.hint || "未知错误"}`,
-            ),
-          );
-        }
+        promiseData.resolve(responseBody || packet);
+      } else {
+        // 错误码映射表
+        const errorCodeMap = {
+          700010: "任务未达成完成条件",
+          1400010: "没有购买该月卡,不能领取每日奖励",
+          12000116: "今日已领取免费奖励",
+          3300060: "扫荡条件不满足",
+          1300050: "请修改您的采购次数",
+          200020: "出了点小问题，请尝试重启游戏解决～",
+          3500020: "没有可领取的奖励"
+        };
+        
+        // 获取错误描述
+        const errorDesc = errorCodeMap[packet.code] || packet.hint || "未知错误";
+        
+        promiseData.reject(
+          new Error(
+            `服务器错误: ${packet.code} - ${errorDesc}`,
+          ),
+        );
+      }
         break;
       }
     }
