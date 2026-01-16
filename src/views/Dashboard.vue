@@ -12,6 +12,7 @@
               </h1>
               <p>今天是 {{ currentDate }}，继续您的游戏管理之旅吧</p>
               <p>反馈微信：VIP-W66668888，添加备注脚本，朋友圈会发布更新通知</p>
+              <p>ID：605716980 兄弟们 送我点残卷 支持一下脚本更新 谢谢</p>
             </div>
             <div class="welcome-actions">
               <n-button
