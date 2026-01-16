@@ -65,13 +65,6 @@
           >
             <PeachBattleRecords inline />
           </n-tab-pane>
-          <n-tab-pane
-            name="recordsopponent"
-            tab="蟠桃园对手战绩"
-            display-directive="show:lazy"
-          >
-            <PeachOpponentBattleRecords inline />
-          </n-tab-pane>
         </n-tabs>
       </div>
     </template>
@@ -85,7 +78,6 @@ import { useMessage } from "naive-ui";
 import { Refresh, Copy } from "@vicons/ionicons5";
 import { gettoday } from '@/utils/clubWarrankUtils'
 import PeachBattleRecords from "./PeachBattleRecords.vue";
-import PeachOpponentBattleRecords from "./PeachOpponentBattleRecords.vue";
 const tokenStore = useTokenStore();
 const message = useMessage();
 const info = computed(() => tokenStore.gameData?.legionInfo || null);

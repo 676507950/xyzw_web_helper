@@ -22,6 +22,7 @@
         <div class="row-title">竞技场进度</div>
         <div class="row-value">
           {{ arenaNum }} / {{ ARENA_TARGET }}（{{ arenaPercent }}%）
+          <span v-if="!isArenaActivityOpen" class="status-indicator closed">(当前未在开放时间)</span>
         </div>
       </div>
       <div class="action-row">
@@ -53,7 +54,7 @@
         <n-button-group>
           <n-button
             class="action-button"
-            :disabled="monthLoading || arenaToppingUp"
+            :disabled="monthLoading || arenaToppingUp || !isArenaActivityOpen"
             @click="topUpMonthly('arena')"
           >
             {{ arenaToppingUp ? "补齐中..." : "竞技场补齐" }}
@@ -63,7 +64,7 @@
             trigger="click"
             @select="onArenaMoreSelect"
           >
-            <n-button :disabled="monthLoading || arenaToppingUp">▾</n-button>
+            <n-button :disabled="monthLoading || arenaToppingUp || !isArenaActivityOpen">▾</n-button>
           </n-dropdown>
         </n-button-group>
       </div>
@@ -136,6 +137,11 @@ const isConnected = computed(() => {
   return (
     tokenStore.getWebSocketStatus(tokenStore.selectedToken.id) === "connected"
   );
+});
+
+const isArenaActivityOpen = computed(() => {
+  const hour = new Date().getHours();
+  return hour >= 6 && hour < 22;
 });
 
 const fetchMonthlyActivity = async () => {
@@ -279,6 +285,7 @@ const pickArenaTargetId = (targets) => {
 const autoTopUpArena = async (need, shouldBe, target) => {
   if (!tokenStore.selectedToken) return message.warning("请先选择Token");
   if (!isConnected.value) return message.warning("请先建立WS连接");
+  if (!isArenaActivityOpen.value) return message.warning("竞技场活动已关闭，请在 6:00-22:00 时间段内操作");
   arenaToppingUp.value = true;
   try {
     const tokenId = tokenStore.selectedToken.id;
@@ -412,6 +419,17 @@ defineExpose({ fetchMonthlyActivity });
     &:hover:not(:disabled) {
       background: var(--secondary-color-hover);
     }
+  }
+}
+
+.status-indicator {
+  font-size: var(--font-size-xs);
+  margin-left: var(--spacing-xs);
+  &.open {
+    color: var(--success-color, #059669);
+  }
+  &.closed {
+    color: var(--error-color, #dc2626);
   }
 }
 </style>

@@ -41,70 +41,116 @@
 
         <!-- 战绩列表 -->
         <div v-else-if="battleRecords && battleRecords.roleDetailsList" ref="exportDom" class="records-list">
-          <div class="records-info">
-            <n-tag type="info">查询日期: {{ queryDate }}</n-tag>
-            <n-tag type="success">总成员: {{ battleRecords.roleDetailsList.length }}</n-tag>
-            
+          <!-- 头部对战信息 -->
+          <div class="battle-header">
+            <h2>{{ queryDate }}  {{ club.name || '俱乐部' }}盐场战绩</h2>
+          </div>
+          
+          <!-- 总体数据统计 -->
+          <div class="overall-stats">
+            <div class="stats-side own">
+              <div class="stats-title">俱乐部总体数据</div>
+              <div class="stats-grid">
+                <div class="stat-item stat-kills">
+                  <div class="stat-label">总击杀</div>
+                  <div class="stat-value">{{ totalKills }}</div>
+                </div>
+                <div class="stat-item stat-revives">
+                  <div class="stat-label">总复活</div>
+                  <div class="stat-value">{{ totalRevives }}</div>
+                </div>
+                <div class="stat-item stat-kd">
+                  <div class="stat-label">总K/D</div>
+                  <div class="stat-value">{{ totalKD }}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div v-for="(member, index) in battleRecords.roleDetailsList" :key="member.roleId" class="member-card">
-            <div class="member-header">
-              <div class="member-info">
-                <div class="ranking-number">{{ index + 1 }}</div>
-                <img v-if="member.headImg" :src="member.headImg" :alt="member.name" class="member-avatar"
-                  @error="handleImageError">
-                <div v-else class="member-avatar-placeholder">{{ member.name?.charAt(0) || '?' }}</div>
-                <span class="member-name">{{ member.name }}</span>
-              </div>
-              <div class="member-stats-inline">
-                <span class="stat-inline win">击杀 {{ member.winCnt || 0 }}</span>
-                <span class="stat-inline loss">死亡 {{ member.loseCnt || 0 }}</span>
-                <span class="stat-inline siege">攻城 {{ member.buildingCnt || 0 }}</span>
-                <span class="stat-inline KD">K/D {{ parseFloat((member.winCnt && member.loseCnt ? member.winCnt/member.loseCnt : 0.00)).toFixed(2) }}</span>
-                <span class="stat-inline Sscore">复活丹 {{ Math.max(member.loseCnt - 6, 0) || 0 }}</span>
-              </div>
-              <n-button text size="small" class="details-button" @click="toggleMemberDetails(member.roleId)">
-                <template #icon>
-                  <n-icon>
-                    <ChevronDown v-if="!expandedMembers.has(member.roleId)" />
-                    <ChevronUp v-else />
-                  </n-icon>
-                </template>
-              </n-button>
-            </div>
-
-            <!-- 战斗详情（可展开） -->
-            <n-collapse-transition :show="expandedMembers.has(member.roleId)">
-              <div class="battle-details">
-                <div v-if="member.targetRoleList && member.targetRoleList.length > 0" class="battles-list">
-                  <div v-for="(battle, index) in member.targetRoleList" :key="index" class="battle-item"
-                    :class="getBattleClass(battle)">
-                    <div class="battle-participants">
-                      <div class="participant attacker">
-                        <img v-if="battle.roleInfo?.headImg" :src="battle.roleInfo.headImg" :alt="battle.roleInfo.name"
-                          class="participant-avatar" @error="handleImageError">
-                        <span class="participant-name">{{ battle.roleInfo?.name || '未知' }}</span>
-                      </div>
-                      <div class="battle-vs">
-                        <n-tag :type="battle.attackType === 0 ? 'warning' : 'info'" size="small">{{
-                          parseAttackType(battle.attackType) }}</n-tag>
-                        <n-tag :type="battle.newWinFlag === 2 ? 'success' : 'error'" size="small">{{
-                          parseBattleResult(battle.newWinFlag) }}</n-tag>
-                      </div>
-                      <div class="participant defender">
-                        <img v-if="battle.targetRoleInfo?.headImg" :src="battle.targetRoleInfo.headImg"
-                          :alt="battle.targetRoleInfo.name" class="participant-avatar" @error="handleImageError">
-                        <span class="participant-name">{{ battle.targetRoleInfo?.name || '未知' }}</span>
-                      </div>
-                    </div>
-                    <div class="battle-time">{{ formatTimestamp(battle.timestamp) }}</div>
+          <!-- 各种榜单 -->
+          <div class="battle-rankings">
+            <!-- 击杀榜 -->
+            <div class="ranking-card">
+              <div class="ranking-title">击杀榜</div>
+              <div class="ranking-content">
+                <div class="ranking-side own">
+                  <div class="ranking-subtitle">Top3</div>
+                  <div v-for="(player, index) in killRank" :key="index" class="ranking-item">
+                    <div class="rank-number">{{ index + 1 }}</div>
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                    <span class="player-name">{{ player.name }}</span>
+                    <span class="player-value">{{ player.winCnt || 0 }}</span>
                   </div>
                 </div>
-                <div v-else class="no-battles">
-                  <n-empty description="暂无战斗记录" size="small" />
+              </div>
+            </div>
+
+            <!-- K/D榜 -->
+            <div class="ranking-card">
+              <div class="ranking-title">K/D榜</div>
+              <div class="ranking-content">
+                <div class="ranking-side own">
+                  <div class="ranking-subtitle">Top3</div>
+                  <div v-for="(player, index) in kdRank" :key="index" class="ranking-item">
+                    <div class="rank-number">{{ index + 1 }}</div>
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                    <span class="player-name">{{ player.name }}</span>
+                    <span class="player-value">{{ player.kd || 0 }}</span>
+                  </div>
                 </div>
               </div>
-            </n-collapse-transition>
+            </div>
+
+            <!-- 复活榜 -->
+            <div class="ranking-card">
+              <div class="ranking-title">复活榜</div>
+              <div class="ranking-content">
+                <div class="ranking-side own">
+                  <div class="ranking-subtitle">Top3</div>
+                  <div v-for="(player, index) in reviveRank" :key="index" class="ranking-item">
+                    <div class="rank-number">{{ index + 1 }}</div>
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                    <span class="player-name">{{ player.name }}</span>
+                    <span class="player-value">{{ player.reviveCnt || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 战神榜 -->
+          <div class="god-rankings">
+            <div class="god-ranking own">
+              <div class="god-ranking-title">俱乐部战神榜</div>
+              <div class="god-ranking-content">
+                <div class="god-ranking-header">
+                  <div class="god-rank-number">排名</div>
+                  <div class="header-avatar"></div>
+                  <div class="header-player">玩家</div>
+                  <div class="header-stat">击杀</div>
+                  <div class="header-stat">死亡</div>
+                  <div class="header-stat">攻城</div>
+                  <div class="header-stat">复活</div>
+                  <div class="header-stat">K/D</div>
+                </div>
+                <div v-for="(player, index) in battleRecords.roleDetailsList" :key="player.roleId" class="god-ranking-item">
+                  <div class="god-rank-number">{{ index + 1 }}</div>
+                  <div class="player-avatar-cell">
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                  </div>
+                  <span class="header-player">{{ player.name }}</span>
+                  <span class="player-stat">{{ player.winCnt || 0 }}</span>
+                  <span class="player-stat">{{ Math.max(player.loseCnt - 6, 0) || 0 }}</span>
+                  <span class="player-stat">{{ player.buildingCnt || 0 }}</span>
+                  <span class="player-stat">{{ player.loseCnt || 0 }}</span>
+                  <span class="player-stat">{{ parseFloat((player.winCnt && player.loseCnt ? player.winCnt/player.loseCnt : 0.00)).toFixed(2) }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -160,69 +206,111 @@
 
         <!-- 战绩列表 -->
         <div v-else-if="battleRecords && battleRecords.roleDetailsList" ref="exportDom" class="records-list">
-          <div class="records-info">
-            <n-tag type="info">查询日期: {{ queryDate }}</n-tag>
-            <n-tag type="success">总成员: {{ battleRecords.roleDetailsList.length }}</n-tag>
+          <!-- 总体数据统计 -->
+          <div class="overall-stats">
+            <div class="stats-side own">
+              <div class="stats-title">俱乐部总体数据</div>
+              <div class="stats-grid">
+                <div class="stat-item stat-kills">
+                  <div class="stat-label">总击杀</div>
+                  <div class="stat-value">{{ totalKills }}</div>
+                </div>
+                <div class="stat-item stat-revives">
+                  <div class="stat-label">总复活</div>
+                  <div class="stat-value">{{ totalRevives }}</div>
+                </div>
+                <div class="stat-item stat-kd">
+                  <div class="stat-label">总K/D</div>
+                  <div class="stat-value">{{ totalKD }}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div v-for="(member, index) in battleRecords.roleDetailsList" :key="member.roleId" class="member-card">
-            <div class="member-header">
-              <div class="member-info">
-                <div class="ranking-number">{{ index + 1 }}</div>
-                <img v-if="member.headImg" :src="member.headImg" :alt="member.name" class="member-avatar"
-                  @error="handleImageError">
-                <div v-else class="member-avatar-placeholder">{{ member.name?.charAt(0) || '?' }}</div>
-                <span class="member-name">{{ member.name }}</span>
-              </div>
-              <div class="member-stats-inline">
-                <span class="stat-inline win">击杀 {{ member.winCnt || 0 }}</span>
-                <span class="stat-inline loss">死亡 {{ member.loseCnt || 0 }}</span>
-                <span class="stat-inline siege">攻城 {{ member.buildingCnt || 0 }}</span>
-                <span class="stat-inline KD">K/D {{ parseFloat((member.winCnt && member.loseCnt ? member.winCnt/member.loseCnt : 0.00)).toFixed(2) }}</span>
-                <span class="stat-inline Sscore">复活丹 {{ Math.max(member.loseCnt - 6, 0) || 0 }}</span>
-              </div>
-              <n-button text size="small" class="details-button" @click="toggleMemberDetails(member.roleId)">
-                <template #icon>
-                  <n-icon>
-                    <ChevronDown v-if="!expandedMembers.has(member.roleId)" />
-                    <ChevronUp v-else />
-                  </n-icon>
-                </template>
-              </n-button>
-            </div>
-
-            <!-- 战斗详情（可展开） -->
-            <n-collapse-transition :show="expandedMembers.has(member.roleId)">
-              <div class="battle-details">
-                <div v-if="member.targetRoleList && member.targetRoleList.length > 0" class="battles-list">
-                  <div v-for="(battle, index) in member.targetRoleList" :key="index" class="battle-item"
-                    :class="getBattleClass(battle)">
-                    <div class="battle-participants">
-                      <div class="participant attacker">
-                        <img v-if="battle.roleInfo?.headImg" :src="battle.roleInfo.headImg" :alt="battle.roleInfo.name"
-                          class="participant-avatar" @error="handleImageError">
-                        <span class="participant-name">{{ battle.roleInfo?.name || '未知' }}</span>
-                      </div>
-                      <div class="battle-vs">
-                        <n-tag :type="battle.attackType === 0 ? 'warning' : 'info'" size="small">{{
-                          parseAttackType(battle.attackType) }}</n-tag>
-                        <n-tag :type="battle.newWinFlag === 2 ? 'success' : 'error'" size="small">{{
-                          parseBattleResult(battle.newWinFlag) }}</n-tag>
-                      </div>
-                      <div class="participant defender">
-                        <img v-if="battle.targetRoleInfo?.headImg" :src="battle.targetRoleInfo.headImg"
-                          :alt="battle.targetRoleInfo.name" class="participant-avatar" @error="handleImageError">
-                        <span class="participant-name">{{ battle.targetRoleInfo?.name || '未知' }}</span>
-                      </div>
-                    </div>
-                    <div class="battle-time">{{ formatTimestamp(battle.timestamp) }}</div>
+          <!-- 各种榜单 -->
+          <div class="battle-rankings">
+            <!-- 击杀榜 -->
+            <div class="ranking-card">
+              <div class="ranking-title">击杀榜</div>
+              <div class="ranking-content">
+                <div class="ranking-side own">
+                  <div class="ranking-subtitle">Top3</div>
+                  <div v-for="(player, index) in killRank" :key="index" class="ranking-item">
+                    <div class="rank-number">{{ index + 1 }}</div>
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                    <span class="player-name">{{ player.name }}</span>
+                    <span class="player-value">{{ player.winCnt || 0 }}</span>
                   </div>
                 </div>
-                <div v-else class="no-battles">
-                  <n-empty description="暂无战斗记录" size="small" />
+              </div>
+            </div>
+
+            <!-- K/D榜 -->
+            <div class="ranking-card">
+              <div class="ranking-title">K/D榜</div>
+              <div class="ranking-content">
+                <div class="ranking-side own">
+                  <div class="ranking-subtitle">Top3</div>
+                  <div v-for="(player, index) in kdRank" :key="index" class="ranking-item">
+                    <div class="rank-number">{{ index + 1 }}</div>
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                    <span class="player-name">{{ player.name }}</span>
+                    <span class="player-value">{{ player.kd || 0 }}</span>
+                  </div>
                 </div>
               </div>
-            </n-collapse-transition>
+            </div>
+
+            <!-- 复活榜 -->
+            <div class="ranking-card">
+              <div class="ranking-title">复活榜</div>
+              <div class="ranking-content">
+                <div class="ranking-side own">
+                  <div class="ranking-subtitle">Top3</div>
+                  <div v-for="(player, index) in reviveRank" :key="index" class="ranking-item">
+                    <div class="rank-number">{{ index + 1 }}</div>
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                    <span class="player-name">{{ player.name }}</span>
+                    <span class="player-value">{{ player.reviveCnt || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 战神榜 -->
+          <div class="god-rankings">
+            <div class="god-ranking own">
+              <div class="god-ranking-title">俱乐部战神榜</div>
+              <div class="god-ranking-content">
+                <div class="god-ranking-header">
+                  <div class="god-rank-number">排名</div>
+                  <div class="header-avatar"></div>
+                  <div class="header-player">玩家</div>
+                  <div class="header-stat">击杀</div>
+                  <div class="header-stat">死亡</div>
+                  <div class="header-stat">攻城</div>
+                  <div class="header-stat">复活</div>
+                  <div class="header-stat">K/D</div>
+                </div>
+                <div v-for="(player, index) in battleRecords.roleDetailsList" :key="player.roleId" class="god-ranking-item">
+                  <div class="god-rank-number">{{ index + 1 }}</div>
+                  <div class="player-avatar-cell">
+                    <img v-if="player.headImg" :src="player.headImg" :alt="player.name" class="player-avatar" @error="handleImageError">
+                    <div v-else class="player-avatar-placeholder">{{ player.name?.charAt(0) || '?' }}</div>
+                  </div>
+                  <span class="player-name">{{ player.name }}</span>
+                  <span class="player-stat">{{ player.winCnt || 0 }}</span>
+                  <span class="player-stat">{{ Math.max(player.loseCnt - 6, 0) || 0 }}</span>
+                  <span class="player-stat">{{ player.buildingCnt || 0 }}</span>
+                  <span class="player-stat">{{ player.loseCnt || 0 }}</span>
+                  <span class="player-stat">{{ parseFloat((player.winCnt && player.loseCnt ? player.winCnt/player.loseCnt : 0.00)).toFixed(2) }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -247,18 +335,12 @@ import { useMessage, NCheckboxGroup, NCheckbox } from 'naive-ui'
 import { useTokenStore } from '@/stores/tokenStore'
 import html2canvas from 'html2canvas';
 import {
-  Trophy,
   Refresh,
   Copy,
-  ChevronDown,
-  ChevronUp,
   DocumentText
 } from '@vicons/ionicons5'
 import {
   getLastSaturday,
-  formatTimestamp,
-  parseBattleResult,
-  parseAttackType,
   formatBattleRecordsForExport,
   copyToClipboard
 } from '@/utils/clubBattleUtils'
@@ -274,13 +356,14 @@ const props = defineProps({
   }
 })
 
-const exportmethod = ref([]);
+const exportmethod = ref(['2']);
 const exportDom = ref(null);
 const emit = defineEmits(['update:visible'])
 
 const message = useMessage()
 const tokenStore = useTokenStore()
-
+const info = computed(() => tokenStore.gameData?.legionInfo || null);
+const club = computed(() => info.value?.info || null);
 const showModal = computed({
   get: () => props.visible,
   set: (val) => emit('update:visible', val)
@@ -291,9 +374,61 @@ const battleRecords = ref(null)
 const expandedMembers = ref(new Set())
 const queryDate = ref('')
 
-
 const legionMatch = ref({
   isRegistered: false
+})
+
+// 计算属性：总击杀
+const totalKills = computed(() => {
+  if (!battleRecords.value?.roleDetailsList) return 0
+  return battleRecords.value.roleDetailsList.reduce((sum, member) => sum + (member.winCnt || 0), 0)
+})
+
+// 计算属性：总复活
+const totalRevives = computed(() => {
+  if (!battleRecords.value?.roleDetailsList) return 0
+  return battleRecords.value.roleDetailsList.reduce((sum, member) => sum + Math.max((member.loseCnt || 0) - 6, 0), 0)
+})
+
+// 计算属性：总K/D
+const totalKD = computed(() => {
+  if (!battleRecords.value?.roleDetailsList) return 0
+  const totalKills = battleRecords.value.roleDetailsList.reduce((sum, member) => sum + (member.winCnt || 0), 0)
+  const totalLosses = battleRecords.value.roleDetailsList.reduce((sum, member) => sum + (member.loseCnt || 0), 0)
+  if (totalLosses === 0) return 0
+  return (totalKills / totalLosses).toFixed(2)
+})
+
+// 计算属性：击杀榜 Top3
+const killRank = computed(() => {
+  if (!battleRecords.value?.roleDetailsList) return []
+  return [...battleRecords.value.roleDetailsList]
+    .sort((a, b) => (b.winCnt || 0) - (a.winCnt || 0))
+    .slice(0, 3)
+})
+
+// 计算属性：K/D榜 Top3
+const kdRank = computed(() => {
+  if (!battleRecords.value?.roleDetailsList) return []
+  return [...battleRecords.value.roleDetailsList]
+    .map(member => ({
+      ...member,
+      kd: parseFloat((member.winCnt && member.loseCnt ? member.winCnt/member.loseCnt : 0.00)).toFixed(2)
+    }))
+    .sort((a, b) => b.kd - a.kd)
+    .slice(0, 3)
+})
+
+// 计算属性：复活榜 Top3
+const reviveRank = computed(() => {
+  if (!battleRecords.value?.roleDetailsList) return []
+  return [...battleRecords.value.roleDetailsList]
+    .map(member => ({
+      ...member,
+      reviveCnt: Math.max((member.loseCnt || 0) - 6, 0)
+    }))
+    .sort((a, b) => b.reviveCnt - a.reviveCnt)
+    .slice(0, 3)
 })
 
 // 格式化战力
@@ -308,30 +443,7 @@ const formatPower = (power) => {
   return power.toString()
 }
 
-// 获取战斗样式类
-const getBattleClass = (battle) => {
-  const classes = []
-  if (battle.newWinFlag === 2) {
-    classes.push('battle-win')
-  } else {
-    classes.push('battle-loss')
-  }
-  if (battle.attackType === 0) {
-    classes.push('battle-attack')
-  } else {
-    classes.push('battle-defend')
-  }
-  return classes.join(' ')
-}
 
-// 切换成员详情展开状态
-const toggleMemberDetails = (roleId) => {
-  if (expandedMembers.value.has(roleId)) {
-    expandedMembers.value.delete(roleId)
-  } else {
-    expandedMembers.value.add(roleId)
-  }
-}
 
 // 处理图片加载错误
 const handleImageError = (event) => {
@@ -435,12 +547,32 @@ const exportToImage = async () => {
   }
 
   try {
+    // 临时移除战神榜内容区域的最大高度限制，确保所有内容都可见
+    const godRankingContents = exportDom.value.querySelectorAll('.god-ranking-content');
+    const originalStyles = [];
+    
+    godRankingContents.forEach(content => {
+      originalStyles.push({
+        element: content,
+        maxHeight: content.style.maxHeight,
+        overflow: content.style.overflow
+      });
+      content.style.maxHeight = 'none';
+      content.style.overflow = 'visible';
+    });
+
     // 5. 用html2canvas渲染DOM为Canvas
     const canvas = await html2canvas(exportDom.value, {
       scale: 2, // 放大2倍，解决图片模糊问题
       useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
       backgroundColor: '#ffffff', // 避免透明背景（默认透明）
       logging: false // 关闭控制台日志
+    });
+
+    // 恢复战神榜内容区域的原始样式
+    originalStyles.forEach(({ element, maxHeight, overflow }) => {
+      element.style.maxHeight = maxHeight;
+      element.style.overflow = overflow;
     });
 
     // 6. Canvas转图片链接（支持PNG/JPG）
@@ -516,70 +648,155 @@ onMounted(() => {
   min-height: 200px;
 }
 
-.records-list {
+/* 总体数据统计 */
+.battle-header {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.battle-header h2 {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  padding: var(--spacing-md);
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.overall-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-md);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stats-side {
+  min-width: 400px;
+}
+
+.stats-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-sm);
+}
+
+.stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+}
+
+/* 统计项颜色区分 */
+.stat-kills {
+  border-left: 4px solid var(--error-color);
+}
+
+.stat-kills .stat-value {
+  color: var(--error-color);
+}
+
+.stat-revives {
+  border-left: 4px solid var(--warning-color);
+}
+
+.stat-revives .stat-value {
+  color: var(--warning-color);
+}
+
+.stat-kd {
+  border-left: 4px solid var(--success-color);
+}
+
+.stat-kd .stat-value {
+  color: var(--success-color);
+}
+
+/* 各种榜单 */
+.battle-rankings {
+  margin-bottom: var(--spacing-md);
+}
+
+.ranking-card {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ranking-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.ranking-content {
+  display: flex;
+  justify-content: center;
+}
+
+.ranking-side {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  min-width: 300px;
 }
 
-.records-info {
-  display: flex;
-  gap: var(--spacing-md);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--border-light);
-  align-items: center;
-}
-
-.sort-indicator {
+.ranking-subtitle {
   font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(32, 128, 240, 0.1);
-  padding: 4px 8px;
-  border-radius: var(--border-radius-small);
-  border: 1px solid rgba(32, 128, 240, 0.2);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-sm);
 }
 
-.member-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--border-radius-medium);
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   padding: var(--spacing-sm);
-  transition: all var(--transition-fast);
-
-  &:hover {
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  }
-
-  &+& {
-    margin-top: var(--spacing-sm);
-  }
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.member-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
-.member-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  min-width: 140px;
-  max-width: 140px;
-  flex-shrink: 0;
-}
-
-.ranking-number {
+.rank-number {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -588,7 +805,22 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.member-avatar {
+.ranking-item:nth-of-type(2) .rank-number {
+  background: #FFD700;
+  color: #000;
+}
+
+.ranking-item:nth-of-type(3) .rank-number {
+  background: #C0C0C0;
+  color: #000;
+}
+
+.ranking-item:nth-of-type(4) .rank-number {
+  background: #CD7F32;
+  color: #000;
+}
+
+.player-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -596,7 +828,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.member-avatar-placeholder {
+.player-avatar-placeholder {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -610,161 +842,214 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.member-name {
-  font-size: var(--font-size-sm);
+.player-name {
   font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
 }
 
-.member-stats-inline {
+.player-value {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+}
+
+/* 战神榜 */
+.god-rankings {
   display: flex;
-  gap: var(--spacing-xs);
-  align-items: center;
-  flex: 1;
+  justify-content: center;
 }
 
-.details-button {
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.stat-inline {
-  font-size: var(--font-size-xs);
-  padding: 2px ;
-  border-radius: var(--border-radius-small);
-  white-space: nowrap;
-  min-width: 52px;
-  text-align: center;
-
-  &.win {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
-  }
-
-  &.loss {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-  }
-
-  &.siege {
-    background: rgba(245, 158, 11, 0.1);
-    color: #d97706;
-  }
-  
-  &.KD {
-    background: rgba(151, 151, 151, 0.1);
-    color: #858585;
-  }
-
-  &.Sscore {
-    background: rgba(244, 162, 216, 0.1);
-    color: #FA79CE;
-  }
-}
-
-.battle-details {
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--border-light);
-}
-
-.battles-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.battle-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md);
-  background: var(--bg-primary);
+.god-ranking {
+  background: var(--bg-secondary);
   border-radius: var(--border-radius-medium);
-  border-left: 3px solid transparent;
-
-  &.battle-win {
-    border-left-color: #10b981;
-  }
-
-  &.battle-loss {
-    border-left-color: #ef4444;
-  }
+  padding: var(--spacing-md);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-width: 600px;
 }
 
-.battle-participants {
+.god-ranking-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.god-ranking-content {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: var(--spacing-xs);
+}
+
+.god-ranking-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.god-ranking-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  flex: 1;
-}
-
-.participant {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  min-width: 0;
-}
-
-.participant-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.participant-name {
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.header-avatar {
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.player-avatar-cell {
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.header-player {
+  width: 140px;
+  padding-left: var(--spacing-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.header-id {
+  flex: 0 0 100px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.battle-vs {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  align-items: center;
-}
-
-.battle-time {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.no-battles {
-  padding: var(--spacing-xl);
+.header-stat {
+  width: 50px;
   text-align: center;
+  flex-shrink: 0;
 }
 
-// 响应式设计
+.god-ranking-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.god-rank-number {
+  width: 32px;
+  height: 24px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+  background: #696969;
+  color: #fff;
+}
+
+.god-ranking-header > .god-rank-number {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}
+
+.god-ranking-item:nth-of-type(2) .god-rank-number {
+  background: #FFD700;
+  color: #000;
+}
+
+.god-ranking-item:nth-of-type(3) .god-rank-number {
+  background: #C0C0C0;
+  color: #000;
+}
+
+.god-ranking-item:nth-of-type(4) .god-rank-number {
+  background: #CD7F32;
+  color: #000;
+}
+
+.player-id {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  flex: 0 0 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-stat {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  width: 50px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.god-ranking-content::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 3px;
+}
+
+.god-ranking-content::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+.god-ranking-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
-  .member-stats {
+  .inline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .stats-grid {
     grid-template-columns: 1fr;
   }
-
-  .battle-participants {
+  
+  .ranking-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
   }
-
-  .battle-item {
+  
+  .god-ranking-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
   }
-
-  .battle-time {
-    align-self: flex-end;
+  
+  .player-stat {
+    min-width: auto;
+    text-align: left;
+  }
+  
+  .stats-side,
+  .ranking-side,
+  .god-ranking {
+    min-width: auto;
+    width: 100%;
   }
 }
 </style>
