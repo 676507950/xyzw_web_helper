@@ -255,6 +255,18 @@ export function registerDefaultCommands(reg) {
     .register("car_getmemberrank")
     .register("car_research")
 
+    // 功法
+    .register("legacy_getinfo")
+    .register("legacy_claimhangup")
+    // 功法残卷赠送
+    .register("legacy_gift_getlist")
+    .register("legacy_gift_send", { recipientId: 0, itemId: 0, quantity: 0 })
+    .register("legacy_gift_received")
+    // 安全密码验证
+    .register("role_commitpassword", { password: "", passwordType: 1 })
+    // 功法残卷发送
+    .register("legacy_sendgift", { itemCnt: 0, legacyUIds: [], targetId: 0 })
+
     // 咸王宝库
     .register("matchteam_getroleteaminfo")
     .register("bosstower_getinfo")
@@ -877,6 +889,7 @@ export class XyzwWebSocketClient {
           3300060: "扫荡条件不满足",
           1300050: "请修改您的采购次数",
           200020: "出了点小问题，请尝试重启游戏解决～",
+          200160: "模块未开启",
           3500020: "没有可领取的奖励"
         };
         
@@ -1012,6 +1025,7 @@ export class XyzwWebSocketClient {
           3300060: "扫荡条件不满足",
           1300050: "请修改您的采购次数",
           200020: "出了点小问题，请尝试重启游戏解决～",
+          200160: "模块未开启",
           3500020: "没有可领取的奖励"
         };
         

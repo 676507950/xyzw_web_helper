@@ -65,6 +65,12 @@
                   服务器 {{ getSortIcon('server') }}
                 </n-button>
                 <n-button 
+                  @click="toggleSort('createdAt')"
+                  :type="sortConfig.field === 'createdAt' ? 'primary' : 'default'"
+                >
+                  创建时间 {{ getSortIcon('createdAt') }}
+                </n-button>
+                <n-button 
                   @click="toggleSort('lastUsed')"
                   :type="sortConfig.field === 'lastUsed' ? 'primary' : 'default'"
                 >
@@ -295,12 +301,12 @@
               <!-- Actions -->
               <n-space>
                 <!-- 存储类型 -->
-                <n-tag size="small" :type="token.importMethod === 'url' ? 'success' : 'warning'">
-                  {{ token.importMethod === "url" ? "长期" : "临时" }}
+                <n-tag size="small" :type="(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent) ? 'success' : 'warning'">
+                  {{ (token.importMethod === "url" || token.importMethod === "bin" || token.upgradedToPermanent) ? "长期" : "临时" }}
                 </n-tag>
                 
                 <!-- 升级选项（仅对临时存储的token显示） -->
-                <n-button v-if="token.importMethod !== 'url'" size="small" type="success" ghost @click.stop="upgradeTokenToPermanent(token)">
+                <n-button v-if="!(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent)" size="small" type="success" ghost @click.stop="upgradeTokenToPermanent(token)">
                   <template #icon>
                     <n-icon>
                       <Star />
@@ -448,7 +454,7 @@ watch(viewMode, (newViewMode) => {
 // 排序状态管理 - 从localStorage读取上次的排序设置
 const savedSortConfig = localStorage.getItem('tokenSortConfig');
 const sortConfig = ref(savedSortConfig ? JSON.parse(savedSortConfig) : {
-  field: 'name', // 排序字段：name, server, lastUsed
+  field: 'createdAt', // 排序字段：name, server, createdAt, lastUsed
   direction: 'asc' // 排序方向：asc, desc
 });
 

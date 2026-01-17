@@ -85,18 +85,15 @@ onSome(["role_getroleinforesp", "role_getroleinfo"], (data: Session) => {
   const tokenStore = useTokenStore();
   const token = tokenStore.gameTokens.find(t => t.id === tokenId);
   if (token) {
-    // 提取游戏名称和服务器信息（根据实际数据结构调整字段名）
-    const gameName = body?.role?.name || body?.name || token.name;
     // 优先使用serverName字段获取服务器信息
     const server = body?.role?.serverName || body?.serverName || body?.role?.server || body?.server || token.server;
     
     // 更新token信息
     tokenStore.updateToken(tokenId, {
-      name: gameName,
       server: server
     });
     
-    gameLogger.verbose(`已更新Token ${tokenId} 的游戏名称和服务器信息`, { gameName, server });
+    gameLogger.verbose(`已更新Token ${tokenId} 的服务器信息`, { server });
   }
 });
 

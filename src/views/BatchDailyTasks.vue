@@ -6,12 +6,20 @@
         <!-- Header -->
         <div class="page-header">
           <h2>批量日常任务</h2>
-          <div class="actions">
-            <n-button type="primary" @click="startBatch" :disabled="isRunning || selectedTokens.length === 0">
+          <div class="actions" style="display: flex; align-items: center;">
+            <n-button type="primary" @click="startBatch" :disabled="isRunning || selectedTokens.length === 0" size="medium">
               {{ isRunning ? "执行中..." : "开始执行" }}
             </n-button>
-            <n-button @click="stopBatch" :disabled="!isRunning" type="error" style="margin-left: 12px">
+            <n-button @click="stopBatch" :disabled="!isRunning" type="error" style="margin-left: 12px" size="medium">
               停止
+            </n-button>
+            <n-button @click="openBatchSettings" type="default" style="margin-left: 12px" size="medium">
+              <template #icon>
+                <n-icon>
+                  <Settings />
+                </n-icon>
+              </template>
+              设置
             </n-button>
           </div>
         </div>
@@ -105,6 +113,12 @@
             <n-button size="small" @click="collection_claimfreereward"
               :disabled="isRunning || selectedTokens.length === 0">
               免费领取珍宝阁
+            </n-button>
+            <n-button size="small" @click="batchLegacyClaim" :disabled="isRunning || selectedTokens.length === 0">
+              批量功法残卷领取
+            </n-button>
+            <n-button size="small" @click="showLegacyGiftModal = true" :disabled="isRunning || selectedTokens.length === 0">
+              批量功法残卷赠送
             </n-button>
           </n-space>
           <n-space vertical>
@@ -270,8 +284,176 @@
       </div>
     </n-modal>
 
+    <!-- Legacy Gift Modal -->
+    <n-modal v-model:show="showLegacyGiftModal" preset="card" title="批量功法残卷赠送" style="width: 90%; max-width: 600px">
+      <div class="settings-content">
+        <div class="settings-grid">
+          <!-- 接收者ID输入 -->
+          <div class="setting-item">
+            <label class="setting-label">接收者ID</label>
+            <n-space>
+              <n-input 
+                v-model:value="recipientIdInput" 
+                placeholder="请输入接收者ID"
+                type="number"
+                @input="clearRecipientError"
+                style="width: 180px"
+              />
+              <n-input 
+                v-model:value="securityPassword" 
+                placeholder="请输入安全密码"
+                type="password"
+                @input="clearRecipientError"
+                style="width: 180px"
+              />
+              <n-button 
+                type="primary" 
+                @click="queryRecipientInfo" 
+                :disabled="!recipientIdInput || isQueryingRecipient || !securityPassword"
+              >
+                查询
+              </n-button>
+            </n-space>
+            <n-text v-if="recipientIdError" type="error" style="margin-top: 5px; display: block">
+              {{ recipientIdError }}
+            </n-text>
+          </div>
+          
+          <!-- 接收者信息展示 -->
+          <div class="setting-item" v-if="recipientInfo">
+            <label class="setting-label">接收者信息</label>
+            <div class="recipient-info" style="background: #f7f8fa; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb; display: flex; align-items: flex-start; gap: 16px; transition: all 0.3s ease;">
+              <!-- 头像部分 -->
+              <div class="avatar-container" style="
+                position: relative;
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                overflow: hidden;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+              ">
+                <img 
+                  v-if="recipientInfo.avatarUrl && !avatarLoadError" 
+                  :src="recipientInfo.avatarUrl" 
+                  alt="角色头像" 
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    transition: all 0.3s ease;
+                  "
+                  @error="handleAvatarError"
+                  @load="handleAvatarLoad"
+                />
+                <!-- 头像加载失败或未设置时的 fallback -->
+                <div 
+                  v-else 
+                  class="avatar-fallback" 
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    color: white;
+                    font-size: 24px;
+                    font-weight: bold;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                  "
+                >
+                  {{ (recipientInfo.name || '未知角色')[0] || '?' }}
+                </div>
+                <!-- 加载指示器 -->
+                <div 
+                  v-if="isAvatarLoading" 
+                  class="avatar-loading" 
+                  style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                  "
+                >
+                  <div class="loading-spinner" style="
+                    width: 30px;
+                    height: 30px;
+                    border: 3px solid rgba(255, 255, 255, 0.3);
+                    border-top: 3px solid white;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                  "></div>
+                </div>
+              </div>
+              
+              <!-- 角色信息部分 -->
+              <div class="role-info" style="flex: 1; min-width: 0;">
+                <div style="margin-bottom: 12px; font-size: 18px; font-weight: bold; color: #1d2129; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">{{ recipientInfo.name || '未知角色' }}</div>
+                <div class="role-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div class="info-item">
+                    <div class="info-label" style="font-size: 12px; color: #86909c; margin-bottom: 2px;">角色ID</div>
+                    <div class="info-value" style="font-size: 14px; font-weight: 500; color: #1d2129;">{{ recipientInfo.roleId }}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label" style="font-size: 12px; color: #86909c; margin-bottom: 2px;">服务器</div>
+                    <div class="info-value" style="font-size: 14px; font-weight: 500; color: #1d2129;">{{ recipientInfo.serverId }}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label" style="font-size: 12px; color: #86909c; margin-bottom: 2px;">战力</div>
+                    <div class="info-value" style="font-size: 16px; font-weight: 600; color: #667eea;">{{ recipientInfo.power }} {{ recipientInfo.powerUnit }}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label" style="font-size: 12px; color: #86909c; margin-bottom: 2px;">军团</div>
+                    <div class="info-value" style="font-size: 14px; font-weight: 500; color: #1d2129;">{{ recipientInfo.legionName || '无' }}</div>
+                  </div>
+                  <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-label" style="font-size: 12px; color: #86909c; margin-bottom: 2px;">军团ID</div>
+                    <div class="info-value" style="font-size: 14px; font-weight: 500; color: #1d2129;">{{ recipientInfo.legionId || '无' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 赠送数量 -->
+          <div class="setting-item">
+            <label class="setting-label">赠送数量</label>
+            <n-input-number 
+              v-model:value="giftQuantity" 
+              :min="1" 
+              :max="1000" 
+              :step="1"
+              placeholder="请输入赠送数量"
+            />
+          </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="modal-actions" style="margin-top: 20px; text-align: right">
+          <n-button @click="showLegacyGiftModal = false" style="margin-right: 12px">取消</n-button>
+          <n-button 
+            type="primary" 
+            @click="confirmLegacyGift" 
+            :disabled="!recipientIdInput || !recipientInfo"
+          >
+            开始赠送
+          </n-button>
+        </div>
+      </div>
+    </n-modal>
+
     <!-- Helper Modal (开箱/钓鱼/招募) -->
-    <n-modal v-model:show="showHelperModal" preset="card" :title="helperModalTitle"
+    <n-modal v-model:show="showHelperModal" preset="card" :title="helperModalTitle",
       style="width: 90%; max-width: 400px">
       <div class="settings-content">
         <div class="settings-grid">
@@ -455,6 +637,42 @@
         </div>
       </div>
     </n-modal>
+
+    <!-- Batch Settings Modal -->
+    <n-modal v-model:show="showBatchSettingsModal" preset="card" title="定时任务设置"
+      style="width: 90%; max-width: 400px">
+      <div class="settings-content">
+        <div style="margin-bottom: 20px; color: #6b7280; font-size: 14px">
+          设置定时任务执行批量使用操作时的数量设置
+        </div>
+        <div class="settings-grid">
+          <div class="setting-item">
+            <label class="setting-label">定时批量开箱数量（10的倍数）</label>
+            <n-input-number v-model:value="batchSettings.boxCount" :min="10" :max="10000" :step="10" size="small" />
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">定时批量钓鱼数量（10的倍数）</label>
+            <n-input-number v-model:value="batchSettings.fishCount" :min="10" :max="10000" :step="10" size="small" />
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">定时批量招募数量（10的倍数）</label>
+            <n-input-number v-model:value="batchSettings.recruitCount" :min="10" :max="10000" :step="10" size="small" />
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">默认宝箱类型</label>
+            <n-select v-model:value="batchSettings.defaultBoxType" :options="boxTypeOptions" size="small" />
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">默认鱼竿类型</label>
+            <n-select v-model:value="batchSettings.defaultFishType" :options="fishTypeOptions" size="small" />
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px; text-align: right">
+          <n-button @click="showBatchSettingsModal = false" style="margin-right: 12px">取消</n-button>
+          <n-button type="primary" @click="saveBatchSettings">保存设置</n-button>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
@@ -550,6 +768,66 @@ const helperModalTitle = computed(() => {
   return titles[helperType.value] || "批量助手";
 });
 
+// Batch Settings State
+const showBatchSettingsModal = ref(false);
+const batchSettings = reactive({
+  boxCount: 100,
+  fishCount: 100,
+  recruitCount: 100,
+  defaultBoxType: 2001,
+  defaultFishType: 1,
+});
+
+// Load batch settings from localStorage
+const loadBatchSettings = () => {
+  try {
+    const saved = localStorage.getItem("batchSettings");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.assign(batchSettings, parsed);
+    }
+  } catch (error) {
+    console.error("Failed to load batch settings:", error);
+  }
+};
+
+// Save batch settings to localStorage
+const saveBatchSettings = () => {
+  try {
+    localStorage.setItem("batchSettings", JSON.stringify(batchSettings));
+    message.success("定时批量任务设置已保存");
+    showBatchSettingsModal.value = false;
+  } catch (error) {
+    console.error("Failed to save batch settings:", error);
+    message.error("保存设置失败");
+  }
+};
+
+// Open batch settings modal
+const openBatchSettings = () => {
+  loadBatchSettings();
+  showBatchSettingsModal.value = true;
+};
+
+// Load settings on component mount
+loadBatchSettings();
+
+// ======================
+// Legacy Gift Feature
+// ======================
+
+// Legacy Gift Modal State
+const showLegacyGiftModal = ref(false);
+const recipientIdInput = ref('');
+const recipientIdError = ref('');
+const recipientInfo = ref(null);
+const isQueryingRecipient = ref(false);
+const giftQuantity = ref(10);
+const securityPassword = ref(''); // 安全密码
+// 头像加载状态
+const isAvatarLoading = ref(false);
+const avatarLoadError = ref(false);
+
 // ======================
 // Scheduled Tasks Feature
 // ======================
@@ -599,6 +877,8 @@ const availableTasks = [
   { label: "一键购买四圣碎片", value: "legion_storebuygoods" },
   { label: "一键黑市采购", value: "store_purchase" },
   { label: "免费领取珍宝阁", value: "collection_claimfreereward" },
+  { label: "批量领取功法残卷", value: "batchLegacyClaim" },
+  { label: "批量赠送功法残卷", value: "batchLegacyGiftSend" },
 ];
 
 const CarresearchItem = [
@@ -2329,7 +2609,12 @@ const executeScheduledTask = async (task) => {
       // Call the task function dynamically
       const taskFunction = eval(taskName);
       if (typeof taskFunction === "function") {
-        await taskFunction();
+        // For batch operations, pass isScheduledTask = true
+        if (['batchOpenBox', 'batchFish', 'batchRecruit'].includes(taskName)) {
+          await taskFunction(true);
+        } else {
+          await taskFunction();
+        }
       } else {
         addLog({
           time: new Date().toLocaleTimeString(),
@@ -2369,6 +2654,226 @@ const fishTypeOptions = [
 const openHelperModal = (type) => {
   helperType.value = type;
   showHelperModal.value = true;
+};
+
+// 批量功法残卷赠送相关方法
+const clearRecipientError = () => {
+  recipientIdError.value = '';
+};
+
+const validateRecipientId = (value) => {
+  if (!value || value === '') {
+    return true; // 允许为空，由按钮禁用控制
+  }
+  if (!Number.isInteger(Number(value)) || Number(value) <= 0) {
+    recipientIdError.value = '请输入有效的数字ID';
+    return false;
+  }
+  return true;
+};
+
+// 头像处理方法
+const handleAvatarLoad = () => {
+  isAvatarLoading.value = false;
+  avatarLoadError.value = false;
+};
+
+const handleAvatarError = () => {
+  isAvatarLoading.value = false;
+  avatarLoadError.value = true;
+};
+
+const resetAvatarState = () => {
+  isAvatarLoading.value = true;
+  avatarLoadError.value = false;
+};
+
+const queryRecipientInfo = async () => {
+  // 1. 输入验证
+  if (!recipientIdInput.value || recipientIdInput.value === '') {
+    recipientIdError.value = '请输入接收者ID';
+    return;
+  }
+  
+  const recipientId = Number(recipientIdInput.value);
+  if (!Number.isInteger(recipientId) || recipientId <= 0) {
+    recipientIdError.value = '请输入有效的数字ID';
+    return;
+  }
+  
+  // 2. 检查选中账号
+  if (selectedTokens.value.length === 0) {
+    recipientIdError.value = '请先选择要操作的角色';
+    return;
+  }
+  
+  // 3. 初始化状态
+  isQueryingRecipient.value = true;
+  recipientIdError.value = '';
+  recipientInfo.value = null;
+  // 重置头像状态
+  resetAvatarState();
+  
+  const firstTokenId = selectedTokens.value[0];
+  const token = tokens.value.find((t) => t.id === firstTokenId);
+  
+  // 记录开始查询
+  addLog({
+    time: new Date().toLocaleTimeString(),
+    message: `=== 开始查询接收者信息: 使用账号 ${token.name} (ID: ${firstTokenId}) ===`,
+    type: "info",
+  });
+  
+  try {
+    // 确保WebSocket连接
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: `正在建立WebSocket连接...`,
+      type: "info",
+    });
+    
+    // 使用现有的ensureConnection函数，它已经包含了重连机制
+    await ensureConnection(firstTokenId);
+    
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: `WebSocket连接成功`,
+      type: "success",
+    });
+    
+    // 发送查询命令
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: `正在发送查询命令，接收者ID: ${recipientId}`,
+      type: "info",
+    });
+    
+    // 延长超时时间到10秒，确保有足够时间处理
+    const resp = await tokenStore.sendMessageWithPromise(
+      firstTokenId,
+      'rank_getroleinfo',
+      {
+        bottleType: 0,
+        includeBottleTeam: false,
+        isSearch: false,
+        roleId: recipientId,
+      },
+      10000
+    );
+    
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: `查询命令发送成功，正在处理响应...`,
+      type: "info",
+    });
+    
+    // 处理查询结果
+    console.log('rank_getroleinfo 响应结果:', resp);
+    
+    // 兼容不同的响应结构
+    const roleData = resp?.role || resp?.roleInfo;
+    
+    if (roleData) {
+      // 构建完整的角色信息，移除等级和VIP字段
+      recipientInfo.value = {
+        roleId: roleData.roleId || roleData.role?.roleId,
+        name: roleData.name || roleData.role?.name,
+        // 添加头像URL
+        avatarUrl: resp?.roleInfo?.headImg || roleData?.headImg || roleData?.role?.headImg || '',
+        // 战力转换为亿为单位
+        power: (function(p) {
+          const billion = 100000000;
+          return (p / billion).toFixed(2);
+        })(roleData.power || roleData.role?.power || 0),
+        powerUnit: '亿',
+        // 扩展更多角色信息
+        serverId: roleData.serverId || roleData.role?.serverId || 0,
+        legionName: resp?.legionInfo?.name || '',
+        legionId: resp?.legionInfo?.id || 0,
+      };
+      
+      // 格式化角色名，处理特殊字符
+      const displayName = recipientInfo.value.name || '未知角色';
+      
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 查询成功: 找到角色 ${displayName} (ID: ${recipientInfo.value.roleId})，战力: ${recipientInfo.value.power}${recipientInfo.value.powerUnit} ===`,
+        type: "success",
+      });
+      
+      message.success('查询成功');
+    } else {
+      const errorMsg = '未找到该角色信息';
+      recipientIdError.value = errorMsg;
+      
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 查询失败: ${errorMsg} ===`,
+        type: "error",
+      });
+      
+      message.error(errorMsg);
+    }
+  } catch (error) {
+    // 详细的错误处理
+    console.error('查询接收者信息失败:', error);
+    
+    let errorMsg = '查询失败';
+    let logType = 'error';
+    
+    // 根据错误类型提供更友好的错误信息
+    if (error.message.includes('连接失败')) {
+      errorMsg = 'WebSocket连接失败，请检查网络或账号状态';
+    } else if (error.message.includes('timeout') || error.message.includes('超时')) {
+      errorMsg = '查询超时，请稍后重试';
+      logType = 'warning';
+    } else if (error.message.includes('200160')) {
+      errorMsg = '功法系统未开启';
+    } else {
+      errorMsg = `查询失败: ${error.message}`;
+    }
+    
+    recipientIdError.value = errorMsg;
+    
+    // 记录错误日志
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: `=== ${errorMsg} ===`,
+      type: logType,
+    });
+    
+    // 显示用户友好的错误提示
+    message.error(errorMsg);
+  } finally {
+    isQueryingRecipient.value = false;
+    
+    // 记录查询完成
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: `=== 查询操作完成 ===`,
+      type: "info",
+    });
+  }
+};
+
+const confirmLegacyGift = async () => {
+  if (!recipientIdInput.value || !recipientInfo.value) {
+    message.error('请先查询并确认接收者信息');
+    return;
+  }
+  
+  if (!securityPassword.value) {
+    message.error('请输入安全密码');
+    return;
+  }
+  
+  // 调用增强版批量赠送功能
+  await batchLegacyGiftSendEnhanced();
+  
+  // 关闭模态框
+  showLegacyGiftModal.value = false;
+  // 清空安全密码
+  securityPassword.value = '';
 };
 
 const executeHelper = () => {
@@ -4672,7 +5177,7 @@ const batchClaimBoxPointReward = async () => {
   message.success("批量领取宝箱积分结束");
 };
 
-const batchOpenBox = async () => {
+const batchOpenBox = async (isScheduledTask = false) => {
   if (selectedTokens.value.length === 0) return;
 
   isRunning.value = true;
@@ -4680,8 +5185,8 @@ const batchOpenBox = async () => {
   // 不再重置logs数组，保留之前的日志
   // logs.value = [];
 
-  const boxType = helperSettings.boxType;
-  const totalCount = helperSettings.count;
+  const boxType = isScheduledTask ? batchSettings.defaultBoxType : helperSettings.boxType;
+  const totalCount = isScheduledTask ? batchSettings.boxCount : helperSettings.count;
   const batches = Math.floor(totalCount / 10);
   const remainder = totalCount % 10;
   const boxNames = {
@@ -4781,7 +5286,7 @@ const batchOpenBox = async () => {
   message.success("批量开箱结束");
 };
 
-const batchFish = async () => {
+const batchFish = async (isScheduledTask = false) => {
   if (selectedTokens.value.length === 0) return;
 
   isRunning.value = true;
@@ -4789,8 +5294,8 @@ const batchFish = async () => {
   // 不再重置logs数组，保留之前的日志
   // logs.value = [];
 
-  const fishType = helperSettings.fishType;
-  const totalCount = helperSettings.count;
+  const fishType = isScheduledTask ? batchSettings.defaultFishType : helperSettings.fishType;
+  const totalCount = isScheduledTask ? batchSettings.fishCount : helperSettings.count;
   const batches = Math.floor(totalCount / 10);
   const remainder = totalCount % 10;
   const fishNames = { 1: "普通鱼竿", 2: "黄金鱼竿" };
@@ -4881,7 +5386,7 @@ const batchFish = async () => {
   message.success("批量钓鱼结束");
 };
 
-const batchRecruit = async () => {
+const batchRecruit = async (isScheduledTask = false) => {
   if (selectedTokens.value.length === 0) return;
 
   isRunning.value = true;
@@ -4889,7 +5394,7 @@ const batchRecruit = async () => {
   // 不再重置logs数组，保留之前的日志
   // logs.value = [];
 
-  const totalCount = helperSettings.count;
+  const totalCount = isScheduledTask ? batchSettings.recruitCount : helperSettings.count;
   const batches = Math.floor(totalCount / 10);
   const remainder = totalCount % 10;
 
@@ -5055,6 +5560,359 @@ const batchClaimFreeEnergy = async () => {
   isRunning.value = false;
   currentRunningTokenId.value = null;
   message.success("批量领取怪异塔免费道具结束");
+};
+
+const batchLegacyClaim = async () => {
+  if (selectedTokens.value.length === 0) return;
+  isRunning.value = true;
+  shouldStop.value = false;
+  
+  // Reset status
+  selectedTokens.value.forEach((id) => {
+    tokenStatus.value[id] = "waiting";
+  });
+  
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+    
+    const token = tokens.value.find((t) => t.id === tokenId);
+    const intervaltime = 2 * 60 * 60 * 1000 + 30 * 60 * 1000;
+    try {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 开始领取功法残卷: ${token.name} ===`,
+        type: "info",
+      });
+      await ensureConnection(tokenId);
+
+      const legacyinfo = await tokenStore.sendMessageWithPromise(
+        tokenId,
+        'legacy_getinfo',
+        {
+        },
+        5000
+      );
+      const hangUpBeginTime = legacyinfo.roleLegacy.hangUpBeginTime;
+      const now = Date.now();
+      const timeDiff = now - hangUpBeginTime;
+
+      if (timeDiff < intervaltime) {
+        const remainingTime = Math.ceil((intervaltime - timeDiff) / 1000 / 60);
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== ${token.name} 领取功法残卷失败,还需${remainingTime}分钟`,
+          type: "error",
+        });
+      } else {
+        const LegacyClaimHangUpResp = await tokenStore.sendMessageWithPromise(
+          tokenId,
+          "legacy_claimhangup",
+          {},
+          5000
+        );
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== ${token.name} 成功领取功法残卷${LegacyClaimHangUpResp.reward[0].value}，共有${LegacyClaimHangUpResp.role.items[37007].quantity}个`,
+          type: "success"
+        });
+      }
+      tokenStatus.value[tokenId] = "completed";
+    } catch (error) {
+      console.error(error);
+      tokenStatus.value[tokenId] = "failed";
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== ${token.name} 领取功法残卷失败: ${error.message || "未知错误"}`,
+        type: "error",
+      });
+    }
+    currentProgress.value = 100;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  
+  isRunning.value = false;
+  currentRunningTokenId.value = null;
+  message.success("批量领取功法残卷结束");
+};
+
+const batchLegacyGiftSend = async () => {
+  if (selectedTokens.value.length === 0) return;
+  
+  // 使用从模态框获取的配置
+  const giftConfig = {
+    recipientId: Number(recipientIdInput.value), // 接收者ID
+    itemId: 37007, // 功法残卷物品ID
+    quantity: giftQuantity.value, // 赠送数量
+  };
+  
+  isRunning.value = true;
+  shouldStop.value = false;
+  
+  // Reset status
+  selectedTokens.value.forEach((id) => {
+    tokenStatus.value[id] = "waiting";
+  });
+  
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+    
+    const token = tokens.value.find((t) => t.id === tokenId);
+    try {
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== 开始赠送功法残卷: ${token.name} ===`,
+        type: "info",
+      });
+      await ensureConnection(tokenId);
+      
+      // 1. 获取可赠送列表（可选，用于验证接收者是否有效）
+      // const giftList = await tokenStore.sendMessageWithPromise(
+      //   tokenId,
+      //   "legacy_gift_getlist",
+      //   {},
+      //   5000
+      // );
+      
+      // 2. 发送赠送请求
+      const giftResp = await tokenStore.sendMessageWithPromise(
+        tokenId,
+        "legacy_gift_send",
+        {
+          recipientId: giftConfig.recipientId,
+          itemId: giftConfig.itemId,
+          quantity: giftConfig.quantity,
+        },
+        5000
+      );
+      
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== ${token.name} 成功赠送功法残卷${giftConfig.quantity}个给ID:${giftConfig.recipientId} ===`,
+        type: "success"
+      });
+      
+      tokenStatus.value[tokenId] = "completed";
+    } catch (error) {
+      console.error(error);
+      tokenStatus.value[tokenId] = "failed";
+      
+      // 特殊错误处理
+      let errorMsg = error.message || "未知错误";
+      if (errorMsg.includes("200160")) {
+        errorMsg = "模块未开启";
+      }
+      
+      addLog({
+        time: new Date().toLocaleTimeString(),
+        message: `=== ${token.name} 赠送功法残卷失败: ${errorMsg} ===`,
+        type: "error",
+      });
+    }
+    currentProgress.value = 100;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  
+  isRunning.value = false;
+  currentRunningTokenId.value = null;
+  message.success("批量赠送功法残卷结束");
+};
+
+// 增强版批量赠送功法残卷（含完善的验证和错误处理）
+const batchLegacyGiftSendEnhanced = async () => {
+  if (selectedTokens.value.length === 0) {
+    message.warning("请先选择要操作的角色");
+    return;
+  }
+  
+  // 使用从模态框获取的配置
+  const giftConfig = {
+    recipientId: Number(recipientIdInput.value), // 接收者ID
+    itemId: 37007, // 功法残卷物品ID
+    quantity: giftQuantity.value, // 赠送数量
+  };
+  
+  // 基本配置验证
+  if (!giftConfig.recipientId || giftConfig.recipientId <= 0) {
+    message.error("请输入有效的接收者ID");
+    return;
+  }
+  
+  if (giftConfig.quantity <= 0 || giftConfig.quantity > 1000) {
+    message.error("赠送数量必须在1-1000之间");
+    return;
+  }
+  
+  isRunning.value = true;
+  shouldStop.value = false;
+  
+  // Reset status
+  selectedTokens.value.forEach((id) => {
+    tokenStatus.value[id] = "waiting";
+  });
+  
+  let totalSuccess = 0;
+  let totalFailed = 0;
+  
+  for (const tokenId of selectedTokens.value) {
+    if (shouldStop.value) break;
+    currentRunningTokenId.value = tokenId;
+    tokenStatus.value[tokenId] = "running";
+    currentProgress.value = 0;
+    
+    const token = tokens.value.find((t) => t.id === tokenId);
+    let consecutiveErrors = 0;
+    const maxRetries = 2;
+    
+    while (consecutiveErrors <= maxRetries) {
+      try {
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== 开始赠送功法残卷: ${token.name} (尝试 ${consecutiveErrors + 1}/${maxRetries + 1}) ===`,
+          type: "info",
+        });
+        
+        // 1. 确保WebSocket连接正常
+        await ensureConnection(tokenId);
+        
+        // 2. 获取角色信息，验证是否有足够的残卷
+        const roleInfo = await tokenStore.sendGetRoleInfo(tokenId);
+        const legacyFragmentCount = roleInfo?.role?.items?.[giftConfig.itemId]?.quantity || 0;
+        
+        if (legacyFragmentCount < giftConfig.quantity) {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `=== ${token.name} 功法残卷不足，当前拥有: ${legacyFragmentCount}，需要: ${giftConfig.quantity} ===`,
+            type: "error",
+          });
+          tokenStatus.value[tokenId] = "failed";
+          totalFailed++;
+          break;
+        }
+        
+        // 3. 发送role_commitpassword命令，用于解除验证安全密码
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== 发送role_commitpassword命令，解除安全密码验证 ===`,
+          type: "info"
+        });
+        
+        // 构建并发送role_commitpassword命令
+        const commitPasswordResp = await tokenStore.sendMessageWithPromise(
+          tokenId,
+          "role_commitpassword",
+          {
+            password: securityPassword.value,
+            passwordType: 1
+          },
+          5000
+        );
+        
+        // 验证响应
+        if (!commitPasswordResp) {
+          throw new Error("安全密码验证请求无响应");
+        }
+        
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== 安全密码验证成功 ===`,
+          type: "success"
+        });
+        
+        // 4. 发送legacy_sendgift命令
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== 发送legacy_sendgift命令，itemCnt=${giftConfig.quantity} ===`,
+          type: "info"
+        });
+        
+        // 构建并发送legacy_sendgift命令
+        const legacySendGiftResp = await tokenStore.sendMessageWithPromise(
+          tokenId,
+          "legacy_sendgift",
+          {
+            itemCnt: giftConfig.quantity,
+            legacyUIds: [],
+            targetId: giftConfig.recipientId
+          },
+          5000
+        );
+        
+        // 验证响应
+        if (!legacySendGiftResp) {
+          throw new Error("赠送请求无响应");
+        }
+        
+        // 5. 更新角色信息
+        await tokenStore.sendMessage(tokenId, "role_getroleinfo");
+        
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== ${token.name} 成功赠送功法残卷${giftConfig.quantity}个给ID:${giftConfig.recipientId} ===`,
+          type: "success"
+        });
+        
+        tokenStatus.value[tokenId] = "completed";
+        totalSuccess++;
+        break;
+      } catch (error) {
+        consecutiveErrors++;
+        console.error(`赠送失败: ${error.message}`);
+        
+        // 特殊错误处理
+        let errorMsg = error.message || "未知错误";
+        let errorType = "error";
+        
+        if (errorMsg.includes("200160")) {
+          errorMsg = "模块未开启";
+        } else if (errorMsg.includes("timeout")) {
+          errorMsg = "请求超时";
+          errorType = "warning";
+        } else if (errorMsg.includes("网络")) {
+          errorMsg = "网络错误";
+          errorType = "warning";
+        }
+        
+        if (consecutiveErrors <= maxRetries) {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `=== ${token.name} 赠送功法残卷失败: ${errorMsg}，将在3秒后重试 ===`,
+            type: "warning",
+          });
+          await new Promise((r) => setTimeout(r, 3000));
+        } else {
+          addLog({
+            time: new Date().toLocaleTimeString(),
+            message: `=== ${token.name} 赠送功法残卷失败: ${errorMsg}，已达最大重试次数 ===`,
+            type: "error",
+          });
+          tokenStatus.value[tokenId] = "failed";
+          totalFailed++;
+          break;
+        }
+      }
+    }
+    
+    currentProgress.value = 100;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  
+  isRunning.value = false;
+  currentRunningTokenId.value = null;
+  
+  // 总结报告
+  addLog({
+    time: new Date().toLocaleTimeString(),
+    message: `=== 批量赠送功法残卷完成: 成功 ${totalSuccess} 个，失败 ${totalFailed} 个 ===`,
+    type: "success",
+  });
+  
+  message.success(`批量赠送功法残卷结束，成功 ${totalSuccess} 个，失败 ${totalFailed} 个`);
 };
 
 const stopBatch = () => {
@@ -5353,6 +6211,37 @@ const stopBatch = () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+  
+  /* 批量功法残卷赠送样式 */
+  .recipient-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+  
+  /* 头像悬停效果 */
+  .avatar-container:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+  }
+  
+  /* 加载动画 */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* 响应式设计 */
+  @media (max-width: 600px) {
+    .recipient-info {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .avatar-container {
+      margin-bottom: 12px;
+    }
   }
 }
 </style>

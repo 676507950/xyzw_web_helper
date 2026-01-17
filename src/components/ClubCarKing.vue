@@ -102,6 +102,19 @@
             </div>
           </div>
 
+          <div class="car-rewards-full" v-if="c.rewards && c.rewards.length > 0">
+            <div class="rewards-list">
+              <span 
+                v-for="(reward, index) in sortRewards(c.rewards)" 
+                :key="index" 
+                class="reward-item" 
+                :class="getRewardClass(reward)"
+              >
+                {{ formatReward(reward) }}
+              </span>
+            </div>
+          </div>
+
           <div class="car-actions">
             <n-button
               size="small"
@@ -273,6 +286,166 @@ const gradeIcon = (color) => {
   };
   const path = map[color] || "/icons/大众.svg";
   return import.meta.env.BASE_URL + path.replace(/^\//, "");
+};
+
+// 物品ID映射字典
+const itemMapping = {
+  1001: "招募令",
+  1003: "进阶石",
+  1006: "精铁",
+  1007: "竞技场门票",
+  1008: "木柴火把",
+  1009: "青铜火把",
+  1010: "咸神火把",
+  1011: "普通鱼竿",
+  1012: "黄金鱼竿",
+  1013: "珍珠",
+  1014: "军团币",
+  1016: "晶石",
+  1017: "复活丹",
+  1019: "盐靛",
+  1020: "皮肤币",
+  1021: "扫荡魔毯",
+  1022: "白玉",
+  1023: "彩玉",
+  1026: "扳手",
+  1033: "贝壳",
+  1035: "金盐靛",
+  10002: "蓝玉",
+  10003: "红玉",
+  10101: "四圣碎片",
+  2001: "木制宝箱",
+  2002: "青铜宝箱",
+  2003: "黄金宝箱",
+  2004: "铂金宝箱",
+  2005: "钻石宝箱",
+  2101: "助威币",
+  3001: "金币袋子",
+  3002: "金砖袋子",
+  3005: "紫色随机碎片",
+  3006: "橙色随机碎片",
+  3007: "红色随机碎片",
+  3008: "精铁袋子",
+  3009: "进阶袋子",
+  3010: "梦魇袋子",
+  3011: "白玉袋子",
+  3012: "扳手袋子",
+  3020: "聚宝盆",
+  3021: "豪华聚宝盆",
+  3201: "红色万能碎片",
+  3302: "橙色万能碎片",
+  35002: "刷新券",
+  35009: "零件",
+};
+
+// 根据物品ID获取物品名称
+const getItemName = (itemId) => {
+  return itemMapping[itemId] || `未知物品(${itemId})`;
+};
+
+// 解析车辆奖励列表，返回格式化的奖励信息
+const parseCarRewards = (rewards) => {
+  const rewardInfo = [];
+  if (!rewards || !Array.isArray(rewards)) return rewardInfo;
+
+  for (const reward of rewards) {
+    rewardInfo.push(formatReward(reward));
+  }
+
+  return rewardInfo;
+};
+
+// 格式化数字为万的格式
+const formatNumberToWan = (num) => {
+  const n = Number(num);
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + "兆";
+  if (n >= 1e8) return (n / 1e8).toFixed(2) + "亿";
+  if (n >= 1e4) return (n / 1e4).toFixed(2) + "万";
+  return n.toString();
+};
+
+// 格式化单个奖励
+const formatReward = (reward) => {
+  const rewardType = reward.type || 0;
+  const itemId = reward.itemId || 0;
+  const value = reward.value || 0;
+
+  if (rewardType === 1) {
+    // 金币
+    return `金币: ${formatNumberToWan(value)}`;
+  } else if (rewardType === 2) {
+    // 金砖
+    return `金砖: ${value.toLocaleString()}`;
+  } else if (rewardType === 3) {
+    // 物品
+    const itemName = getItemName(itemId);
+    return `${itemName}: ${value}`;
+  } else {
+    return `类型${rewardType}物品${itemId}: ${value}`;
+  }
+};
+
+// 判断是否为高价值奖励
+const isHighValueReward = (reward) => {
+  const rewardType = Number(reward.type || 0);
+  const itemId = Number(reward.itemId || 0);
+  const value = Number(reward.value || 0);
+
+  // 高价值奖励列表
+  const highValueItems = [
+    { type: 3, itemId: 3201 }, // 红色万能碎片
+    { type: 3, itemId: 1001 }, // 招募令
+    { type: 2, itemId: 0 }, // 金砖
+    { type: 3, itemId: 1022 }, // 白玉
+    { type: 3, itemId: 1023 }, // 彩玉
+  ];
+
+  return highValueItems.some(item => 
+    item.type === rewardType && 
+    item.itemId === itemId
+  );
+};
+
+// 判断是否为刷新券
+const isRefreshTicket = (reward) => {
+  const rewardType = Number(reward.type || 0);
+  const itemId = Number(reward.itemId || 0);
+  return rewardType === 3 && itemId === 35002;
+};
+
+// 获取奖励的样式类
+const getRewardClass = (reward) => {
+  const isRefresh = isRefreshTicket(reward);
+  const isHigh = isHighValueReward(reward);
+  if (isRefresh) {
+    return 'refresh-ticket';
+  }
+  if (isHigh) {
+    return 'high-value';
+  }
+  return '';
+};
+
+// 对奖励进行排序，高价值奖励排在最前面
+const sortRewards = (rewards) => {
+  if (!Array.isArray(rewards)) return [];
+  return [...rewards].sort((a, b) => {
+    const isHighA = isHighValueReward(a);
+    const isHighB = isHighValueReward(b);
+    const isRefreshA = isRefreshTicket(a);
+    const isRefreshB = isRefreshTicket(b);
+    
+    // 高价值奖励排在最前面
+    if (isHighA && !isHighB) return -1;
+    if (!isHighA && isHighB) return 1;
+    
+    // 刷新券排在中间
+    if (isRefreshA && !isRefreshB) return -1;
+    if (!isRefreshA && isRefreshB) return 1;
+    
+    // 其他奖励保持原有顺序
+    return 0;
+  });
 };
 
 // —— 奖励与发车策略 ——
@@ -869,6 +1042,42 @@ const cancelHelper = () => {
     border-radius: 50%;
     margin-right: 6px;
     vertical-align: middle;
+  }
+
+  .car-rewards-full {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .rewards-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .reward-item {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: var(--border-radius-small);
+    background: var(--bg-primary);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .reward-item.high-value {
+    color: #f59e0b;
+    font-weight: var(--font-weight-medium);
+    background: rgba(245, 158, 11, 0.1);
+  }
+
+  .reward-item.refresh-ticket,
+  .reward-item.high-value.refresh-ticket {
+    color: #22c55e;
+    font-weight: var(--font-weight-medium);
+    background: rgba(34, 197, 94, 0.1);
   }
 
   .car-actions {
