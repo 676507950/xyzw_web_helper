@@ -44,8 +44,12 @@ const getTodayBossId = () => {
 };
 
 export class DailyTaskRunner {
-  constructor(tokenStore) {
+  constructor(tokenStore, delaySettings = null) {
     this.tokenStore = tokenStore;
+    this.delaySettings = delaySettings || {
+      commandDelay: 500,
+      taskDelay: 500
+    };
   }
 
   log(message, type = "info") {
@@ -73,12 +77,15 @@ export class DailyTaskRunner {
         params,
         timeout,
       );
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, this.delaySettings.commandDelay));
       if (description) this.log(`${description} - 成功`, "success");
       return result;
     } catch (error) {
-      if (description)
-        this.log(`${description} - 失败: ${error.message}`, "error");
+      if (description) {
+        const token = this.tokenStore.gameTokens.find((t) => t.id === tokenId);
+        const tokenName = token?.name || tokenId;
+        this.log(`[${tokenName}] ${description} - 失败: ${error.message}`, "error");
+      }
       throw error;
     }
   }
@@ -671,7 +678,7 @@ export class DailyTaskRunner {
         await task.execute();
         const progress = Math.floor(((i + 1) / totalTasks) * 100);
         if (this.callbacks?.onProgress) this.callbacks.onProgress(progress);
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, this.delaySettings.taskDelay));
       } catch (error) {
         this.log(`任务执行失败: ${task.name} - ${error.message}`, "error");
       }
