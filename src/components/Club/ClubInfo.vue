@@ -21,7 +21,7 @@
         <div class="toolbar">
           <n-space size="small">
             <!-- 申请列表按钮 -->
-            <n-button size="small" @click="getApplyList">申请列表</n-button>
+            <n-button v-if="canKick" size="small" @click="getApplyList">申请列表</n-button>
             <n-button size="small" @click="refreshClub">刷新</n-button>
           </n-space>
         </div>
