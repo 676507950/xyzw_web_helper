@@ -25,7 +25,7 @@
             <n-button size="small" @click="refreshClub">刷新</n-button>
           </n-space>
         </div>
-        
+
         <!-- 申请列表悬浮界面 -->
         <n-modal
           v-model:show="showApplyList"
@@ -39,18 +39,18 @@
         >
           <template #header-extra>
             <n-space size="small">
-              <n-button 
-                size="small" 
-                type="primary" 
-                @click="approveAll" 
+              <n-button
+                size="small"
+                type="primary"
+                @click="approveAll"
                 :disabled="applyList.length === 0"
               >
                 一键通过
               </n-button>
-              <n-button 
-                size="small" 
-                type="error" 
-                @click="rejectAll" 
+              <n-button
+                size="small"
+                type="error"
+                @click="rejectAll"
                 :disabled="applyList.length === 0"
               >
                 一键拒绝
@@ -59,16 +59,19 @@
           </template>
           <div v-if="loadingApply" class="loading">
             <n-spin size="small" />
-            <span style="margin-left: 8px;">正在加载申请列表...</span>
+            <span style="margin-left: 8px">正在加载申请列表...</span>
           </div>
           <div v-else-if="applyList.length === 0" class="empty-apply">
             <n-empty description="暂无申请" />
           </div>
           <div v-else class="apply-list-container">
-            <div class="apply-list" :style="{ maxHeight: '800px', overflowY: 'auto' }">
-              <div 
-                v-for="apply in applyList" 
-                :key="apply.roleId" 
+            <div
+              class="apply-list"
+              :style="{ maxHeight: '800px', overflowY: 'auto' }"
+            >
+              <div
+                v-for="apply in applyList"
+                :key="apply.roleId"
                 class="apply-item"
                 :class="{ 'apply-item-hover': hoveredItemId === apply.roleId }"
                 @mouseenter="hoveredItemId = apply.roleId"
@@ -80,11 +83,17 @@
                     :src="apply.headImg || '/icons/xiaoyugan.png'"
                   />
                   <div class="apply-info">
-                    <div class="apply-name">{{ apply.name }}(ID:{{ apply.roleId }})</div>
+                    <div class="apply-name">
+                      {{ apply.name }}(ID:{{ apply.roleId }})
+                    </div>
                     <div class="apply-details">
                       <span>等级: {{ apply.level || 0 }}</span>
-                      <span class="apply-power">{{ formatNumber(apply.power || 0) }}</span>
-                      <span v-if="apply.serverId">服务区: {{ apply.serverId }}</span>
+                      <span class="apply-power">{{
+                        formatNumber(apply.power || 0)
+                      }}</span>
+                      <span v-if="apply.serverId"
+                        >服务区: {{ apply.serverId }}</span
+                      >
                     </div>
                     <div v-if="apply.applyReason" class="apply-reason">
                       申请留言: {{ apply.applyReason }}
@@ -93,7 +102,11 @@
                 </div>
                 <div class="apply-right">
                   <n-space size="small">
-                    <n-button size="tiny" type="primary" @click="approveApply(apply.roleId)">
+                    <n-button
+                      size="tiny"
+                      type="primary"
+                      @click="approveApply(apply.roleId)"
+                    >
                       通过
                     </n-button>
                     <n-button size="tiny" @click="rejectApply(apply.roleId)">
@@ -228,7 +241,7 @@
           >
             <ClubWeirdTowerInfo inline />
           </n-tab-pane>
-          
+
           <n-tab-pane
             name="carsocre"
             tab="赛车积分信息"
@@ -248,9 +261,9 @@ import { useMessage } from "naive-ui";
 import { useTokenStore } from "@/stores/tokenStore";
 import ClubBattleRecords from "./ClubBattleRecords.vue";
 import ClubHistoryRecords from "./ClubHistoryRecords.vue";
-import ClubWeirdTowerInfo from './ClubWeirdTowerInfo.vue';
-import CarScoreInfo from './CarScoreInfo.vue';
-import { $emit } from '@/stores/events'
+import ClubWeirdTowerInfo from "./ClubWeirdTowerInfo.vue";
+import CarScoreInfo from "./CarScoreInfo.vue";
+import { $emit } from "@/stores/events";
 
 const tokenStore = useTokenStore();
 const message = useMessage();
@@ -282,7 +295,9 @@ const topMembers = computed(() => {
 const currentMemberJob = computed(() => {
   const roleId = tokenStore.gameData?.roleInfo?.role?.roleId;
   if (!roleId) return 0;
-  const currentMember = members.value.find(m => Number(m.roleId) === Number(roleId));
+  const currentMember = members.value.find(
+    (m) => Number(m.roleId) === Number(roleId),
+  );
   return currentMember?.job || 0;
 });
 
@@ -295,12 +310,12 @@ const canKick = computed(() => {
 const kickMember = (roleId) => {
   const token = tokenStore.selectedToken;
   if (!token) return;
-  
+
   // 正确的发送方式：第一个参数是命令名称，第二个参数是命令体
   tokenStore.sendMessage(token.id, "legion_kickout", {
-    roleId: Number(roleId)
+    roleId: Number(roleId),
   });
-  
+
   // 乐观更新：立即从本地成员列表中移除该成员
   if (tokenStore.gameData?.legionInfo?.info?.members) {
     // 删除成员信息
@@ -310,7 +325,7 @@ const kickMember = (roleId) => {
       refreshClub();
     }, 1000);
   }
-  
+
   message.info(`正在踢出成员 ID: ${roleId}`);
 };
 
@@ -318,13 +333,13 @@ const kickMember = (roleId) => {
 const getApplyList = () => {
   const token = tokenStore.selectedToken;
   if (!token) return;
-  
+
   // 显示申请列表界面
   showApplyList.value = true;
   // 设置加载状态
   loadingApply.value = true;
   applyList.value = [];
-  
+
   // 发送legion_applylist命令
   tokenStore.sendMessage(token.id, "legion_applylist", {});
   message.info("正在获取申请列表");
@@ -334,14 +349,14 @@ const getApplyList = () => {
 const approveApply = (roleId) => {
   const token = tokenStore.selectedToken;
   if (!token) return;
-  
+
   // 发送通过申请命令
   tokenStore.sendMessage(token.id, "legion_agree", {
-    roleId: Number(roleId)
+    roleId: Number(roleId),
   });
-  
+
   // 从申请列表中移除该成员
-  applyList.value = applyList.value.filter(apply => apply.roleId !== roleId);
+  applyList.value = applyList.value.filter((apply) => apply.roleId !== roleId);
   message.info(`已通过成员 ID: ${roleId} 的申请`);
 };
 
@@ -349,14 +364,14 @@ const approveApply = (roleId) => {
 const rejectApply = (roleId) => {
   const token = tokenStore.selectedToken;
   if (!token) return;
-  
+
   // 发送拒绝申请命令
   tokenStore.sendMessage(token.id, "legion_ignore", {
-    roleId: Number(roleId)
+    roleId: Number(roleId),
   });
-  
+
   // 从申请列表中移除该成员
-  applyList.value = applyList.value.filter(apply => apply.roleId !== roleId);
+  applyList.value = applyList.value.filter((apply) => apply.roleId !== roleId);
   message.info(`已拒绝成员 ID: ${roleId} 的申请`);
 };
 
@@ -364,17 +379,17 @@ const rejectApply = (roleId) => {
 const approveAll = () => {
   const token = tokenStore.selectedToken;
   if (!token) return;
-  
+
   const count = applyList.value.length;
   if (count === 0) return;
-  
+
   // 遍历所有申请项，发送通过命令
-  applyList.value.forEach(apply => {
+  applyList.value.forEach((apply) => {
     tokenStore.sendMessage(token.id, "legion_agree", {
-      roleId: Number(apply.roleId)
+      roleId: Number(apply.roleId),
     });
   });
-  
+
   // 清空申请列表
   applyList.value = [];
   message.success(`已通过所有 ${count} 个申请`);
@@ -384,23 +399,21 @@ const approveAll = () => {
 const rejectAll = () => {
   const token = tokenStore.selectedToken;
   if (!token) return;
-  
+
   const count = applyList.value.length;
   if (count === 0) return;
-  
+
   // 遍历所有申请项，发送拒绝命令
-  applyList.value.forEach(apply => {
+  applyList.value.forEach((apply) => {
     tokenStore.sendMessage(token.id, "legion_ignore", {
-      roleId: Number(apply.roleId)
+      roleId: Number(apply.roleId),
     });
   });
-  
+
   // 清空申请列表
   applyList.value = [];
   message.success(`已拒绝所有 ${count} 个申请`);
 };
-
-
 
 const activeTab = ref("overview");
 
@@ -416,47 +429,58 @@ const hoveredItemId = ref(null);
 const handleApplyListResp = (session) => {
   // 从session对象中提取响应内容
   const responseBody = session.body;
-  
+
   if (responseBody) {
-    if (typeof responseBody === 'object') {
+    if (typeof responseBody === "object") {
       // 处理对象类型的响应
-      
+
       // 检查是否有roleList数组字段（根据用户要求）
       if (Array.isArray(responseBody.roleList)) {
         // 从roleList数组中提取申请列表数据
         // 过滤掉无效的申请项（没有roleId的项）
-        const validRoles = responseBody.roleList.filter(role => role.roleId && role.name);
-        applyList.value = validRoles.map(role => ({
+        const validRoles = responseBody.roleList.filter(
+          (role) => role.roleId && role.name,
+        );
+        applyList.value = validRoles.map((role) => ({
           headImg: role.headImg,
           level: role.level,
           name: role.name,
           power: role.power,
           roleId: role.roleId,
-          serverId: role.ext?.['server_id'] || '',
-          applyReason: role.ext?.['legion_apply_reason'] || ''
+          serverId: role.ext?.["server_id"] || "",
+          applyReason: role.ext?.["legion_apply_reason"] || "",
         }));
         // 停止加载状态
         loadingApply.value = false;
         message.success(`获取到 ${validRoles.length} 个申请`);
-      } else if (Array.isArray(responseBody.applyList) || Array.isArray(responseBody.list) || Array.isArray(responseBody.data)) {
+      } else if (
+        Array.isArray(responseBody.applyList) ||
+        Array.isArray(responseBody.list) ||
+        Array.isArray(responseBody.data)
+      ) {
         // 兼容其他可能的数组字段
-        const applyArray = responseBody.applyList || responseBody.list || responseBody.data;
+        const applyArray =
+          responseBody.applyList || responseBody.list || responseBody.data;
         // 过滤掉无效的申请项，并提取服务区和申请留言信息
-        applyList.value = applyArray.filter(apply => apply.roleId && apply.name).map(apply => ({
-          ...apply,
-          serverId: apply.ext?.['server_id'] || '',
-          applyReason: apply.ext?.['legion_apply_reason'] || ''
-        }));
+        applyList.value = applyArray
+          .filter((apply) => apply.roleId && apply.name)
+          .map((apply) => ({
+            ...apply,
+            serverId: apply.ext?.["server_id"] || "",
+            applyReason: apply.ext?.["legion_apply_reason"] || "",
+          }));
         loadingApply.value = false;
         message.success(`获取到 ${applyList.value.length} 个申请`);
       } else if (Array.isArray(responseBody)) {
         // 直接是数组的情况
         // 过滤掉无效的申请项，并提取服务区和申请留言信息
-        applyList.value = responseBody.filter(apply => apply.roleId && apply.name).map(apply => ({
-          ...apply,
-          serverId: apply.ext?.['server_id'] || '',
-          applyReason: apply.ext?.['legion_apply_reason'] || ''
-        }));
+        applyList.value = responseBody
+          .filter((apply) => apply.roleId && apply.name)
+          .map((apply) => ({
+            ...apply,
+            serverId: apply.ext?.["server_id"] || "",
+            applyReason: apply.ext?.["legion_apply_reason"] || "",
+          }));
         loadingApply.value = false;
         message.success(`获取到 ${applyList.value.length} 个申请`);
       } else {
@@ -468,11 +492,13 @@ const handleApplyListResp = (session) => {
     } else if (Array.isArray(responseBody)) {
       // 直接是数组的情况
       // 过滤掉无效的申请项，并提取服务区和申请留言信息
-      applyList.value = responseBody.filter(apply => apply.roleId && apply.name).map(apply => ({
-        ...apply,
-        serverId: apply.ext?.['server_id'] || '',
-        applyReason: apply.ext?.['legion_apply_reason'] || ''
-      }));
+      applyList.value = responseBody
+        .filter((apply) => apply.roleId && apply.name)
+        .map((apply) => ({
+          ...apply,
+          serverId: apply.ext?.["server_id"] || "",
+          applyReason: apply.ext?.["legion_apply_reason"] || "",
+        }));
       loadingApply.value = false;
       message.success(`获取到 ${applyList.value.length} 个申请`);
     } else {
@@ -908,6 +934,4 @@ const formatNumber = (num) => {
 .apply-list::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
 }
-
-
 </style>

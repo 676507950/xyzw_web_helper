@@ -6,6 +6,37 @@
 import { bonProtocol, g_utils } from "./bonProtocol.js";
 import { wsLogger, gameLogger } from "./logger.js";
 
+/**
+ * 错误码映射表
+ * 用于将服务器返回的错误码转换为可读的错误描述
+ */
+const errorCodeMap = {
+  700010: "任务未达成完成条件",
+  1400010: "没有购买该月卡,不能领取每日奖励",
+  12000116: "今日已领取免费奖励",
+  3300060: "扫荡条件不满足",
+  1300050: "请修改您的采购次数",
+  200020: "出了点小问题，请尝试重启游戏解决～",
+  200160: "模块未开启",
+  7500140: "请先输入密码",
+  7500100: "密码输入错误",
+  7500120: "密码输入错误次数已达上限",
+  200400: "操作太快，请稍后再试",
+  200760: "您当前看到的界面已发生变化，请重新登录",
+  2300190: "未加入俱乐部",
+  2300370: "俱乐部商品购买数量超出上限",
+  400000: "物品不存在",
+  1500020: "能量不足",
+  2300070: "未加入俱乐部",
+  3500020: "没有可领取的奖励",
+  12000050: "今日发车次数已达上限",
+  12000060: "不在发车时间内",
+  400190: "没有可领取的签到奖励",
+  1000020: "今天已经领取过奖励了",
+  3300050: "购买数量超出限制",
+  700020: "已经领取过这个任务",
+};
+
 /** 生成 [min,max] 的随机整数 */
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -277,7 +308,7 @@ export function registerDefaultCommands(reg) {
       heroId: 0,
       part: 0,
       quenchId: 0,
-      quenches: {}
+      quenches: {},
     })
     .register("equipment_quench", {
       heroId: 0,
@@ -285,9 +316,14 @@ export function registerDefaultCommands(reg) {
       quenchId: 0,
       quenches: {},
       seed: 0,
-      skipOrange: false
+      skipOrange: false,
     })
-    .register("equipment_updatequenchlock", { heroId: 0, part: 0, slot: 0, isLocked: false })
+    .register("equipment_updatequenchlock", {
+      heroId: 0,
+      part: 0,
+      slot: 0,
+      isLocked: false,
+    })
 
     // 咸王宝库
     .register("matchteam_getroleteaminfo")
@@ -903,35 +939,12 @@ export class XyzwWebSocketClient {
       if (packet.code === 0 || packet.code === undefined) {
         promiseData.resolve(responseBody || packet);
       } else {
-        // 错误码映射表
-        const errorCodeMap = {
-          700010: "任务未达成完成条件",
-          1400010: "没有购买该月卡,不能领取每日奖励",
-          12000116: "今日已领取免费奖励",
-          3300060: "扫荡条件不满足",
-          1300050: "请修改您的采购次数",
-          200020: "出了点小问题，请尝试重启游戏解决～",
-          200160: "模块未开启",
-          7500140: "请先输入密码",
-          7500100: "密码输入错误",
-          7500120: "密码输入错误次数已达上限",
-          200400: "操作太快，请稍后再试",
-          200760: "您当前看到的界面已发生变化，请重新登录",
-          2300190: "未加入俱乐部",
-          2300370: "俱乐部商品购买数量超出上限",
-          400000: "物品不存在",
-          1500020: "能量不足",
-          2300070: "未加入俱乐部",
-          3500020: "没有可领取的奖励"
-        };
-
         // 获取错误描述
-        const errorDesc = errorCodeMap[packet.code] || packet.hint || "未知错误";
+        const errorDesc =
+          errorCodeMap[packet.code] || packet.hint || "未知错误";
 
         promiseData.reject(
-          new Error(
-            `服务器错误: ${packet.code} - ${errorDesc}`,
-          ),
+          new Error(`服务器错误: ${packet.code} - ${errorDesc}`),
         );
       }
       return;
@@ -977,9 +990,9 @@ export class XyzwWebSocketClient {
       fight_starttowerresp: "fight_starttower",
       evotowerinforesp: "evotower_getinfo",
       evotower_fightresp: "evotower_fight",
-      evotower_getlegionjoinmembersresp: 'evotower_getlegionjoinmembers',
-      mergebox_getinforesp: 'mergebox_getinfo',
-      mergebox_claimfreeenergyresp: 'mergebox_claimfreeenergy',
+      evotower_getlegionjoinmembersresp: "evotower_getlegionjoinmembers",
+      mergebox_getinforesp: "mergebox_getinfo",
+      mergebox_claimfreeenergyresp: "mergebox_claimfreeenergy",
       item_openpackresp: "item_openpack",
       equipment_quenchresp: "equipment_quench",
       // 咸王宝库
@@ -1016,7 +1029,11 @@ export class XyzwWebSocketClient {
       task_claimweekrewardresp: "task_claimweekreward",
 
       // 同步响应映射（优先级低）
-      syncresp: ["system_mysharecallback", "task_claimdailypoint", "role_commitpassword"],
+      syncresp: [
+        "system_mysharecallback",
+        "task_claimdailypoint",
+        "role_commitpassword",
+      ],
       syncrewardresp: [
         "system_buygold",
         "discount_claimreward",
@@ -1055,26 +1072,12 @@ export class XyzwWebSocketClient {
         if (packet.code === 0 || packet.code === undefined) {
           promiseData.resolve(responseBody || packet);
         } else {
-          // 错误码映射表
-          const errorCodeMap = {
-            700010: "任务未达成完成条件",
-            1400010: "没有购买该月卡,不能领取每日奖励",
-            12000116: "今日已领取免费奖励",
-            3300060: "扫荡条件不满足",
-            1300050: "请修改您的采购次数",
-            200020: "出了点小问题，请尝试重启游戏解决～",
-            200160: "模块未开启",
-            2300190: "未加入俱乐部",
-            3500020: "没有可领取的奖励"
-          };
-
           // 获取错误描述
-          const errorDesc = errorCodeMap[packet.code] || packet.hint || "未知错误";
+          const errorDesc =
+            errorCodeMap[packet.code] || packet.hint || "未知错误";
 
           promiseData.reject(
-            new Error(
-              `服务器错误: ${packet.code} - ${errorDesc}`,
-            ),
+            new Error(`服务器错误: ${packet.code} - ${errorDesc}`),
           );
         }
         break;

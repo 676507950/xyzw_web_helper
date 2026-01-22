@@ -10,17 +10,34 @@
         <div class="status-dot" />
         <span>{{
           carList.length > 0 ? `共 ${carList.length} 辆` : "暂无数据"
-          }}</span>
+        }}</span>
       </div>
     </div>
 
     <div class="card-content">
       <div class="car-toolbar">
         <n-space size="small">
-          <n-button type="primary" size="small" :loading="carLoading" @click="fetchCarInfo">{{ carLoading ? "加载中..." :
-            "刷新数据" }}</n-button>
-          <n-button size="small" secondary :disabled="carLoading || !isConnected" @click="smartSendCar">智能发车</n-button>
-          <n-button size="small" secondary :disabled="carLoading || !isConnected" @click="claimAllCars">一键收车</n-button>
+          <n-button
+            type="primary"
+            size="small"
+            :loading="carLoading"
+            @click="fetchCarInfo"
+            >{{ carLoading ? "加载中..." : "刷新数据" }}</n-button
+          >
+          <n-button
+            size="small"
+            secondary
+            :disabled="carLoading || !isConnected"
+            @click="smartSendCar"
+            >智能发车</n-button
+          >
+          <n-button
+            size="small"
+            secondary
+            :disabled="carLoading || !isConnected"
+            @click="claimAllCars"
+            >一键收车</n-button
+          >
           <n-tag size="small" :type="hasFreeRefresh ? 'success' : 'default'">
             {{
               hasFreeRefresh ? `有 ${freeCarsCount} 辆可免费刷新` : "无免费刷新"
@@ -38,7 +55,11 @@
       <div v-if="carList.length > 0" class="car-grid">
         <div v-for="c in carList" :key="c.key" class="car-card">
           <div class="car-header">
-            <img class="car-brand-icon" :src="gradeIcon(c.color)" :alt="gradeLabel(c.color)" />
+            <img
+              class="car-brand-icon"
+              :src="gradeIcon(c.color)"
+              :alt="gradeLabel(c.color)"
+            />
             <div class="car-badge" :class="'grade-' + (c.color || 0)">
               {{ gradeLabel(c.color) }}
             </div>
@@ -48,8 +69,14 @@
           </div>
           <div class="car-meta">
             <div class="kv">
-              <span class="k">品阶</span><span class="v"><span class="grade-dot"
-                  :class="'grade-' + (c.color || 0)"></span>{{ gradeLabel(c.color) }}</span>
+              <span class="k">品阶</span
+              ><span class="v"
+                ><span
+                  class="grade-dot"
+                  :class="'grade-' + (c.color || 0)"
+                ></span
+                >{{ gradeLabel(c.color) }}</span
+              >
             </div>
             <div class="kv" v-if="c.level != null">
               <span class="k">等级</span><span class="v">{{ c.level }}</span>
@@ -58,45 +85,70 @@
               <span class="k">星级</span><span class="v">{{ c.star }}</span>
             </div>
             <div class="kv">
-              <span class="k">状态</span><span class="v">{{
+              <span class="k">状态</span
+              ><span class="v">{{
                 Number(c.sendAt || 0) === 0 ? "未发车" : "已发车"
-                }}</span>
+              }}</span>
             </div>
             <div class="kv">
-              <span class="k">帮手</span><span class="v">{{
+              <span class="k">帮手</span
+              ><span class="v">{{
                 Number(c.color || 0) >= 5 ? "可携带" : "—"
-                }}</span>
+              }}</span>
             </div>
             <div class="kv" v-if="isBigPrize(c.rewards)">
-              <span class="k">奖励</span><span class="v" style="color: #f59e0b">包含大奖</span>
+              <span class="k">奖励</span
+              ><span class="v" style="color: #f59e0b">包含大奖</span>
             </div>
           </div>
 
-          <div class="car-rewards-full" v-if="c.rewards && c.rewards.length > 0">
+          <div
+            class="car-rewards-full"
+            v-if="c.rewards && c.rewards.length > 0"
+          >
             <div class="rewards-list">
-              <span v-for="(reward, index) in sortRewards(c.rewards)" :key="index" class="reward-item"
-                :class="getRewardClass(reward)">
+              <span
+                v-for="(reward, index) in sortRewards(c.rewards)"
+                :key="index"
+                class="reward-item"
+                :class="getRewardClass(reward)"
+              >
                 {{ formatReward(reward) }}
               </span>
             </div>
           </div>
 
           <div class="car-actions">
-            <n-button size="small" :type="Number(c.refreshCount ?? 0) === 0 ? 'success' : 'warning'"
-              :disabled="carLoading || Number(c.sendAt || 0) !== 0" @click="refreshCar(c)">
+            <n-button
+              size="small"
+              :type="Number(c.refreshCount ?? 0) === 0 ? 'success' : 'warning'"
+              :disabled="carLoading || Number(c.sendAt || 0) !== 0"
+              @click="refreshCar(c)"
+            >
               {{
                 Number(c.refreshCount ?? 0) === 0
                   ? "免费刷新品阶"
                   : "刷新品阶(需车票)"
               }}
             </n-button>
-            <n-button size="small" type="primary" :disabled="carLoading || actionDisabled(c)" @click="handleAction(c)">
+            <n-button
+              size="small"
+              type="primary"
+              :disabled="carLoading || actionDisabled(c)"
+              @click="handleAction(c)"
+            >
               {{ actionLabel(c) }}
             </n-button>
-            <n-button size="small" quaternary :disabled="carLoading ||
-              Number(c.color || 0) < 5 ||
-              Number(c.sendAt || 0) !== 0
-              " @click="openHelperDialog(c)">
+            <n-button
+              size="small"
+              quaternary
+              :disabled="
+                carLoading ||
+                Number(c.color || 0) < 5 ||
+                Number(c.sendAt || 0) !== 0
+              "
+              @click="openHelperDialog(c)"
+            >
               护卫
             </n-button>
           </div>
@@ -106,12 +158,24 @@
   </div>
 
   <!-- 护卫选择弹窗（放置于同一模板中） -->
-  <n-modal v-model:show="helperDialogVisible" preset="card" title="选择护卫" style="width: 600px">
+  <n-modal
+    v-model:show="helperDialogVisible"
+    preset="card"
+    title="选择护卫"
+    style="width: 600px"
+  >
     <div class="helper-body">
       <div class="helper-row">
         <span class="label">护卫成员</span>
-        <n-select v-model:value="helperSelection" :options="helperOptions" placeholder="选择俱乐部成员"
-          :loading="helperLoading" filterable :max-tag-count="1" style="width: 420px" />
+        <n-select
+          v-model:value="helperSelection"
+          :options="helperOptions"
+          placeholder="选择俱乐部成员"
+          :loading="helperLoading"
+          filterable
+          :max-tag-count="1"
+          style="width: 420px"
+        />
       </div>
       <div class="tips">说明：次数满 4 的成员不可再被选择。</div>
     </div>
@@ -423,7 +487,9 @@ const shouldSendCar = (car, tickets) => {
   const rewards = Array.isArray(car?.rewards) ? car.rewards : [];
   const racingTickets = countRacingRefreshTickets(rewards);
   if (tickets >= 6) {
-    return color >= 5 || racingTickets >= 4 || isBigPrize(rewards);
+    return (
+      color >= 4 && (color >= 5 || racingTickets >= 4 || isBigPrize(rewards))
+    );
   }
   return color >= 4 || racingTickets >= 2 || isBigPrize(rewards);
 };
@@ -452,7 +518,7 @@ const fetchCarInfo = async () => {
       );
       const qty = roleRes?.role?.items?.[35002]?.quantity;
       refreshTickets.value = Number(qty || 0);
-    } catch (_) { }
+    } catch (_) {}
     carRaw.value = res?.body ?? res;
     carFetched.value = true;
     if (!normalizeCars(carRaw.value).length) {
@@ -531,7 +597,7 @@ const refreshCar = async (car) => {
       refreshTickets.value = Number(
         roleRes?.role?.items?.[35002]?.quantity || 0,
       );
-    } catch (_) { }
+    } catch (_) {}
   } catch (e) {
     message.error("刷新失败：" + (e.message || "未知错误"));
   }
@@ -706,7 +772,7 @@ const claimAllCars = async () => {
     for (const c of claimables) {
       try {
         await claimCar(c);
-      } catch (_) { }
+      } catch (_) {}
       await new Promise((r) => setTimeout(r, 300));
     }
     await fetchCarInfo();
@@ -1028,7 +1094,7 @@ const cancelHelper = () => {
     flex-wrap: wrap;
   }
 
-  .car-actions>* {
+  .car-actions > * {
     flex: 1;
     min-width: 80px;
   }
