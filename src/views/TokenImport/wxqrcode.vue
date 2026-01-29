@@ -146,6 +146,75 @@ const generateQRCode = async () => {
 /**
  * 尝试获取微信二维码
  */
+//尝试新代码
+  const tryGetWeixinQR = async () => {
+  try {
+    // 用你当前站点作为回调（需要在微信开放平台配置过，否则可能返回错误码）
+    const redirect = encodeURIComponent(window.location.origin + "/");
+
+    // 1) 走 jslogin 获取 uuid（更稳，不用解析 HTML）
+    const jsloginUrl =
+      "/api/weixin/connect/jslogin" +
+      "?appid=wxfb0d5667e5cb1c44" +
+      "&redirect_uri=" + redirect +
+      "&scope=snsapi_login" +
+      "&state=weixin";
+
+    const res = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", jsloginUrl, true);
+      xhr.timeout = 15000;
+      xhr.setRequestHeader("Accept", "*/*");
+      xhr.onload = () => resolve(xhr);
+      xhr.onerror = () => reject(new Error("网络错误"));
+      xhr.ontimeout = () => reject(new Error("请求超时"));
+      xhr.send();
+    });
+
+    if (res.status !== 200) {
+      throw new Error("HTTP 状态码：" + res.status);
+    }
+
+    const text = res.responseText || "";
+
+    // 微信 jslogin 常见返回：
+    // window.QRLogin.code = 200; window.QRLogin.uuid = "xxxx";
+    const codeMatch = text.match(/window\.QRLogin\.code\s*=\s*(\d+)/);
+    const uuidMatch = text.match(/window\.QRLogin\.uuid\s*=\s*"([^"]+)"/);
+
+    const code = codeMatch ? Number(codeMatch[1]) : null;
+    const uuid = uuidMatch ? uuidMatch[1] : null;
+
+    if (code !== 200 || !uuid) {
+      // 把返回前 200 个字符带上，方便你看到微信到底返回了啥
+      throw new Error(
+        "获取uuid失败，code=" +
+          code +
+          "，响应片段：" +
+          text.slice(0, 200),
+      );
+    }
+
+    // 2) 用 uuid 拼二维码图片
+    const qrUrl = `https://open.weixin.qq.com/connect/qrcode/${uuid}`;
+
+    qrcodeUUID.value = uuid;
+    qrcodeUrl.value = qrUrl;
+
+    updateStatus("请使用微信扫码登录", "success");
+
+    // 3) 开始轮询扫码状态（你原本的逻辑可复用）
+    startScanMonitoring();
+    return true;
+  } catch (err) {
+    console.error("获取二维码失败:", err);
+    updateStatus("二维码获取失败：" + err.message, "error");
+    return false;
+  }
+};
+
+//新代码结束
+/**********这里
 const tryGetWeixinQR = async () => {
   try {
     const qrPageUrl =
@@ -187,6 +256,9 @@ const tryGetWeixinQR = async () => {
     // 解析 uuid
     qrcodeUUID.value = qrUrl.split("/").pop().split("?")[0];
     qrcodeUrl.value = qrUrl;
+
+       这里！！！！！！！！！！！！！！
+  */
 
     // 更新状态
     updateStatus("请使用微信扫码登录", "success");
