@@ -178,7 +178,7 @@ const refreshClub = async () => {
           message.error("未获取到对战俱乐部");
           return;
         }
-        firstLegionId = payloadTaskRes.enemyLegionMap[formatDateToShort(getLastSunday())].id;
+        firstLegionId = payloadTaskRes.enemyLegionMap[formatDateToShort(getLastSunday())]?.id;
         if (!firstLegionId) {
           message.error("未获取到对战俱乐部ID");
           return;

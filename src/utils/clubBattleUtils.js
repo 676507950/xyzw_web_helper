@@ -63,6 +63,43 @@ export function getLastSaturday() {
   return `${targetYear}/${targetMonth}/${targetDay}`;
 }
 
+/**
+ * 判断当前时间是否是盐场时间
+ */
+export function isNowInLegionWarTime(){
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const date = today.getDate();
+  const hours = today.getHours();
+  const minutes = today.getMinutes();
+  //用分钟好计算
+  const minutesCount = hours * 60 +minutes;
+  //获取本月周日的数组
+  const getSundayOfMonths=(year,month)=>{
+    let sundayArr = [];
+    for (let d = 0; d <31; d++) {
+      let temp = new Date(year,month,d);
+      if(temp.getMonth()==month &&temp.getDay()==0){
+        sundayArr.push(d)
+      }
+    }
+    return sundayArr;
+  }
+
+  //当前时间是20.00~21.00,周日月赛则是20.00~21.30
+  //前提是周六或第四周周日 1200=20*60   1260=21*60
+  if(dayOfWeek ==6&& minutesCount>=1195 &&minutesCount <=1260)
+  {
+    return true;
+  }
+  const sundayArr = getSundayOfMonths(today.getFullYear(),today.getMonth());
+  //取第四个周末的日期
+  if(dayOfWeek ==0&&sundayArr.length>=4 && date == sundayArr[3] &&minutesCount>=1195 &&minutesCount<=1290){
+    return true;
+  }
+  return false;
+}
+
 export function formatTimestamp1(timestamp) {
   const date = new Date(timestamp);
   const year = date.getFullYear();

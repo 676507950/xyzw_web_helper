@@ -66,6 +66,7 @@
     <!-- 武将升级助手（提取组件） -->
     <HeroUpgradeCard v-if="activeSection === 'tools'" />
 
+
     <!-- 洗练助手（提取组件） -->
     <RefineHelperCard v-if="activeSection === 'tools'" />
 
@@ -73,7 +74,6 @@
     <ConsumptionProgressCard v-if="activeSection === 'tools'" />
     <!-- 咸王宝库（提取组件） -->
     <BossTower v-if="activeSection === 'tools'" />
-
     <!-- 俱乐部排位（暂时隐藏） -->
     <div
       class="status-card legion-match"

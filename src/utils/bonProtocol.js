@@ -521,7 +521,73 @@ export const bon = {
   },
 };
 
-/** —— 协议消息包装，与原 ProtoMsg 类等价 —— */
+/** —— 协议消息包装，与原 ProtoMsg 类等价 盐场版本—— */
+export class ProtoMsgLegion {
+  constructor(raw) {
+    if (raw?.cmd) {
+      raw.cmd = raw.cmd.toLowerCase();
+    }
+    this._raw = raw;
+    this._rawData = undefined;
+    this._data = undefined;
+    this._t = undefined;
+    this._sendMsg = undefined;
+    this.rtt = 0;
+  }
+
+  get sendMsg() { return this._sendMsg; }
+  get seq() { return this._raw.seq; }
+  get resp() { return this._raw.resp; }
+  get ack() { return this._raw.ack; }
+  get cmd() { return this._raw?.cmd && this._raw?.cmd.toLowerCase(); }
+  get code() { return ~~this._raw.code; }
+  get error() { return this._raw.error; }
+  get time() { return this._raw.time; }
+  get body() { return this._raw.body; }
+  get hint() { return this._raw.hint; }
+
+  /** 惰性 decode body → rawData（bon.decode） */
+  get rawData() {
+    if (this._rawData !== undefined || this.body === undefined) return this._rawData;
+    this._rawData = bon.decode(this.body);
+    return this._rawData;
+  }
+
+  /** 指定数据类型 */
+  setDataType(t) {
+    if (t) this._t = { name: t.name ?? 'Anonymous', ctor: t };
+    return this;
+  }
+
+  /** 配置"请求"对象，让 respType 自动对齐 */
+  setSendMsg(msg) {
+    this._sendMsg = msg;
+    return this.setDataType(msg.respType);
+  }
+
+  /** 将 rawData 反序列化为业务对象 */
+  getData(clazz) {
+    if (this._data !== undefined || this.rawData === undefined) return this._data;
+
+    let t = this._t;
+    if (clazz && t && clazz !== t.ctor) {
+      console.warn(`getData type not match, ${clazz.name} != ${t.name}`);
+      t = { name: clazz.name, ctor: clazz };
+    }
+
+    this._data = this.rawData;
+    return this._data;
+  }
+
+  toLogString() {
+    const e = { ...this._raw };
+    delete e.body;
+    e.data = this.rawData;
+    e.rtt = this.rtt;
+    return JSON.stringify(e);
+  }
+}
+
 export class ProtoMsg {
   constructor(raw) {
     if (raw?.cmd) {
@@ -746,11 +812,23 @@ export function encode(obj, enc) {
 }
 
 /** 对外：parse（解密 → bon.decode → ProtoMsg） */
-export function parse(buf, enc) {
+export function parse(buf, enc,isLegion=false) {
+  if(!isLegion){
+    const u8 = new Uint8Array(buf);
+    const plain = enc.decrypt(u8);
+    const raw = bon.decode(plain);
+    return new ProtoMsg(raw);
+  }else{
+    return parseLegion(buf,enc,true);
+  }
+}
+
+/** 对外：parse（解密 → bon.decode → ProtoMsg） 返回的消息体是盐场版本的消息体*/
+function parseLegion(buf, enc,isLegion) {
   const u8 = new Uint8Array(buf);
   const plain = enc.decrypt(u8);
   const raw = bon.decode(plain);
-  return new ProtoMsg(raw);
+  return new ProtoMsgLegion(raw);
 }
 
 // 游戏消息模板

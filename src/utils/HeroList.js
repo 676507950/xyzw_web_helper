@@ -60,8 +60,8 @@ export const HERO_DICT = {
   310: { name: "吕玲绮", type: "群雄", avatar: "/team/lvlingqi.png" },
   311: { name: "潘凤", type: "群雄", avatar: "/team/panfeng.png" },
   312: { name: "邢道荣", type: "群雄", avatar: "/team/xingdaorong.png" },
-  313: { name: "祝融夫人", type: "群雄", avatar: "/team/zhurongfuren.png" },
-  314: { name: "孟获", type: "群雄", avatar: "/team/menghuo.png" },
+  313: { name: "祝融夫人", type: "蜀国", avatar: "/team/zhurongfuren.png" },
+  314: { name: "孟获", type: "蜀国", avatar: "/team/menghuo.png" },
 };
 
 //鱼珠字典
@@ -161,6 +161,22 @@ const color = {
   5: { color: "橙色", value: "orange" },
   6: { color: "红色", value: "red" },
 };
+
+const weapon={
+  1:"一支穿云箭",
+  2:"皮鞋手机",
+  3:"懦弱百合",
+  4:"正义喇叭",
+  5:"祖传大饼",
+  6:"冰镇啤酒",
+  7:"导演话筒",
+  8:"驱蚊花露水",
+  9:"止痒花露水"
+}
+
+export const formatWeapon=(id)=>{
+  return weapon[id];
+}
 
 /**
  * 提取传入对象中的鱼和鱼珠信息

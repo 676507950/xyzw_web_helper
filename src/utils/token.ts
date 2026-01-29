@@ -16,13 +16,13 @@ export const transformToken = async (arrayBuffer: ArrayBuffer) => {
       responseType: "arraybuffer",
     },
   );
-  console.log("转换Token:", typeof res.data);
+  // console.log("转换Token:", typeof res.data);
 
   const msg = g_utils.parse(res.data);
-  console.log("解析结果:", msg);
+  // console.log("解析结果:", msg);
 
   const data = msg.getData();
-  console.log("数据内容:", data);
+  // console.log("数据内容:", data);
 
   const currentTime = Date.now();
   const sessId = currentTime * 100 + Math.floor(Math.random() * 100);

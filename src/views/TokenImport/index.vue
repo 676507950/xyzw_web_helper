@@ -14,7 +14,13 @@
       </div>
 
       <!-- Token导入区域 -->
-      <a-modal class="token-import-modal" v-model:visible="showImportForm" width="40rem" :footer="false" :default-visible="!tokenStore.hasTokens">
+      <a-modal
+        class="token-import-modal"
+        v-model:visible="showImportForm"
+        width="40rem"
+        :footer="false"
+        :default-visible="!tokenStore.hasTokens"
+      >
         <template #title>
           <h2>
             <n-icon>
@@ -25,19 +31,38 @@
         </template>
         <div class="card-header">
           <!-- 导入方式选择 -->
-          <n-radio-group v-model:value="importMethod" class="import-method-tabs" size="small">
+          <n-radio-group
+            v-model:value="importMethod"
+            class="import-method-tabs"
+            size="small"
+          >
             <n-radio-button value="manual"> 手动输入 </n-radio-button>
             <n-radio-button value="url"> URL获取 </n-radio-button>
+            <n-radio-button value="wxQrcode"> 微信扫码获取 </n-radio-button>
             <n-radio-button value="bin"> BIN获取 </n-radio-button>
           </n-radio-group>
         </div>
         <div class="card-body">
-          <manual-token-form @cancel="() => (showImportForm = false)" @ok="() => (showImportForm = false)"
-            v-if="importMethod === 'manual'" />
-          <url-token-form @cancel="() => (showImportForm = false)" @ok="() => (showImportForm = false)"
-            v-if="importMethod === 'url'" />
-          <bin-token-form @cancel="() => (showImportForm = false)" @ok="() => (showImportForm = false)"
-            v-if="importMethod === 'bin'" />
+          <manual-token-form
+            @cancel="() => (showImportForm = false)"
+            @ok="() => (showImportForm = false)"
+            v-if="importMethod === 'manual'"
+          />
+          <url-token-form
+            @cancel="() => (showImportForm = false)"
+            @ok="() => (showImportForm = false)"
+            v-if="importMethod === 'url'"
+          />
+          <wx-qrcode-form
+            @cancel="() => (showImportForm = false)"
+            @ok="() => (showImportForm = false)"
+            v-if="importMethod === 'wxQrcode'"
+          />
+          <bin-token-form
+            @cancel="() => (showImportForm = false)"
+            @ok="() => (showImportForm = false)"
+            v-if="importMethod === 'bin'"
+          />
         </div>
       </a-modal>
 
@@ -45,39 +70,39 @@
       <div v-if="tokenStore.hasTokens" class="tokens-section">
         <div class="section-header">
           <n-space align="center">
-              <h2>我的Token列表 ({{ tokenStore.gameTokens.length }}个)</h2>
-              <n-radio-group v-model:value="viewMode" size="small">
-                <n-radio-button value="list">列表</n-radio-button>
-                <n-radio-button value="card">卡片</n-radio-button>
-              </n-radio-group>
-              <n-divider vertical style="height: 24px;"></n-divider>
-              <n-button-group size="small">
-                <n-button 
-                  @click="toggleSort('name')"
-                  :type="sortConfig.field === 'name' ? 'primary' : 'default'"
-                >
-                  名称 {{ getSortIcon('name') }}
-                </n-button>
-                <n-button 
-                  @click="toggleSort('server')"
-                  :type="sortConfig.field === 'server' ? 'primary' : 'default'"
-                >
-                  服务器 {{ getSortIcon('server') }}
-                </n-button>
-                <n-button 
-                  @click="toggleSort('createdAt')"
-                  :type="sortConfig.field === 'createdAt' ? 'primary' : 'default'"
-                >
-                  创建时间 {{ getSortIcon('createdAt') }}
-                </n-button>
-                <n-button 
-                  @click="toggleSort('lastUsed')"
-                  :type="sortConfig.field === 'lastUsed' ? 'primary' : 'default'"
-                >
-                  最后使用 {{ getSortIcon('lastUsed') }}
-                </n-button>
-              </n-button-group>
-            </n-space>
+            <h2>我的Token列表 ({{ tokenStore.gameTokens.length }}个)</h2>
+            <n-radio-group v-model:value="viewMode" size="small">
+              <n-radio-button value="list">列表</n-radio-button>
+              <n-radio-button value="card">卡片</n-radio-button>
+            </n-radio-group>
+            <n-divider vertical style="height: 24px"></n-divider>
+            <n-button-group size="small">
+              <n-button
+                @click="toggleSort('name')"
+                :type="sortConfig.field === 'name' ? 'primary' : 'default'"
+              >
+                名称 {{ getSortIcon("name") }}
+              </n-button>
+              <n-button
+                @click="toggleSort('server')"
+                :type="sortConfig.field === 'server' ? 'primary' : 'default'"
+              >
+                服务器 {{ getSortIcon("server") }}
+              </n-button>
+              <n-button
+                @click="toggleSort('createdAt')"
+                :type="sortConfig.field === 'createdAt' ? 'primary' : 'default'"
+              >
+                创建时间 {{ getSortIcon("createdAt") }}
+              </n-button>
+              <n-button
+                @click="toggleSort('lastUsed')"
+                :type="sortConfig.field === 'lastUsed' ? 'primary' : 'default'"
+              >
+                最后使用 {{ getSortIcon("lastUsed") }}
+              </n-button>
+            </n-button-group>
+          </n-space>
           <div class="header-actions">
             <n-button type="success" @click="goToDashboard">
               <template #icon>
@@ -88,7 +113,11 @@
               批量功能
             </n-button>
 
-            <n-button v-if="!showImportForm" type="primary" @click="showImportForm = true">
+            <n-button
+              v-if="!showImportForm"
+              type="primary"
+              @click="showImportForm = true"
+            >
               <template #icon>
                 <n-icon>
                   <Add />
@@ -98,33 +127,45 @@
             </n-button>
 
             <n-dropdown :options="bulkOptions" @select="handleBulkAction">
-                <n-button>
-                  <template #icon>
-                    <n-icon>
-                      <Menu />
-                    </n-icon>
-                  </template>
-                  批量操作
-                </n-button>
-              </n-dropdown>
+              <n-button>
+                <template #icon>
+                  <n-icon>
+                    <Menu />
+                  </n-icon>
+                </template>
+                批量操作
+              </n-button>
+            </n-dropdown>
           </div>
         </div>
 
         <div class="tokens-grid" v-if="viewMode === 'card'">
-          <a-card v-for="(token, index) in sortedTokens" :key="token.id" draggable="true"
-            @dragstart="handleDragStart(index, $event)" @dragover="handleDragOver($event)"
-            @drop="handleDrop(index, $event)" :class="{
+          <a-card
+            v-for="(token, index) in sortedTokens"
+            :key="token.id"
+            draggable="true"
+            @dragstart="handleDragStart(index, $event)"
+            @dragover="handleDragOver($event)"
+            @drop="handleDrop(index, $event)"
+            :class="{
               'token-card': true,
               active: selectedTokenId === token.id,
-            }" @click="selectToken(token)">
+            }"
+            @click="selectToken(token)"
+          >
             <template #title>
               <a-space class="token-name">
                 {{ token.name }}
-                <a-tag :color="getServerTagColor(token.id)" v-if="token.server">{{
-                  token.server
-                }}</a-tag>
+                <a-tag
+                  :color="getServerTagColor(token.id)"
+                  v-if="token.server"
+                  >{{ token.server }}</a-tag
+                >
                 <!-- 连接状态指示器 -->
-                <a-badge :status="getTokenStyle(token.id)" :text="getConnectionStatusText(token.id)" />
+                <a-badge
+                  :status="getTokenStyle(token.id)"
+                  :text="getConnectionStatusText(token.id)"
+                />
                 <!-- 连接状态文字 -->
                 <!-- <a-tag color="green">
                   {{ getConnectionStatusText(token.id) }}
@@ -132,7 +173,10 @@
               </a-space>
             </template>
             <template #extra>
-              <n-dropdown :options="getTokenActions(token)" @select="(key) => handleTokenAction(key, token)">
+              <n-dropdown
+                :options="getTokenActions(token)"
+                @select="(key) => handleTokenAction(key, token)"
+              >
                 <n-button text>
                   <template #icon>
                     <n-icon>
@@ -148,30 +192,43 @@
                 <span class="token-label">Token:</span>
                 <code class="token-value">{{ maskToken(token.token) }}</code>
               </div>
-              
+
               <!-- 备注信息 -->
-              <div v-if="editingRemark === token.id" class="token-remark token-remark-edit" @click.stop>
+              <div
+                v-if="editingRemark === token.id"
+                class="token-remark token-remark-edit"
+                @click.stop
+              >
                 <span class="remark-label">备注：</span>
-                <n-input 
-                  v-model:value="tempRemarks[token.id]" 
-                  type="textarea" 
-                  :rows="2" 
-                  placeholder="添加备注信息..." 
-                  @blur="saveRemark(token)" 
-                  @keyup.enter="saveRemark(token)" 
-                  @keyup.esc="cancelEditRemark()" 
+                <n-input
+                  v-model:value="tempRemarks[token.id]"
+                  type="textarea"
+                  :rows="2"
+                  placeholder="添加备注信息..."
+                  @blur="saveRemark(token)"
+                  @keyup.enter="saveRemark(token)"
+                  @keyup.esc="cancelEditRemark()"
                   autofocus
                 />
               </div>
-              <div v-else class="token-remark" @click.stop="startEditRemark(token)">
+              <div
+                v-else
+                class="token-remark"
+                @click.stop="startEditRemark(token)"
+              >
                 <span class="remark-label">备注：</span>
-                <span class="remark-value">{{ token.remark || '点击添加备注' }}</span>
-                <n-icon style="margin-left: 4px; color: var(--text-tertiary);">
+                <span class="remark-value">{{
+                  token.remark || "点击添加备注"
+                }}</span>
+                <n-icon style="margin-left: 4px; color: var(--text-tertiary)">
                   <Create />
                 </n-icon>
               </div>
-              
-              <a-button :loading="refreshingTokens.has(token.id)" @click.stop="refreshToken(token)">
+
+              <a-button
+                :loading="refreshingTokens.has(token.id)"
+                @click.stop="refreshToken(token)"
+              >
                 <template #icon>
                   <n-icon>
                     <Refresh />
@@ -199,14 +256,46 @@
               <div class="storage-info">
                 <div class="storage-item">
                   <span class="storage-label">存储类型：</span>
-                  <n-tag size="small" :type="(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent) ? 'success' : 'warning'">
-                    {{ (token.importMethod === "url" || token.importMethod === "bin" || token.upgradedToPermanent) ? "长期有效" : "临时存储" }}
+                  <n-tag
+                    size="small"
+                    :type="
+                      token.importMethod === 'url' ||
+                      token.importMethod === 'bin' ||
+                      token.importMethod === 'wxQrcode' ||
+                      token.upgradedToPermanent
+                        ? 'success'
+                        : 'warning'
+                    "
+                  >
+                    {{
+                      token.importMethod === "url" ||
+                      token.importMethod === "bin" ||
+                      token.importMethod === "wxQrcode" ||
+                      token.upgradedToPermanent
+                        ? "长期有效"
+                        : "临时存储"
+                    }}
                   </n-tag>
                 </div>
 
                 <!-- 升级选项（仅对临时存储的token显示） -->
-                <div v-if="!(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent)" class="storage-upgrade">
-                  <n-button size="tiny" type="success" ghost @click.stop="upgradeTokenToPermanent(token)">
+                <div
+                  v-if="
+                    !(
+                      token.importMethod === 'url' ||
+                      token.importMethod === 'bin' ||
+                      token.importMethod === 'wxQrcode' ||
+                      token.upgradedToPermanent
+                    )
+                  "
+                  class="storage-upgrade"
+                >
+                  <n-button
+                    size="tiny"
+                    type="success"
+                    ghost
+                    @click.stop="upgradeTokenToPermanent(token)"
+                  >
                     <template #icon>
                       <n-icon>
                         <Star />
@@ -218,8 +307,13 @@
               </div>
             </template>
             <template #actions>
-              <n-button type="primary" size="large" block :loading="connectingTokens.has(token.id)"
-                @click="startTaskManagement(token)">
+              <n-button
+                type="primary"
+                size="large"
+                block
+                :loading="connectingTokens.has(token.id)"
+                @click="startTaskManagement(token)"
+              >
                 <template #icon>
                   <n-icon>
                     <Home />
@@ -233,51 +327,78 @@
 
         <!-- List View -->
         <div class="tokens-list" v-else>
-          <n-card v-for="(token, index) in sortedTokens" :key="token.id" draggable="true"
-            @dragstart="handleDragStart(index, $event)" @dragover="handleDragOver($event)"
-            @drop="handleDrop(index, $event)" size="small" style="margin-bottom: 8px" hoverable
-            @click="selectToken(token)" :class="{ active: selectedTokenId === token.id }">
+          <n-card
+            v-for="(token, index) in sortedTokens"
+            :key="token.id"
+            draggable="true"
+            @dragstart="handleDragStart(index, $event)"
+            @dragover="handleDragOver($event)"
+            @drop="handleDrop(index, $event)"
+            size="small"
+            style="margin-bottom: 8px"
+            hoverable
+            @click="selectToken(token)"
+            :class="{ active: selectedTokenId === token.id }"
+          >
             <n-space justify="space-between" align="center">
               <!-- Info -->
               <n-space align="center" :size="6">
                 <!-- 连接状态 - 移动到最前端显示 -->
-                <div style="min-width: 65px;">
-                  <a-badge :status="getTokenStyle(token.id)" :text="getConnectionStatusText(token.id)" />
+                <div style="min-width: 65px">
+                  <a-badge
+                    :status="getTokenStyle(token.id)"
+                    :text="getConnectionStatusText(token.id)"
+                  />
                 </div>
 
                 <!-- Token基本信息 -->
-                <div style="min-width: 100px;">
-                  <div style="display: flex;
-                              align-items: center;
-                              flex-wrap: wrap;
-                              gap: 2px;">
-                    <span style="
-                        font-weight: bold;
-                        font-size: 0.95em;
-                      ">{{ token.name }}</span>
-                    <n-tag size="small" :type="getServerTagType(token.id)" v-if="token.server">{{
-                      token.server
-                    }}</n-tag>
+                <div style="min-width: 100px">
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      flex-wrap: wrap;
+                      gap: 2px;
+                    "
+                  >
+                    <span style="font-weight: bold; font-size: 0.95em">{{
+                      token.name
+                    }}</span>
+                    <n-tag
+                      size="small"
+                      :type="getServerTagType(token.id)"
+                      v-if="token.server"
+                      >{{ token.server }}</n-tag
+                    >
                     <!-- 备注信息 - 显示在服务器信息后面 -->
-                    <div v-if="editingRemark === token.id" style="
+                    <div
+                      v-if="editingRemark === token.id"
+                      style="
                         font-size: 0.75em;
                         display: flex;
                         align-items: center;
                         gap: 4px;
-                      " @click.stop>
-                      <i class="i-mdi:note-outline" style="margin-right: 1px;"></i>
-                      <n-input 
-                        v-model:value="tempRemarks[token.id]" 
-                        size="small" 
-                        placeholder="添加备注..." 
-                        @blur="saveRemark(token)" 
-                        @keyup.enter="saveRemark(token)" 
-                        @keyup.esc="cancelEditRemark()" 
+                      "
+                      @click.stop
+                    >
+                      <i
+                        class="i-mdi:note-outline"
+                        style="margin-right: 1px"
+                      ></i>
+                      <n-input
+                        v-model:value="tempRemarks[token.id]"
+                        size="small"
+                        placeholder="添加备注..."
+                        @blur="saveRemark(token)"
+                        @keyup.enter="saveRemark(token)"
+                        @keyup.esc="cancelEditRemark()"
                         autofocus
-                        style="width: 150px;"
+                        style="width: 150px"
                       />
                     </div>
-                    <div v-else style="
+                    <div
+                      v-else
+                      style="
                         font-size: 0.75em;
                         color: var(--text-secondary);
                         white-space: nowrap;
@@ -287,10 +408,17 @@
                         display: flex;
                         align-items: center;
                         gap: 4px;
-                      " @click.stop="startEditRemark(token)">
-                      <i class="i-mdi:note-outline" style="margin-right: 1px;"></i>
-                      {{ token.remark || '点击添加备注' }}
-                      <n-icon style="font-size: 0.8em; color: var(--text-tertiary);">
+                      "
+                      @click.stop="startEditRemark(token)"
+                    >
+                      <i
+                        class="i-mdi:note-outline"
+                        style="margin-right: 1px"
+                      ></i>
+                      {{ token.remark || "点击添加备注" }}
+                      <n-icon
+                        style="font-size: 0.8em; color: var(--text-tertiary)"
+                      >
                         <Create />
                       </n-icon>
                     </div>
@@ -301,12 +429,42 @@
               <!-- Actions -->
               <n-space>
                 <!-- 存储类型 -->
-                <n-tag size="small" :type="(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent) ? 'success' : 'warning'">
-                  {{ (token.importMethod === "url" || token.importMethod === "bin" || token.upgradedToPermanent) ? "长期" : "临时" }}
+                <n-tag
+                  size="small"
+                  :type="
+                    token.importMethod === 'url' ||
+                    token.importMethod === 'bin' ||
+                    token.importMethod === 'wxQrcode' ||
+                    token.upgradedToPermanent
+                      ? 'success'
+                      : 'warning'
+                  "
+                >
+                  {{
+                    token.importMethod === "url" ||
+                    token.importMethod === "bin" ||
+                    token.importMethod === "wxQrcode" ||
+                    token.upgradedToPermanent
+                      ? "长期"
+                      : "临时"
+                  }}
                 </n-tag>
-                
+
                 <!-- 升级选项（仅对临时存储的token显示） -->
-                <n-button v-if="!(token.importMethod === 'url' || token.importMethod === 'bin' || token.upgradedToPermanent)" size="small" type="success" ghost @click.stop="upgradeTokenToPermanent(token)">
+                <n-button
+                  v-if="
+                    !(
+                      token.importMethod === 'url' ||
+                      token.importMethod === 'bin' ||
+                      token.importMethod === 'wxQrcode' ||
+                      token.upgradedToPermanent
+                    )
+                  "
+                  size="small"
+                  type="success"
+                  ghost
+                  @click.stop="upgradeTokenToPermanent(token)"
+                >
                   <template #icon>
                     <n-icon>
                       <Star />
@@ -314,9 +472,13 @@
                   </template>
                   升级
                 </n-button>
-                
-                <n-button size="small" type="primary" :loading="connectingTokens.has(token.id)"
-                  @click.stop="startTaskManagement(token)">
+
+                <n-button
+                  size="small"
+                  type="primary"
+                  :loading="connectingTokens.has(token.id)"
+                  @click.stop="startTaskManagement(token)"
+                >
                   <template #icon>
                     <n-icon>
                       <Home />
@@ -324,7 +486,11 @@
                   </template>
                   控制台
                 </n-button>
-                <n-button size="small" @click.stop="refreshToken(token)" :loading="refreshingTokens.has(token.id)">
+                <n-button
+                  size="small"
+                  @click.stop="refreshToken(token)"
+                  :loading="refreshingTokens.has(token.id)"
+                >
                   <template #icon>
                     <n-icon>
                       <Refresh />
@@ -332,7 +498,10 @@
                   </template>
                   刷新
                 </n-button>
-                <n-dropdown :options="getTokenActions(token)" @select="(key) => handleTokenAction(key, token)">
+                <n-dropdown
+                  :options="getTokenActions(token)"
+                  @select="(key) => handleTokenAction(key, token)"
+                >
                   <n-button size="small" circle @click.stop>
                     <template #icon>
                       <n-icon>
@@ -353,18 +522,37 @@
           <i class="mdi:bed-empty"></i>
         </template>
         还没有导入任何Token
-        <a-button type="link" @click="openshowImportForm">打开Token管理</a-button>
+        <a-button type="link" @click="openshowImportForm"
+          >打开Token管理</a-button
+        >
       </a-empty>
     </div>
 
     <!-- 编辑Token模态框 -->
-    <n-modal v-model:show="showEditModal" preset="card" title="编辑Token" style="width: 500px">
-      <n-form ref="editFormRef" :model="editForm" :rules="editRules" label-placement="left" label-width="80px">
+    <n-modal
+      v-model:show="showEditModal"
+      preset="card"
+      title="编辑Token"
+      style="width: 500px"
+    >
+      <n-form
+        ref="editFormRef"
+        :model="editForm"
+        :rules="editRules"
+        label-placement="left"
+        label-width="80px"
+      >
         <n-form-item label="名称" path="name">
           <n-input v-model:value="editForm.name" />
         </n-form-item>
         <n-form-item label="Token字符串" path="token">
-          <n-input v-model:value="editForm.token" type="textarea" :rows="3" placeholder="粘贴Token字符串..." clearable />
+          <n-input
+            v-model:value="editForm.token"
+            type="textarea"
+            :rows="3"
+            placeholder="粘贴Token字符串..."
+            clearable
+          />
         </n-form-item>
         <n-form-item label="服务器">
           <n-input v-model:value="editForm.server" />
@@ -373,7 +561,12 @@
           <n-input v-model:value="editForm.wsUrl" />
         </n-form-item>
         <n-form-item label="备注">
-          <n-input v-model:value="editForm.remark" type="textarea" :rows="2" placeholder="添加备注信息..." />
+          <n-input
+            v-model:value="editForm.remark"
+            type="textarea"
+            :rows="2"
+            placeholder="添加备注信息..."
+          />
         </n-form-item>
       </n-form>
 
@@ -391,6 +584,7 @@
 import ManualTokenForm from "./manual.vue";
 import UrlTokenForm from "./url.vue";
 import BinTokenForm from "./bin.vue";
+import WxQrcodeForm from "./wxqrcode.vue";
 
 import { useTokenStore, selectedTokenId } from "@/stores/tokenStore";
 import {
@@ -411,7 +605,9 @@ import {
 import { NIcon, useDialog, useMessage } from "naive-ui";
 import { h, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-
+import { transformToken } from "@/utils/token";
+import useIndexedDB from "@/hooks/useIndexedDB";
+const { getArrayBuffer } = useIndexedDB();
 // 接收路由参数
 const props = defineProps({
   token: String,
@@ -439,7 +635,7 @@ const importMethod = ref("manual");
 const refreshingTokens = ref(new Set());
 const connectingTokens = ref(new Set());
 // 从localStorage读取上次的视图模式，默认为列表视图
-const viewMode = ref(localStorage.getItem('tokenViewMode') || "list");
+const viewMode = ref(localStorage.getItem("tokenViewMode") || "list");
 const dragIndex = ref(null);
 
 // 备注编辑状态管理
@@ -448,50 +644,54 @@ const tempRemarks = ref({}); // 临时保存编辑中的备注内容
 
 // 监听视图模式变化，保存到localStorage
 watch(viewMode, (newViewMode) => {
-  localStorage.setItem('tokenViewMode', newViewMode);
+  localStorage.setItem("tokenViewMode", newViewMode);
 });
 
 // 排序状态管理 - 从localStorage读取上次的排序设置
-const savedSortConfig = localStorage.getItem('tokenSortConfig');
-const sortConfig = ref(savedSortConfig ? JSON.parse(savedSortConfig) : {
-  field: 'createdAt', // 排序字段：name, server, createdAt, lastUsed
-  direction: 'asc' // 排序方向：asc, desc
-});
+const savedSortConfig = localStorage.getItem("tokenSortConfig");
+const sortConfig = ref(
+  savedSortConfig
+    ? JSON.parse(savedSortConfig)
+    : {
+        field: "createdAt", // 排序字段：name, server, createdAt, lastUsed
+        direction: "asc", // 排序方向：asc, desc
+      },
+);
 
 // 排序后的游戏角色Token列表
 const sortedTokens = computed(() => {
   return [...tokenStore.gameTokens].sort((tokenA, tokenB) => {
     let valueA, valueB;
-    
+
     // 根据排序字段获取比较值
     switch (sortConfig.value.field) {
-      case 'name':
-        valueA = tokenA.name?.toLowerCase() || '';
-        valueB = tokenB.name?.toLowerCase() || '';
+      case "name":
+        valueA = tokenA.name?.toLowerCase() || "";
+        valueB = tokenB.name?.toLowerCase() || "";
         break;
-      case 'server':
-        valueA = tokenA.server?.toLowerCase() || '';
-        valueB = tokenB.server?.toLowerCase() || '';
+      case "server":
+        valueA = tokenA.server?.toLowerCase() || "";
+        valueB = tokenB.server?.toLowerCase() || "";
         break;
-      case 'createdAt':
+      case "createdAt":
         valueA = new Date(tokenA.createdAt || 0).getTime();
         valueB = new Date(tokenB.createdAt || 0).getTime();
         break;
-      case 'lastUsed':
+      case "lastUsed":
         valueA = new Date(tokenA.lastUsed || 0).getTime();
         valueB = new Date(tokenB.lastUsed || 0).getTime();
         break;
       default:
-        valueA = tokenA.name?.toLowerCase() || '';
-        valueB = tokenB.name?.toLowerCase() || '';
+        valueA = tokenA.name?.toLowerCase() || "";
+        valueB = tokenB.name?.toLowerCase() || "";
     }
-    
+
     // 根据排序方向比较值
     if (valueA < valueB) {
-      return sortConfig.value.direction === 'asc' ? -1 : 1;
+      return sortConfig.value.direction === "asc" ? -1 : 1;
     }
     if (valueA > valueB) {
-      return sortConfig.value.direction === 'asc' ? 1 : -1;
+      return sortConfig.value.direction === "asc" ? 1 : -1;
     }
     return 0;
   });
@@ -501,21 +701,22 @@ const sortedTokens = computed(() => {
 const toggleSort = (field) => {
   if (sortConfig.value.field === field) {
     // 如果点击的是当前排序字段，则切换排序方向
-    sortConfig.value.direction = sortConfig.value.direction === 'asc' ? 'desc' : 'asc';
+    sortConfig.value.direction =
+      sortConfig.value.direction === "asc" ? "desc" : "asc";
   } else {
     // 如果点击的是新的排序字段，则默认升序
     sortConfig.value.field = field;
-    sortConfig.value.direction = 'asc';
+    sortConfig.value.direction = "asc";
   }
-  
+
   // 保存排序设置到localStorage
-  localStorage.setItem('tokenSortConfig', JSON.stringify(sortConfig.value));
+  localStorage.setItem("tokenSortConfig", JSON.stringify(sortConfig.value));
 };
 
 // 获取排序图标
 const getSortIcon = (field) => {
   if (sortConfig.value.field !== field) return null;
-  return sortConfig.value.direction === 'asc' ? '↑' : '↓';
+  return sortConfig.value.direction === "asc" ? "↑" : "↓";
 };
 
 const handleDragStart = (index, event) => {
@@ -561,7 +762,7 @@ const editRules = {
 };
 
 const bulkOptions = [
-  { label: '刷新所有Token', key: 'refreshAll' },
+  { label: "刷新所有Token", key: "refreshAll" },
   { label: "更新token信息", key: "updateInfo" },
   { label: "导出所有Token", key: "export" },
   { label: "导入Token文件", key: "import" },
@@ -582,7 +783,7 @@ const refreshToken = async (token) => {
   refreshingTokens.value.add(token.id);
 
   try {
-    if (token.sourceUrl) {
+    if (token.importMethod === "url") {
       // 有源URL的token - 从URL重新获取
       let response;
 
@@ -628,11 +829,23 @@ const refreshToken = async (token) => {
       });
 
       message.success("Token刷新成功");
+    } else if (
+      token.importMethod === "wxQrcode" ||
+      token.importMethod === "bin"
+    ) {
+      const userToken = await getArrayBuffer(token.name);
+      if (userToken) {
+        const newToken = await transformToken(userToken);
+        tokenStore.updateToken(token.id, {
+          token: newToken,
+          lastRefreshed: Date.now(),
+        });
+        message.success("Token刷新成功");
+      }
     } else {
-      // 没有源URL的token - 提示用户手动处理
       dialog.info({
         title: "重新获取Token",
-        content: `Token "${token.name}" 是手动导入的，没有配置自动刷新地址。
+        content: `Token "${token.name}" 是通过微信扫码登录导入的，没有配置自动刷新地址。
 
 请选择以下操作：
 1. 重新手动导入新的Token
@@ -921,11 +1134,11 @@ const startEditRemark = (token) => {
 // 保存备注的通用函数
 const saveCurrentRemark = () => {
   if (!editingRemark.value) return;
-  
+
   const editingTokenId = editingRemark.value;
   const remark = tempRemarks.value[editingTokenId] || "";
   tokenStore.updateToken(editingTokenId, {
-    remark: remark
+    remark: remark,
   });
   editingRemark.value = null;
   message.success("备注已保存");
@@ -955,82 +1168,93 @@ const deleteToken = (token) => {
 // 批量刷新所有URLToken
 const refreshAllTokens = async () => {
   if (!tokenStore.gameTokens.length) {
-    message.warning('没有可刷新的Token')
-    return
+    message.warning("没有可刷新的Token");
+    return;
   }
 
-  const tokensToRefresh = tokenStore.gameTokens.filter(token => token.sourceUrl)
-  const manualTokens = tokenStore.gameTokens.filter(token => !token.sourceUrl)
+  const tokensToRefresh = tokenStore.gameTokens.filter(
+    (token) =>
+      token.importMethod === "url" ||
+      token.importMethod === "wxQrcode" ||
+      token.importMethod === "bin",
+  );
+  const manualTokens = tokenStore.gameTokens.filter(
+    (token) => token.importMethod === "manual",
+  );
 
   if (tokensToRefresh.length === 0) {
-    message.warning('没有支持自动刷新的Token')
-    return
+    message.warning("没有支持自动刷新的Token");
+    return;
   }
 
   // 显示确认对话框
   dialog.warning({
-    title: '批量刷新Token',
-    content: '确定要刷新所有支持自动刷新的Token吗?',
-    positiveText: '开始刷新',
-    negativeText: '取消',
+    title: "批量刷新Token",
+    content: "确定要刷新所有支持自动刷新的Token吗?",
+    positiveText: "开始刷新",
+    negativeText: "取消",
     onPositiveClick: async () => {
       try {
-        let successCount = 0
-        let failCount = 0
+        let successCount = 0;
+        let failCount = 0;
 
         // 显示进度提示
-        const loadingMessage = message.loading(`正在批量刷新Token (0/${tokensToRefresh.length})`, {
-          duration: 0
-        })
+        const loadingMessage = message.loading(
+          `正在批量刷新Token (0/${tokensToRefresh.length})`,
+          {
+            duration: 0,
+          },
+        );
 
         for (let i = 0; i < tokensToRefresh.length; i++) {
-          const token = tokensToRefresh[i]
+          const token = tokensToRefresh[i];
 
           try {
             // 更新进度显示
-            loadingMessage.content = `正在刷新Token (${i + 1}/${tokensToRefresh.length}): ${token.name}`
+            loadingMessage.content = `正在刷新Token (${i + 1}/${tokensToRefresh.length}): ${token.name}`;
 
             // 调用单个刷新函数
-            await refreshToken(token)
-            successCount++
+            await refreshToken(token);
+            successCount++;
           } catch (error) {
-            console.error(`刷新Token "${token.name}" 失败:`, error)
-            failCount++
+            console.error(`刷新Token "${token.name}" 失败:`, error);
+            failCount++;
           }
 
           // 添加短暂延迟避免请求过于频繁
           if (i < tokensToRefresh.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }
 
         // 关闭进度提示
-        loadingMessage.destroy()
+        loadingMessage.destroy();
 
         // 显示结果
         if (failCount === 0) {
-          message.success(`批量刷新完成！成功刷新 ${successCount} 个Token`)
+          message.success(`批量刷新完成！成功刷新 ${successCount} 个Token`);
         } else {
-          message.warning(`批量刷新完成，成功 ${successCount} 个，失败 ${failCount} 个`)
+          message.warning(
+            `批量刷新完成，成功 ${successCount} 个，失败 ${failCount} 个`,
+          );
         }
 
         // 如果有手动导入的Token，提示用户
         if (manualTokens.length > 0) {
-          message.info(`${manualTokens.length} 个手动导入的Token需要手动刷新`)
+          message.info(`${manualTokens.length} 个手动导入的Token需要手动刷新`);
         }
-
       } catch (error) {
-        message.error('批量刷新过程中发生错误: ' + error.message)
+        message.error("批量刷新过程中发生错误: " + error.message);
       }
-    }
-  })
-}
+    },
+  });
+};
 
 const handleBulkAction = (key) => {
   switch (key) {
-    case 'refreshAll':
-      refreshAllTokens()
-      break
+    case "refreshAll":
+      refreshAllTokens();
+      break;
     case "updateInfo":
       updateAllTokenInfo();
       break;
@@ -1127,10 +1351,11 @@ const updateAllTokenInfo = async () => {
     message.warning("没有可更新的Token");
     return;
   }
-  
+
   dialog.warning({
     title: "更新所有Token信息",
-    content: "此操作将逐个连接所有Token，获取最新的角色名称和服务器信息，完成后自动断开连接。\n\n预计耗时：约3-5秒/个Token",
+    content:
+      "此操作将逐个连接所有Token，获取最新的角色名称和服务器信息，完成后自动断开连接。\n\n预计耗时：约3-5秒/个Token",
     positiveText: "开始更新",
     negativeText: "取消",
     onPositiveClick: async () => {
@@ -1138,29 +1363,32 @@ const updateAllTokenInfo = async () => {
         let successCount = 0;
         let failCount = 0;
         const totalTokens = tokenStore.gameTokens.length;
-        
+
         // 显示进度提示
-        const loadingMessage = message.loading(`正在更新Token信息 (0/${totalTokens})`, {
-          duration: 0
-        });
-        
+        const loadingMessage = message.loading(
+          `正在更新Token信息 (0/${totalTokens})`,
+          {
+            duration: 0,
+          },
+        );
+
         // 顺序处理每个token
         for (let i = 0; i < tokenStore.gameTokens.length; i++) {
           const token = tokenStore.gameTokens[i];
-          
+
           // 更新进度显示
           loadingMessage.content = `正在更新Token信息 (${i + 1}/${totalTokens}): ${token.name}`;
-          
+
           try {
             // 连接token获取角色信息
             await tokenStore.selectToken(token.id);
-            
+
             // 等待1秒确保角色信息已获取（可根据实际情况调整）
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
             // 断开连接
             tokenStore.closeWebSocketConnection(token.id);
-            
+
             successCount++;
             message.success(`Token "${token.name}" 信息更新成功`);
           } catch (error) {
@@ -1168,26 +1396,30 @@ const updateAllTokenInfo = async () => {
             failCount++;
             message.error(`Token "${token.name}" 信息更新失败`);
           }
-          
+
           // 添加短暂延迟，避免服务器压力过大
           if (i < tokenStore.gameTokens.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }
-        
+
         // 关闭进度提示
         loadingMessage.destroy();
-        
+
         // 显示结果
         if (failCount === 0) {
-          message.success(`所有Token信息更新完成！成功更新 ${successCount} 个Token`);
+          message.success(
+            `所有Token信息更新完成！成功更新 ${successCount} 个Token`,
+          );
         } else {
-          message.warning(`Token信息更新完成，成功 ${successCount} 个，失败 ${failCount} 个`);
+          message.warning(
+            `Token信息更新完成，成功 ${successCount} 个，失败 ${failCount} 个`,
+          );
         }
       } catch (error) {
-        message.error('更新过程中发生错误: ' + error.message);
+        message.error("更新过程中发生错误: " + error.message);
       }
-    }
+    },
   });
 };
 
@@ -1588,21 +1820,21 @@ onMounted(async () => {
   scrollbar-width: thin;
   scrollbar-color: var(--border-medium) var(--bg-tertiary);
   flex: 1;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: var(--bg-tertiary);
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: var(--border-medium);
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb:hover {
     background: var(--border-dark);
   }
@@ -1636,21 +1868,21 @@ onMounted(async () => {
   scrollbar-width: thin;
   scrollbar-color: var(--border-medium) var(--bg-tertiary);
   flex: 1;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: var(--bg-tertiary);
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: var(--border-medium);
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb:hover {
     background: var(--border-dark);
   }
@@ -1764,7 +1996,7 @@ onMounted(async () => {
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-xs);
-  
+
   &:hover {
     background: var(--bg-secondary);
   }
@@ -1774,7 +2006,7 @@ onMounted(async () => {
   cursor: default;
   background: var(--bg-primary);
   border: 1px solid var(--border-medium);
-  
+
   &:hover {
     background: var(--bg-primary);
   }
@@ -1880,7 +2112,6 @@ onMounted(async () => {
 }
 
 @keyframes pulse-green {
-
   0%,
   100% {
     opacity: 1;
@@ -1892,7 +2123,6 @@ onMounted(async () => {
 }
 
 @keyframes pulse-yellow {
-
   0%,
   100% {
     opacity: 1;
@@ -1904,7 +2134,6 @@ onMounted(async () => {
 }
 
 @keyframes pulse-red {
-
   0%,
   100% {
     opacity: 1;
@@ -1985,11 +2214,11 @@ onMounted(async () => {
   margin-top: var(--spacing-xs);
 }
 
-:global([data-theme="dark"] .token-import-modal .arco-modal){
+:global([data-theme="dark"] .token-import-modal .arco-modal) {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
 
 [data-theme="dark"] .token-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 </style>

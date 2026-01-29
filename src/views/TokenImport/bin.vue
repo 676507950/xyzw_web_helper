@@ -122,7 +122,7 @@ const importForm = reactive({
   name: "",
   server: "",
   wsUrl: "",
-  importMethod: '',
+  importMethod: "",
 });
 const roleList = ref<
   Array<{ name: string; token: string; server: string; wsUrl: string }>
@@ -182,7 +182,7 @@ const uploadBin = (binFile: File) => {
         token: roleToken,
         server: roleMeta.server + "" + roleMeta.roleIndex || "",
         wsUrl: importForm.wsUrl || "",
-        importMethod: 'bin'
+        importMethod: "bin",
       });
     };
     reader.onerror = () => {

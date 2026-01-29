@@ -35,6 +35,7 @@ const errorCodeMap = {
   1000020: "今天已经领取过奖励了",
   3300050: "购买数量超出限制",
   700020: "已经领取过这个任务",
+  12400000: "挂机奖励领取过于频繁",
 };
 
 /** 生成 [min,max] 的随机整数 */
@@ -330,7 +331,11 @@ export function registerDefaultCommands(reg) {
     .register("bosstower_getinfo")
     .register("bosstower_startboss")
     .register("bosstower_startbox")
-    .register("discount_getdiscountinfo");
+    .register("discount_getdiscountinfo")
+    
+    //发送游戏内消息
+    .register("system_sendchatmessage")
+    ;
 
   registry.commands.set(
     "fight_startareaarena",
