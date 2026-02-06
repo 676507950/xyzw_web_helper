@@ -1,22 +1,29 @@
-import { gameLogger } from "@/utils/logger";
-import { XyzwWebSocketClient } from "@/utils/xyzwWebSocket.js";
-import { EventEmitter } from "event-emitter3";
-import { useTokenStore } from "../tokenStore";
 
-import { StudyPlugin } from "./study.js";
-import { useLocalStorage } from "@vueuse/core";
+import { gameLogger } from '@/utils/logger';
+import { XyzwWebSocketClient } from '@/utils/xyzwWebSocket';
+import { EventEmitter } from 'event-emitter3';
 
-const chatMsgList = useLocalStorage<any>("xyzw_chat_msg_list", []);
+import { AckPlugin } from './ack.ts';
+import { ChatPlugin } from './chat.ts';
+import { HangupPlugin } from './hangup.ts';
+import { LegionPlugin } from './legion.ts';
+import { RolePlugin } from './role.ts';
+import { StudyPlugin } from './study.ts';
+import { TeamPlugin } from './team.ts';
+import { TowerPlugin } from './tower.ts';
 
 export const $emit = new EventEmitter();
 export const events: Set<string> = new Set<string>();
+$emit.on('$any', (cmd: string, data: XyzwSession) => {
+  gameLogger.warn(`收到未处理事件: ${cmd} TokenID: ${data.tokenId}`, data);
+});
 
 export const onSome = (event: string[], listener: (...args: any[]) => void) => {
   event.map((e) => events.add(e));
-  event.forEach((evt) => {
+  event.forEach(evt => {
     $emit.on(evt, listener);
-  });
-};
+  })
+}
 
 export const emitPlus = (
   event: string | symbol,
@@ -24,11 +31,13 @@ export const emitPlus = (
 ): boolean => {
   // 先触发具体事件，然后触发$any事件
   const result = $emit.emit(event, ...args);
-  $emit.emit("$any", event, ...args);
+  if (!events.has(event as string)) {
+    $emit.emit("$any", event, ...args);
+  }
   return result;
 };
 
-export interface Session {
+export interface XyzwSession {
   id: string;
   tokenId: string;
   cmd: string;
@@ -44,269 +53,31 @@ export interface EVM {
   $emit: EventEmitter;
 }
 
-$emit.on("$any", (cmd: string, data: Session) => {
-  gameLogger.debug(`收到未处理事件: ${cmd} TokenID: ${data.tokenId}`, data);
-});
-
-StudyPlugin({
+const evmInst: EVM = {
   onSome,
   emitPlus,
   $emit,
-});
+};
 
-onSome(["_sys/ack"], (data: Session) => {});
+AckPlugin(evmInst);
 
-// 俱乐部申请列表响应
-onSome(["legion_applylistresp"], (data: Session) => {
-  gameLogger.debug(`收到俱乐部申请列表响应: ${data.tokenId}`, data.body);
-});
+RolePlugin(evmInst);
 
-// omail_newmailnotify   邮件
+TeamPlugin(evmInst);
 
-onSome(
-  ["system_newchatmessagenotify", "system_newchatmessagenotifyresp"],
-  (data: Session) => {
-    gameLogger.debug(`收到新聊天消息事件: ${data.tokenId}`, data);
-    const { body, gameData } = data;
-    if (!body || !body.chatMessage) {
-      gameLogger.debug("聊天消息响应为空或格式不正确");
-      return;
-    }
-    chatMsgList.value.push(body.chatMessage);
-  },
-);
+StudyPlugin(evmInst);
 
-onSome(["role_getroleinforesp", "role_getroleinfo"], (data: Session) => {
-  gameLogger.verbose(`收到角色信息事件: ${data.tokenId}`, data);
-  const { body, tokenId } = data;
-  data.gameData.value.roleInfo = body;
-  data.gameData.value.lastUpdated = new Date().toISOString();
-  if (body.role?.study?.maxCorrectNum !== undefined) {
-    $emit.emit("I-study", data);
-  }
+TowerPlugin(evmInst);
 
-  // 从角色信息中提取游戏名称和服务器信息，并更新到token列表
-  const tokenStore = useTokenStore();
-  const token = tokenStore.gameTokens.find((t) => t.id === tokenId);
-  if (token) {
-    // 优先使用serverName字段获取服务器信息
-    const server =
-      body?.role?.serverName ||
-      body?.serverName ||
-      body?.role?.server ||
-      body?.server;
+LegionPlugin(evmInst);
 
-    // 只有当服务器信息实际发生变化时才更新，避免循环触发
-    if (server && server !== token.server) {
-      // 更新token信息
-      tokenStore.updateToken(tokenId, {
-        server: server,
-      });
+ChatPlugin(evmInst);
 
-      gameLogger.verbose(`已更新Token ${tokenId} 的服务器信息`, { server });
-    }
-  }
-});
+HangupPlugin(evmInst);
 
-onSome(
-  [
-    "legion_getinfo",
-    "legion_getinforesp",
-    "legion_getinfor",
-    "legion_getinforresp",
-  ],
-  (data: Session) => {
-    gameLogger.verbose(`收到军团信息事件: ${data.tokenId}`, data);
-    const { body } = data;
-    if (!body) {
-      gameLogger.debug("军团信息响应为空");
-      return;
-    }
-    data.gameData.value.legionInfo = body;
-    data.gameData.value.lastUpdated = new Date().toISOString();
-  },
-);
 
-onSome(["activity_getresp", "activity_get"], (data: Session) => {
-  gameLogger.verbose(`收到活动信息事件: ${data.tokenId}`, data);
-  const { body } = data;
-  gameLogger.debug("活动信息body:", body);
-  if (!body) {
-    gameLogger.debug("活动信息响应为空");
-    return;
-  }
-  // 假设 activity_get 返回的 body 就是活动信息对象，或者包含 activities 字段
-  // 如果 body 是数组，可能需要转换。这里先按原样存储，后续根据实际数据调整
-  data.gameData.value.commonActivityInfo = body;
-  data.gameData.value.lastUpdated = new Date().toISOString();
-});
 
-onSome(["bosstower_getinforesp", "bosstower_getinfo"], (data: Session) => {
-  gameLogger.verbose(`收到咸王宝库信息事件: ${data.tokenId}`, data);
-  const { body } = data;
-  gameLogger.debug("咸王宝库body:", body);
-  if (!body) {
-    gameLogger.debug("咸王宝库响应为空");
-    return;
-  }
 
-  data.gameData.value.bossTowerInfo = body;
-  data.gameData.value.lastUpdated = new Date().toISOString();
-});
 
-onSome(
-  ["evotowerinforesp", "evotower_getinforesp", "evotower_getinfo"],
-  (data: Session) => {
-    gameLogger.verbose(`收到怪异塔信息事件: ${data.tokenId}`, data);
-    const { body } = data;
-    gameLogger.debug("怪异塔body:", body);
-    if (!body) {
-      gameLogger.debug("怪异塔响应为空");
-      return;
-    }
 
-    data.gameData.value.evoTowerInfo = body;
-    data.gameData.value.lastUpdated = new Date().toISOString();
-  },
-);
 
-onSome(
-  [
-    "team_getteaminfo",
-    "team_getteaminforesp",
-    "role_gettargetteam",
-    "role_gettargetteamresp",
-  ],
-  (data: Session) => {
-    gameLogger.verbose(`收到队伍信息事件: ${data.tokenId}`, data);
-    const { body, gameData, cmd } = data;
-    if (!body) {
-      gameLogger.debug("队伍信息响应为空");
-      return;
-    }
-    // 更新队伍数据
-    if (!gameData.value.presetTeam) {
-      gameData.value.presetTeam = {};
-    }
-    gameData.value.presetTeam = { ...gameData.value.presetTeam, ...body };
-    data.gameData.value.lastUpdated = new Date().toISOString();
-  },
-);
-
-onSome(
-  [
-    "presetteam_setteam",
-    "presetteam_setteamresp",
-    "presetteam_saveteam",
-    "presetteam_saveteamresp",
-  ],
-  (data: Session) => {
-    gameLogger.verbose(`收到队伍信息事件: ${data.tokenId}`, data);
-    const { body, gameData, cmd } = data;
-    if (!body) {
-      gameLogger.debug("队伍信息响应为空");
-      return;
-    }
-    // 更新队伍数据
-    if (!gameData.value.presetTeam) {
-      gameData.value.presetTeam = {};
-    }
-    // 设置/保存队伍响应 - 可能只返回确认信息
-    if (body.presetTeamInfo) {
-      gameData.value.presetTeam.presetTeamInfo = body.presetTeamInfo;
-    }
-    // 合并其他队伍相关数据
-    Object.keys(body).forEach((key) => {
-      if (key.includes("team") || key.includes("Team")) {
-        gameData.value.presetTeam[key] = body[key];
-      }
-    });
-  },
-);
-
-onSome(["tower_getinfo", "tower_getinforesp"], (data: Session) => {
-  gameLogger.verbose(`收到查询塔事件: ${data.tokenId}`, data);
-  const { body, gameData, client } = data;
-  // 保存爬塔结果到gameData中，供组件使用
-  if (!gameData.value.towerResult) {
-    gameData.value.towerResult = {};
-  }
-  if (!body) {
-    gameLogger.warn("爬塔战斗开始响应为空");
-    return;
-  }
-});
-
-onSome(["fight_starttower", "fight_starttowerresp"], (data: Session) => {
-  gameLogger.verbose(`收到爬塔战斗开始事件: ${data.tokenId}`, data);
-  const { body, gameData, client } = data;
-  // 保存爬塔结果到gameData中，供组件使用
-  if (!gameData.value.towerResult) {
-    gameData.value.towerResult = {};
-  }
-  if (!body) {
-    gameLogger.warn("爬塔战斗开始响应为空");
-    return;
-  }
-  const battleData = body.battleData;
-  if (!battleData) {
-    gameLogger.warn("爬塔战斗数据为空");
-    return;
-  }
-
-  // 判断爬塔结果
-  const towerId = battleData.options?.towerId;
-  const curHP = battleData.result?.sponsor?.ext?.curHP;
-  const isSuccess = curHP > 0;
-  gameData.value.towerResult = {
-    success: isSuccess,
-    curHP,
-    towerId,
-    timestamp: Date.now(),
-  };
-  gameData.value.lastUpdated = new Date().toISOString();
-
-  // 检查是否需要自动领取奖励
-  if (!isSuccess && towerId == undefined) {
-    return;
-  }
-
-  const layer = towerId % 10;
-  const rewardFloor = Math.floor(towerId / 10);
-
-  // 如果是新层数的第一层(layer=0)，检查是否有奖励可领取
-  if (layer === 0) {
-    setTimeout(() => {
-      const roleInfo = gameData.value.roleInfo;
-      const towerRewards = roleInfo?.role?.tower?.reward;
-
-      if (towerRewards && !towerRewards[rewardFloor]) {
-        // 保存奖励信息
-        gameData.value.towerResult.autoReward = true;
-        gameData.value.towerResult.rewardFloor = rewardFloor;
-        client?.send("tower_claimreward", { rewardId: rewardFloor });
-      }
-    }, 1500);
-  }
-
-  // 爬塔后立即更新角色信息和塔信息
-  setTimeout(() => {
-    try {
-      client?.send("role_getroleinfo", {});
-    } catch (error) {
-      // 忽略更新数据错误
-    }
-  }, 1000);
-});
-
-onSome(["tower_claimreward", "tower_claimrewardresp"], (data: Session) => {
-  const { body, gameData, client } = data;
-  if (!body) {
-    gameLogger.warn("爬塔战斗开始响应为空");
-    return;
-  }
-  // 奖励领取成功后更新角色信息
-  setTimeout(() => {
-    client?.send("role_getroleinfo", {});
-  }, 500);
-});

@@ -87,7 +87,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { Scan, PersonCircleOutline, Refresh, Close } from "@vicons/ionicons5";
 import { NIcon, useMessage } from "naive-ui";
-import { transformToken } from "@/utils/token";
+import { getTokenId, transformToken } from "@/utils/token";
 import useIndexedDB from "@/hooks/useIndexedDB";
 import { useTokenStore } from "@/stores/tokenStore";
 
@@ -523,6 +523,7 @@ const saveAccount = async (arrBuf, nickname = "") => {
 
   const bin = new Uint8Array(arrBuf);
   // console.log("bin:", bin);
+  const tokenId = getTokenId(bin);
   const roleToken = await transformToken(bin.buffer);
   const roleTokenJson = JSON.parse(roleToken);
   console.log("roleTokenJson.roleId:", roleTokenJson.roleId);
@@ -533,6 +534,7 @@ const saveAccount = async (arrBuf, nickname = "") => {
   }
   const roleName = name;
   const role = {
+    id: tokenId,
     name: roleName,
     token: roleToken,
     server: "",
@@ -540,9 +542,9 @@ const saveAccount = async (arrBuf, nickname = "") => {
     importMethod: "wxQrcode",
   };
   // 刷新indexDB数据库token数据
-  storeArrayBuffer(roleName, bin);
+  storeArrayBuffer(tokenId, bin);
 
-  const gameToken = tokenStore.gameTokens.find((t) => t.name === roleName);
+  const gameToken = tokenStore.gameTokens.find((t) => t.id === tokenId);
   if (gameToken) {
     console.log("移除同名token:", gameToken);
     tokenStore.updateToken(gameToken.id, {

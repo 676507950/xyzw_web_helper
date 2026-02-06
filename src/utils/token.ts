@@ -1,5 +1,12 @@
 import axios from "axios";
+import { MD5, lib, enc } from "crypto-js";
 import { g_utils } from "@/utils/bonProtocol";
+
+export const getTokenId = (token: string | ArrayBuffer | Uint8Array) => {
+  const binHash = MD5(lib.WordArray.create(token)).toString(enc.Hex)
+  return binHash;
+}
+
 export const transformToken = async (arrayBuffer: ArrayBuffer) => {
   // 如果是data URL格式，提取base64部分
   const res = await axios.post(

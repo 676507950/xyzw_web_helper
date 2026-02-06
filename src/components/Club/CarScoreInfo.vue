@@ -258,7 +258,6 @@ const exportToImage = async () => {
     // 7. 创建下载链接，触发浏览器下载
     const link = document.createElement('a');
     link.href = imgUrl;
-    console.log()
     const queryDate = ref(gettoday())
     link.download = queryDate.value.replace("/",'年').replace("/",'月')+'日俱乐部赛车数据.png'; // 下载文件名
     document.body.appendChild(link);

@@ -5,12 +5,6 @@
  import { bonProtocol, g_utils } from './bonProtocol.js'
  import { wsLogger, gameLogger } from './logger.js'
  
- /** 生成 [min,max] 的随机整数 */
- const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
- 
- /** Promise 版 sleep */
- const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
- 
  /** 为日志生成安全的 body 预览，避免控制台再次解析原始对象 */
  const formatBodyForLog = (body) => {
    if (!body) return ''

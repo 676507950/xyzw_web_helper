@@ -1,29 +1,13 @@
 <template>
   <!-- 手动输入表单 -->
-  <n-form
-    :model="importForm"
-    :label-placement="'top'"
-    :size="'large'"
-    :show-label="true"
-  >
+  <n-form :model="importForm" :label-placement="'top'" :size="'large'" :show-label="true">
     <n-form-item :label="'游戏角色名称'" :show-label="true">
-      <n-input
-        v-model:value="importForm.name"
-        placeholder="例如：主号战士"
-        clearable
-      />
+      <n-input v-model:value="importForm.name" placeholder="例如：主号战士" clearable />
     </n-form-item>
 
     <n-form-item :label="'bin文件'" :show-label="true">
-      <a-upload
-        multiple
-        accept="*.bin,*.dmp"
-        @before-upload="uploadBin"
-        draggable
-        dropzone
-        placeholder="粘贴Token字符串..."
-        clearable
-      >
+      <a-upload multiple accept="*.bin,*.dmp" @before-upload="uploadBin" draggable dropzone placeholder="粘贴Token字符串..."
+        clearable>
         <!-- <div class="dropzone-content">
           请点击上传或将bind文件拖拽到此处
         </div> -->
@@ -34,8 +18,7 @@
         <div>
           <strong>角色名称:</strong> {{ role.name || "未命名角色" }}<br />
           <strong>Token:</strong>
-          <span style="word-break: break-all">{{ role.token }}</span
-          ><br />
+          <span style="word-break: break-all">{{ role.token }}</span><br />
           <strong>服务器:</strong> {{ role.server || "未指定" }}
         </div>
       </a-list-item>
@@ -46,30 +29,18 @@
       <n-collapse-item title="角色详情 (可选)" name="optional">
         <div class="optional-fields">
           <n-form-item label="服务器">
-            <n-input
-              v-model:value="importForm.server"
-              placeholder="服务器名称"
-            />
+            <n-input v-model:value="importForm.server" placeholder="服务器名称" />
           </n-form-item>
 
           <n-form-item label="自定义连接地址">
-            <n-input
-              v-model:value="importForm.wsUrl"
-              placeholder="留空使用默认连接"
-            />
+            <n-input v-model:value="importForm.wsUrl" placeholder="留空使用默认连接" />
           </n-form-item>
         </div>
       </n-collapse-item>
     </n-collapse>
 
     <div class="form-actions">
-      <n-button
-        type="primary"
-        size="large"
-        block
-        :loading="isImporting"
-        @click="handleImport"
-      >
+      <n-button type="primary" size="large" block :loading="isImporting" @click="handleImport">
         <template #icon>
           <n-icon>
             <CloudUpload />
@@ -102,9 +73,8 @@ import {
 } from "naive-ui";
 
 import PQueue from "p-queue";
-// import { useI18n } from 'vue-i18n';
 import useIndexedDB from "@/hooks/useIndexedDB";
-import { transformToken } from "@/utils/token";
+import { getTokenId, transformToken } from "@/utils/token";
 
 const $emit = defineEmits(["cancel", "ok"]);
 
@@ -125,7 +95,14 @@ const importForm = reactive({
   importMethod: "",
 });
 const roleList = ref<
-  Array<{ name: string; token: string; server: string; wsUrl: string }>
+  Array<{
+    id: string;
+    name: string;
+    token: string;
+    server: string;
+    wsUrl: string;
+    importMethod: string;
+  }>
 >([]);
 
 const tQueue = new PQueue({ concurrency: 1, interval: 1000 });
@@ -160,26 +137,27 @@ const uploadBin = (binFile: File) => {
     reader.onload = async (e) => {
       const userToken = e.target?.result as ArrayBuffer;
       // console.log('转换Token:', userToken);
+      const tokenId = getTokenId(userToken);
       const roleToken = await transformToken(userToken);
-      const roleName = roleMeta.roleName || binFile.name.split(".")?.[0] || "";
       // 刷新indexDB数据库token数据
-      storeArrayBuffer(roleName, userToken);
+      storeArrayBuffer(tokenId, userToken);
       // 上传列表中发现已存在的重复名称，提示消息
-      if (roleList.value.some((role) => role.name === roleName)) {
+      if (roleList.value.some((role) => role.id === tokenId)) {
         message.error("上传列表中已存在同名角色! ");
         return;
       }
       // 检查待上传的角色是否已在tokenStore中存在
       const existingToken = tokenStore.gameTokens.find(
-        (t) => t.name === roleName,
+        (t) => t.id === tokenId,
       );
       if (existingToken) {
         message.warning(`角色"${roleName}"已存在，将更新该角色的Token`);
       }
       message.success("Token读取成功，请检查角色名称等信息后提交");
       roleList.value.push({
-        name: roleName,
+        id: tokenId,
         token: roleToken,
+        name: roleMeta.roleName,
         server: roleMeta.server + "" + roleMeta.roleIndex || "",
         wsUrl: importForm.wsUrl || "",
         importMethod: "bin",
@@ -200,7 +178,7 @@ const handleImport = async () => {
   }
   roleList.value.forEach((role) => {
     // tokenStore.gameTokens中发现已存在的重复名称，则移出token后重新添加
-    const gameToken = tokenStore.gameTokens.find((t) => t.name === role.name);
+    const gameToken = tokenStore.gameTokens.find((t) => t.id === role.id);
     if (gameToken) {
       console.log("移除同名token:", gameToken);
       // tokenStore.removeToken(gameToken.id);

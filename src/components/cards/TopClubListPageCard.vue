@@ -325,7 +325,6 @@ const exportToImage = async () => {
     // 7. 创建下载链接，触发浏览器下载
     const link = document.createElement("a");
     link.href = imgUrl;
-    console.log();
     link.download =
       queryDate.value.replace("/", "年").replace("/", "月") +
       "日TOP俱乐部信息.png";
