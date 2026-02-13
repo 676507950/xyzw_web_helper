@@ -139,6 +139,7 @@ const uploadBin = (binFile: File) => {
       // console.log('转换Token:', userToken);
       const tokenId = getTokenId(userToken);
       const roleToken = await transformToken(userToken);
+      const roleName = roleMeta.roleName || binFile.name.split(".")?.[0] || "";
       // 刷新indexDB数据库token数据
       storeArrayBuffer(tokenId, userToken);
       // 上传列表中发现已存在的重复名称，提示消息
@@ -157,7 +158,7 @@ const uploadBin = (binFile: File) => {
       roleList.value.push({
         id: tokenId,
         token: roleToken,
-        name: roleMeta.roleName,
+        name: roleName,
         server: roleMeta.server + "" + roleMeta.roleIndex || "",
         wsUrl: importForm.wsUrl || "",
         importMethod: "bin",

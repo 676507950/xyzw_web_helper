@@ -10,8 +10,9 @@ import useIndexedDB from "@/hooks/useIndexedDB";
 import { generateRandomSeed } from "@/utils/randomSeed";
 import { transformToken } from "@/utils/token";
 import { emitPlus } from "./events/index.js";
+import router from "@/router";
 
-const { getArrayBuffer } = useIndexedDB();
+const { getArrayBuffer, storeArrayBuffer, deleteArrayBuffer } = useIndexedDB();
 
 declare interface TokenData {
   id: string;
@@ -323,6 +324,7 @@ export const useTokenStore = defineStore("tokens", () => {
 
           const gameToken = gameTokens.value.find((t) => t.id === tokenId);
           console.log(gameToken);
+          let refreshSuccess = false;
           if (gameToken) {
             if (gameToken.importMethod === "url" && gameToken.sourceUrl) {
               // URL形式token刷新
@@ -334,6 +336,7 @@ export const useTokenStore = defineStore("tokens", () => {
                     // 直接使用返回的token，无需transformToken
                     updateToken(tokenId, { ...gameToken, token: data.token });
                     console.log("从URL获取token成功:", gameToken.name);
+                    refreshSuccess = true;
                   }
                 }
               } catch (error) {
@@ -343,19 +346,49 @@ export const useTokenStore = defineStore("tokens", () => {
               gameToken.importMethod === "bin" ||
               gameToken.importMethod === "wxQrcode"
             ) {
-              // Bin形式token刷新（原有逻辑）
-              const userToken: ArrayBuffer | null = await getArrayBuffer(
-                gameToken.name,
+              // Bin形式token刷新（兼容新旧两种key格式）
+              // 优先使用新的tokenId作为key，如果失败则尝试旧的name作为key
+              let userToken: ArrayBuffer | null = await getArrayBuffer(
+                tokenId,
               );
-              console.log("读取到的ArrayBuffer:", gameToken.name, userToken);
+              let usedOldKey = false;
+              if (!userToken) {
+                userToken = await getArrayBuffer(
+                  gameToken.name,
+                );
+                usedOldKey = true;
+              }
+              console.log("读取到的ArrayBuffer:", tokenId, userToken);
               if (userToken) {
                 const token = await transformToken(userToken);
                 updateToken(tokenId, { ...gameToken, token });
+                // 如果使用旧的name key读取成功，则用新的tokenId key重新保存并删除旧数据
+                if (usedOldKey) {
+                  await storeArrayBuffer(tokenId, userToken);
+                  await deleteArrayBuffer(gameToken.name);
+                  console.log("已迁移IndexedDB数据:", gameToken.name, "->", tokenId);
+                }
                 console.log(gameToken);
+                refreshSuccess = true;
               }
             }
           }
-          wsLogger.error(`Token 已过期，需要重新导入 [${tokenId}]`);
+          if (refreshSuccess) {
+            wsLogger.info(`Token刷新成功，自动重新连接 [${tokenId}]`);
+            // 只在tokens或admin/game-features页面自动重连
+            const currentPath = router.currentRoute.value.path;
+            const shouldAutoReconnect = 
+              currentPath === '/tokens' || 
+              currentPath === '/admin/game-features';
+            
+            if (shouldAutoReconnect) {
+              selectToken(tokenId, true);
+            } else {
+              wsLogger.info(`当前页面不自动重连: ${currentPath}`);
+            }
+          } else {
+            wsLogger.error(`Token 已过期，需要重新导入 [${tokenId}]`);
+          }
         }
         return;
       }

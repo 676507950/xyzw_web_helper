@@ -500,7 +500,6 @@ const handleChange = async (e) => {
   reader.readAsArrayBuffer(file);
   reader.onload = (e) => {
     const arrayBuffer = event.target.result; // 得到ArrayBuffer
-    console.log(arrayBuffer)
     // 转换为Uint8Array（便于按字节查看/处理，每个元素是0-255的字节值）
     const uint8Array = new Uint8Array(arrayBuffer);
     const decode = g_utils.bon.decode(uint8Array);

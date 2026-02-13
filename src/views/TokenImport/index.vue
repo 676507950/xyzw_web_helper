@@ -607,7 +607,7 @@ import { h, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { transformToken } from "@/utils/token";
 import useIndexedDB from "@/hooks/useIndexedDB";
-const { getArrayBuffer } = useIndexedDB();
+const { getArrayBuffer, storeArrayBuffer, deleteArrayBuffer } = useIndexedDB();
 // 接收路由参数
 const props = defineProps({
   token: String,
@@ -833,13 +833,23 @@ const refreshToken = async (token) => {
       token.importMethod === "wxQrcode" ||
       token.importMethod === "bin"
     ) {
-      const userToken = await getArrayBuffer(token.name);
+      let userToken = await getArrayBuffer(token.id);
+      let usedOldKey = false;
+      if (!userToken) {
+        userToken = await getArrayBuffer(token.name);
+        usedOldKey = true;
+      }
       if (userToken) {
         const newToken = await transformToken(userToken);
         tokenStore.updateToken(token.id, {
           token: newToken,
           lastRefreshed: Date.now(),
         });
+        if (usedOldKey) {
+          await storeArrayBuffer(token.id, userToken);
+          await deleteArrayBuffer(token.name);
+          console.log("已迁移IndexedDB数据:", token.name, "->", token.id);
+        }
         message.success("Token刷新成功");
       }
     } else {

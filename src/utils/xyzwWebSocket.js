@@ -24,7 +24,7 @@ const errorCodeMap = {
   7500120: "密码输入错误次数已达上限",
   200400: "操作太快，请稍后再试",
   200760: "您当前看到的界面已发生变化，请重新登录",
-  2300190: "未加入俱乐部",
+  2300190: "今天已经签到过了",
   2300370: "俱乐部商品购买数量超出上限",
   400000: "物品不存在",
   1500020: "能量不足",
@@ -37,14 +37,16 @@ const errorCodeMap = {
   3300050: "购买数量超出限制",
   700020: "已经领取过这个任务",
   12400000: "挂机奖励领取过于频繁",
+  2300250: "俱乐部BOSS今日攻打次数已用完",
+  400010: "物品数量不足",
 };
 
 // 事件节流定义表，根据实际需要调整命令和节流时间
 const CmdDebounceMap = {
-  "role_getroleinfo": 1000,
-  "system_claimhangupreward": 1000,
-  "system_getdatabundlever": 1000,
-}
+  role_getroleinfo: 1000,
+  system_claimhangupreward: 1000,
+  system_getdatabundlever: 1000,
+};
 
 /** 为日志生成安全的 body 预览，避免控制台再次解析原始对象 */
 const formatBodyForLog = (body) => {
@@ -336,9 +338,7 @@ export function registerDefaultCommands(reg) {
     .register("discount_getdiscountinfo")
 
     //发送游戏内消息
-    .register("system_sendchatmessage")
-    ;
-
+    .register("system_sendchatmessage");
   registry.commands.set(
     "fight_startareaarena",
     (ack = 0, seq = 0, params = {}) => {
@@ -599,7 +599,7 @@ export class XyzwWebSocketClient {
       this._clearTimers();
       if (this.onDisconnect) this.onDisconnect(evt);
       if (this.sendCache) {
-        $CacheManager.delCache(this.url)
+        $CacheManager.delCache(this.url);
       }
     };
 
@@ -744,12 +744,16 @@ export class XyzwWebSocketClient {
   async debounceSend(cmd, ...args) {
     if (CmdDebounceMap[cmd]) {
       gameLogger.info(`Debounce 发送命令排期: ${cmd}`);
-      return this.sendCache.get(cmd, async (c) => {
-        gameLogger.info(`Debounce 发送命令执行: ${c}`);
-        return await this.sendWithPromise(cmd, ...args);
-      }, {
-        timeout: CmdDebounceMap[cmd],
-      })
+      return this.sendCache.get(
+        cmd,
+        async (c) => {
+          gameLogger.info(`Debounce 发送命令执行: ${c}`);
+          return await this.sendWithPromise(cmd, ...args);
+        },
+        {
+          timeout: CmdDebounceMap[cmd],
+        },
+      );
     } else {
       return this.sendWithPromise(cmd, ...args);
     }

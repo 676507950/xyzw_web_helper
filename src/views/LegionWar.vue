@@ -701,8 +701,8 @@ const fetchBattleRecords1 = async (getbattlefield) => {
       connectWebSocket();
       return;
     }
-    const baseWsUrl = getbattlefield?.info.domainName+`?p=${encodeURIComponent(tokenStore.selectedToken.token)}&e=x&sid2=${getbattlefield.info.sid}&lang=chinese&sid2=${getbattlefield.info.sid}`
-    hint.value = getbattlefield.info.battlefieldId;
+    const baseWsUrl = getbattlefield?.info.domainName+`?p=${encodeURIComponent(tokenStore.selectedToken.token)}&e=x&sid2=${getbattlefield?.info.sid}&lang=chinese&sid2=${getbattlefield?.info.sid}`
+    hint.value = getbattlefield?.info.battlefieldId;
     legionWarWebSocket =  new XyzwLegionWarWebSocketClient({
       url: baseWsUrl,
           utils: null,
@@ -715,8 +715,7 @@ const fetchBattleRecords1 = async (getbattlefield) => {
       try {
         setTimeout( () => {
           isEntireBattlefield.value=true;
-          message.success("已进入战场");
-          // const entire = legionWarWebSocket.send("war_enterbattlefield",{battlefieldId:hint.value,useGzip:true})
+          const entire = legionWarWebSocket.send("war_enterbattlefield",{battlefieldId:hint.value,useGzip:true})
         }, 5000);
       } catch (error) {
         console.error(`初始请求盐场信息失败 [${tokenId}]`, error)
@@ -726,6 +725,7 @@ const fetchBattleRecords1 = async (getbattlefield) => {
     legionWarWebSocket.setMessageListener((message) => {
       const cmd = message?.cmd || 'unknown'
       if(cmd.includes("war_getbattlefieldinfo")){
+        console.log(message.rawData)
         result.value = message?.rawData;
         resizeAndRedraw(legionWarMapDom.value)
       }

@@ -162,21 +162,31 @@ const color = {
   6: { color: "红色", value: "red" },
 };
 
-const weapon={
-  1:"一支穿云箭",
-  2:"皮鞋手机",
-  3:"懦弱百合",
-  4:"正义喇叭",
-  5:"祖传大饼",
-  6:"冰镇啤酒",
-  7:"导演话筒",
-  8:"驱蚊花露水",
-  9:"止痒花露水"
-}
+const weapon = {
+  1: "一支穿云箭",
+  2: "皮鞋手机",
+  3: "懦弱百合",
+  4: "正义喇叭",
+  5: "祖传大饼",
+  6: "冰镇啤酒",
+  7: "导演话筒",
+  8: "驱蚊花露水",
+  9: "止痒花露水",
+};
 
-export const formatWeapon=(id)=>{
+export const legacycolor = {
+  1: { name: "虾米", value: "green" },
+  2: { name: "入门", value: "blue" },
+  3: { name: "高手", value: "purple" },
+  4: { name: "宗师", value: "orange" },
+  5: { name: "泰斗", value: "red" },
+  6: { name: "至尊", value: "gold" },
+  7: { name: "珍·至尊", value: "gold" },
+};
+
+export const formatWeapon = (id) => {
   return weapon[id];
-}
+};
 
 /**
  * 提取传入对象中的鱼和鱼珠信息

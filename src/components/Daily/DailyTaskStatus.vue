@@ -127,6 +127,29 @@
             />
           </div>
 
+          <!-- 延迟设置 -->
+          <div class="setting-item">
+            <label class="setting-label">命令延迟 (毫秒)</label>
+            <n-input-number
+              v-model:value="settings.commandDelay"
+              :min="0"
+              :max="5000"
+              :step="100"
+              size="small"
+            />
+          </div>
+
+          <div class="setting-item">
+            <label class="setting-label">任务延迟 (毫秒)</label>
+            <n-input-number
+              v-model:value="settings.taskDelay"
+              :min="0"
+              :max="5000"
+              :step="100"
+              size="small"
+            />
+          </div>
+
           <!-- 功能开关 -->
           <div class="setting-switches">
             <div class="switch-row">
@@ -275,7 +298,6 @@ import {
 
 const tokenStore = useTokenStore();
 const message = useMessage();
-const runner = new DailyTaskRunner(tokenStore);
 
 // 响应式数据
 const showSettings = ref(false);
@@ -296,6 +318,8 @@ const settings = reactive({
   claimHangUp: true,
   claimEmail: true,
   blackMarketPurchase: true,
+  commandDelay: 500,
+  taskDelay: 500,
 });
 
 // 每日任务列表
@@ -318,7 +342,7 @@ const tasks = ref([
 ]);
 
 // 选项配置
-const formationOptions = [1, 2, 3, 4].map((v) => ({
+const formationOptions = [1, 2, 3, 4, 5, 6].map((v) => ({
   label: `阵容${v}`,
   value: v,
 }));
@@ -459,6 +483,11 @@ const runDailyFix = async () => {
     log("=== 开始执行一键补差任务 ===");
 
     // 使用 DailyTaskRunner 执行任务
+    const runner = new DailyTaskRunner(tokenStore, {
+      commandDelay: settings.commandDelay,
+      taskDelay: settings.taskDelay,
+    });
+
     await runner.run(
       tokenStore.selectedToken.id,
       {
