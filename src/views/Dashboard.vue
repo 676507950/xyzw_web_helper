@@ -11,8 +11,8 @@
                 欢迎回来，{{ tokenStore.selectedToken?.name || "游戏玩家" }}！
               </h1>
               <p>今天是 {{ currentDate }}，继续您的游戏管理之旅吧</p>
-              <p>反馈微信：VIP-W66668888，添加备注脚本，朋友圈会发布更新通知</p>
-              <p>ID：605716980 兄弟们 送我点残卷 支持一下脚本更新 谢谢</p>
+              <p>反馈微信：LoveBian_04，添加备注脚本，朋友圈会发布更新通知</p>
+              <p>十级炉子代抽也可以联系</p>
             </div>
             <div class="welcome-actions">
               <n-button
