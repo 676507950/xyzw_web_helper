@@ -20,6 +20,7 @@ export const HERO_DICT = {
   118: { name: "赵云", type: "蜀国", avatar: "/team/zhaoyun.png" },
   119: { name: "大乔", type: "吴国", avatar: "/team/daqiao.png" },
   120: { name: "张角", type: "群雄", avatar: "/team/zhangjiao.png" },
+  121: { name: "鲁肃", type: "吴国", avatar: "/team/lusu.png" },
   201: { name: "徐晃", type: "魏国", avatar: "/team/xuhuang.png" },
   202: { name: "荀彧", type: "魏国", avatar: "/team/xunyu.png" },
   203: { name: "典韦", type: "魏国", avatar: "/team/xiaodianwei.png" },
@@ -62,6 +63,91 @@ export const HERO_DICT = {
   312: { name: "邢道荣", type: "群雄", avatar: "/team/xingdaorong.png" },
   313: { name: "祝融夫人", type: "蜀国", avatar: "/team/zhurongfuren.png" },
   314: { name: "孟获", type: "蜀国", avatar: "/team/menghuo.png" },
+};
+
+export const LINEUP_RULES = [
+  {
+    name: "吴国",
+    required: [106, 111],
+    colorProps: { color: "#f5222d", textColor: "#fff" }, // 红
+  },
+  {
+    name: "姜维",
+    required: [114, 111],
+    colorProps: { color: "#237804", textColor: "#fff" }, // 最深绿
+  },
+  {
+    name: "毒爆",
+    required: [108, 112, 120],
+    colorProps: { color: "#722ed1", textColor: "#fff" }, // 紫
+  },
+  {
+    name: "吕赵",
+    required: [107, 116, 118],
+    colorProps: { color: "#faad14", textColor: "#fff" }, // 浅橙/金
+  },
+  {
+    name: "三蜀",
+    required: [104, 110, 118],
+    colorProps: { color: "#389e0d", textColor: "#fff" }, // 中深绿
+  },
+  {
+    name: "典韦",
+    required: [117, 113],
+    colorProps: { color: "#40a9ff", textColor: "#fff" }, // 浅蓝
+  },
+  {
+    name: "司马懿",
+    required: [101, 113],
+    colorProps: { color: "#0050b3", textColor: "#fff" }, // 深蓝
+  },
+  {
+    name: "关羽",
+    required: [103],
+    colorProps: { color: "#73d13d", textColor: "#fff" }, // 浅绿
+  },
+  {
+    name: "吕布",
+    required: [107, 116],
+    forbidden: [118],
+    colorProps: { color: "#f06f44ff", textColor: "#fff" }, // 深橙/红橙
+  },
+  {
+    name: "控制毒",
+    required: [120, 104, 110],
+    colorProps: { color: "#722ed1", textColor: "#fff" }, // 紫
+  },
+];
+
+export const getLineupType = (heroList) => {
+  const ids = new Set(heroList.map((h) => parseInt(h.heroId)));
+  const has = (id) => ids.has(id);
+
+  for (const rule of LINEUP_RULES) {
+    // 检查必需武将
+    if (rule.required && !rule.required.every((id) => has(id))) {
+      continue;
+    }
+
+    // 检查禁止武将
+    if (rule.forbidden && rule.forbidden.some((id) => has(id))) {
+      continue;
+    }
+
+    // 检查二选一/多选一武将
+    if (rule.oneOf) {
+      const oneOfMatch = rule.oneOf.every((group) =>
+        group.some((id) => has(id)),
+      );
+      if (!oneOfMatch) {
+        continue;
+      }
+    }
+
+    return rule.name;
+  }
+
+  return "其他";
 };
 
 //鱼珠字典

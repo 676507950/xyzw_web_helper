@@ -31,12 +31,12 @@ export function formatWarrankRecordsForExport(legionRankList, queryDate) {
   const worksheetData = [
     ['排名', 'ID' , '区服', '俱乐部名', '战力', '红淬','前三红淬', '黄金积分', '联盟','公告'],
     ...legionRankList
-      .sort((a, b) => (a.rank || 0) - (b.rank || 0))
+      .sort((a, b) => (b.score || 0) - (a.score || 0))
       .map((member, index) => [
-        member.rank,
+        index + 1,
 	      member.id,
-	      member.ServerId,
-        member.Clubname,
+	      member.serverId || member.ServerId,
+        member.name || member.Clubname,
         formatPower(member.power),
         member.redQuench,
         connectstr(member.redno1,member.redno2,member.redno3),

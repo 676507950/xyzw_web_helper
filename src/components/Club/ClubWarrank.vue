@@ -83,6 +83,20 @@
             >导出</n-button
           >
           <n-button
+            :type="isEditMode ? 'warning' : 'default'"
+            size="small"
+            :disabled="!battleRecords1 || loading1"
+            @click="toggleEditMode"
+            class="action-btn edit-btn"
+          >
+            <template #icon>
+              <n-icon>
+                <CreateOutline />
+              </n-icon>
+            </template>
+            {{ isEditMode ? "退出编辑" : "调整排名" }}
+          </n-button>
+          <n-button
             type="info"
             size="small"
             :disabled="!battleRecords1 || loading1"
@@ -194,8 +208,9 @@
         >
           <!-- 表格标题行 -->
           <div class="table-header">
-            <div class="table-cell rank">红粹排名</div>
+            <div class="table-cell rank">排名</div>
             <div class="table-cell alliance">联盟</div>
+            <div class="table-cell server">服务器</div>
             <div class="table-cell avatar">头像</div>
             <div class="table-cell name">名称</div>
             <div class="table-cell score" v-if="ScoreShow === 1">积分</div>
@@ -203,7 +218,6 @@
             <div class="table-cell first-3">前三车头</div>
             <div class="table-cell power">战力</div>
             <div class="table-cell level">等级</div>
-            <div class="table-cell server">服务区</div>
             <div class="table-cell announcement">公告</div>
           </div>
 
@@ -212,32 +226,54 @@
             v-for="(member, index) in filteredLegionList"
             :key="member.id"
             class="table-row"
-            :class="getAllianceClass(allianceincludes(member.announcement))"
+            :class="getAllianceClass(getMemberAlliance(member))"
           >
             <div class="table-cell rank">
-              <div class="rank-container">
+              <div v-if="isEditMode" class="edit-rank">
+                <n-input-number
+                  v-model:value="manualRankings[member.id]"
+                  size="small"
+                  :min="1"
+                  :max="20"
+                  style="width: 70px"
+                  :show-button="false"
+                  @focus="handleRankFocus(member)"
+                  @blur="handleRankBlur(member)"
+                  @keydown.enter="$event.target.blur()"
+                />
+              </div>
+              <div v-else class="rank-container">
                 <span
-                  v-if="redQuenchRankings[member.id] === 1"
+                  v-if="getMemberRank(member) === 1"
                   class="rank-medal gold"
                 ></span>
                 <span
-                  v-else-if="redQuenchRankings[member.id] === 2"
+                  v-else-if="getMemberRank(member) === 2"
                   class="rank-medal silver"
                 ></span>
                 <span
-                  v-else-if="redQuenchRankings[member.id] === 3"
+                  v-else-if="getMemberRank(member) === 3"
                   class="rank-medal bronze"
                 ></span>
                 <span v-else class="rank-number">{{
-                  redQuenchRankings[member.id]
+                  getMemberRank(member)
                 }}</span>
               </div>
             </div>
             <div class="table-cell alliance">
-              <span class="alliance-tag">{{
-                allianceincludes(member.announcement) || "未知联盟"
+              <div v-if="isEditMode" class="edit-alliance">
+                <n-select
+                  v-model:value="manualAlliances[member.id]"
+                  :options="allianceOptions"
+                  size="small"
+                  style="width: 110px"
+                />
+              </div>
+              <span v-else class="alliance-tag">{{
+                getMemberAlliance(member)
               }}</span>
             </div>
+            <div class="table-cell server">{{ member.serverId || 0 }}</div>
             <div class="table-cell avatar">
               <img
                 v-if="member.logo"
@@ -302,7 +338,6 @@
             <div class="table-cell level">
               <span>{{ member.level || 30 }}</span>
             </div>
-            <div class="table-cell server">{{ member.serverId || 0 }}</div>
             <div class="table-cell announcement">
               {{ member.announcement || "" }}
             </div>
@@ -788,9 +823,13 @@ import {
   NCheckbox,
   NModal,
   NAvatar,
+  NInput,
+  NInputNumber,
+  NSelect,
 } from "naive-ui";
 import { useTokenStore } from "@/stores/tokenStore";
 import html2canvas from "html2canvas";
+import { downloadCanvasAsImage } from "@/utils/imageExport";
 import {
   Trophy,
   Refresh,
@@ -798,6 +837,7 @@ import {
   ChevronDown,
   ChevronUp,
   DocumentText,
+  CreateOutline,
 } from "@vicons/ionicons5";
 import {
   getLastSaturday,
@@ -848,6 +888,125 @@ const inputDate1 = ref(getLastSaturday());
 
 // 新增联盟筛选功能
 const activeAlliance = ref("all");
+// 排序模式：manual-手动/默认，redQuench-红淬，score-积分
+const currentSortType = ref("manual");
+
+// 手动调整功能
+const isEditMode = ref(false);
+const manualRankings = ref({});
+const manualAlliances = ref({});
+const editingSortOrder = ref([]); // 编辑模式下的固定排序顺序
+const tempOldRanks = ref({}); // 暂存编辑前的排名
+
+const allianceOptions = [
+  { label: "大联盟", value: "大联盟" },
+  { label: "梦盟", value: "梦盟" },
+  { label: "正义联盟", value: "正义联盟" },
+  { label: "龙盟", value: "龙盟" },
+  { label: "未知联盟", value: "未知联盟" },
+];
+
+const toggleEditMode = () => {
+  if (!isEditMode.value) {
+    // 进入编辑模式
+    if (battleRecords1.value?.legionRankList) {
+      // 1. 初始化手动数据（如果未初始化）
+      battleRecords1.value.legionRankList.forEach((member) => {
+        if (manualRankings.value[member.id] === undefined) {
+          manualRankings.value[member.id] = redQuenchRankings.value[member.id];
+        }
+        if (manualAlliances.value[member.id] === undefined) {
+          manualAlliances.value[member.id] =
+            allianceincludes(member.announcement) || "未知联盟";
+        }
+      });
+
+      // 2. 锁定当前排序顺序
+      // 获取当前完整列表并按当前规则排序
+      const currentList = [...battleRecords1.value.legionRankList].sort(
+        (a, b) => {
+          if (currentSortType.value === "manual") {
+            return getMemberRank(a) - getMemberRank(b);
+          } else if (currentSortType.value === "redQuench") {
+            return (b.redQuench || 0) - (a.redQuench || 0);
+          } else if (currentSortType.value === "score") {
+            return (b.sRScore || 0) - (a.sRScore || 0);
+          }
+          return 0;
+        },
+      );
+      // 保存 ID 顺序
+      editingSortOrder.value = currentList.map((m) => m.id);
+    }
+  } else {
+    // 退出编辑模式
+    // 可以在这里执行额外的清理或确认逻辑
+    message.success("已保存调整");
+    // 强制刷新列表排序（通过 filteredLegionList 的响应式依赖）
+  }
+  isEditMode.value = !isEditMode.value;
+};
+
+const handleRankFocus = (member) => {
+  tempOldRanks.value[member.id] = manualRankings.value[member.id];
+};
+
+const handleRankBlur = (member) => {
+  const newRank = manualRankings.value[member.id];
+  const oldRank = tempOldRanks.value[member.id];
+
+  // 清理暂存
+  delete tempOldRanks.value[member.id];
+
+  // 验证有效性，如果无效则恢复
+  if (!newRank || newRank < 1 || newRank > 20) {
+    manualRankings.value[member.id] = oldRank;
+    if (newRank !== null && newRank !== undefined) {
+      // 只有当用户输入了无效值时才提示，清空不提示（虽然 NInputNumber min=1 通常不会清空）
+      message.warning("排名必须在 1-20 之间");
+    }
+    return;
+  }
+
+  if (newRank === oldRank) return;
+
+  // 查找占用新排名的俱乐部
+  const targetMemberId = Object.keys(manualRankings.value).find(
+    (id) => String(id) !== String(member.id) && manualRankings.value[id] === newRank
+  );
+
+  if (targetMemberId) {
+    // 交换排名: 把占用者的排名设为我的旧排名
+    manualRankings.value[targetMemberId] = oldRank;
+    const targetName = getMemberName(targetMemberId);
+    message.success(`排名已交换：${member.name} ↔ ${targetName}`);
+  }
+
+  // 只要手动调整了排名，就切换回 manual 排序模式
+  currentSortType.value = "manual";
+};
+
+// 获取成员名称辅助函数
+const getMemberName = (id) => {
+  const member = battleRecords1.value?.legionRankList.find(
+    (m) => String(m.id) === String(id)
+  );
+  return member ? member.name : "未知俱乐部";
+};
+
+const getMemberAlliance = (member) => {
+  if (manualAlliances.value[member.id] !== undefined) {
+    return manualAlliances.value[member.id];
+  }
+  return allianceincludes(member.announcement) || "未知联盟";
+};
+
+const getMemberRank = (member) => {
+  if (manualRankings.value[member.id] !== undefined) {
+    return manualRankings.value[member.id];
+  }
+  return redQuenchRankings.value[member.id];
+};
 
 // 新增查询对手相关状态
 const queryLoading = ref(false);
@@ -1373,11 +1532,27 @@ const filteredLegionList = computed(() => {
   }
 
   if (activeAlliance.value === "all") {
-    return battleRecords1.value.legionRankList;
+    return [...battleRecords1.value.legionRankList].sort((a, b) => {
+      if (isEditMode.value) {
+        // 编辑模式下，按照快照顺序排序
+        return (
+          editingSortOrder.value.indexOf(a.id) -
+          editingSortOrder.value.indexOf(b.id)
+        );
+      }
+      if (currentSortType.value === "manual") {
+        return getMemberRank(a) - getMemberRank(b);
+      } else if (currentSortType.value === "redQuench") {
+        return (b.redQuench || 0) - (a.redQuench || 0);
+      } else if (currentSortType.value === "score") {
+        return (b.sRScore || 0) - (a.sRScore || 0);
+      }
+      return 0;
+    });
   }
 
-  return battleRecords1.value.legionRankList.filter((member) => {
-    const memberAlliance = allianceincludes(member.announcement);
+  const filtered = battleRecords1.value.legionRankList.filter((member) => {
+    const memberAlliance = getMemberAlliance(member);
     if (activeAlliance.value === "空白") {
       return (
         !member.announcement ||
@@ -1386,6 +1561,24 @@ const filteredLegionList = computed(() => {
       );
     }
     return memberAlliance === activeAlliance.value;
+  });
+
+  return filtered.sort((a, b) => {
+    if (isEditMode.value) {
+      // 编辑模式下，按照快照顺序排序
+      return (
+        editingSortOrder.value.indexOf(a.id) -
+        editingSortOrder.value.indexOf(b.id)
+      );
+    }
+    if (currentSortType.value === "manual") {
+      return getMemberRank(a) - getMemberRank(b);
+    } else if (currentSortType.value === "redQuench") {
+      return (b.redQuench || 0) - (a.redQuench || 0);
+    } else if (currentSortType.value === "score") {
+      return (b.sRScore || 0) - (a.sRScore || 0);
+    }
+    return 0;
   });
 });
 
@@ -1419,7 +1612,7 @@ const getActiveAllianceCount = (alliance) => {
   }
 
   return battleRecords1.value.legionRankList.filter((member) => {
-    const memberAlliance = allianceincludes(member.announcement);
+    const memberAlliance = getMemberAlliance(member);
     if (alliance === "空白") {
       return (
         !member.announcement ||
@@ -1921,13 +2114,51 @@ const handleRefresh1 = () => {
 };
 
 const hcSort = async () => {
-  // battleRecords1.legionRankList 按照 redQuench 降序
-  battleRecords1.value.legionRankList.sort((a, b) => b.redQuench - a.redQuench);
+  if (!battleRecords1.value?.legionRankList) return;
+
+  // 1. 按红淬数量排序
+  const sortedList = [...battleRecords1.value.legionRankList].sort(
+    (a, b) => (b.redQuench || 0) - (a.redQuench || 0),
+  );
+
+  // 2. 更新排名数据
+  sortedList.forEach((member, index) => {
+    manualRankings.value[member.id] = index + 1;
+  });
+
+  // 3. 切换到手动排序模式（使用更新后的排名）
+  currentSortType.value = "manual";
+
+  // 4. 如果在编辑模式，更新快照顺序以立即刷新视图
+  if (isEditMode.value) {
+    editingSortOrder.value = sortedList.map((m) => m.id);
+  }
+
+  message.success("已按红淬数量重置排名");
 };
 
 const scoreSort = async () => {
-  // battleRecords1.legionRankList 按照 sRScore 降序
-  battleRecords1.value.legionRankList.sort((a, b) => b.sRScore - a.sRScore);
+  if (!battleRecords1.value?.legionRankList) return;
+
+  // 1. 按积分排序
+  const sortedList = [...battleRecords1.value.legionRankList].sort(
+    (a, b) => (b.sRScore || 0) - (a.sRScore || 0),
+  );
+
+  // 2. 更新排名数据
+  sortedList.forEach((member, index) => {
+    manualRankings.value[member.id] = index + 1;
+  });
+
+  // 3. 切换到手动排序模式（使用更新后的排名）
+  currentSortType.value = "manual";
+
+  // 4. 如果在编辑模式，更新快照顺序以立即刷新视图
+  if (isEditMode.value) {
+    editingSortOrder.value = sortedList.map((m) => m.id);
+  }
+
+  message.success("已按积分重置排名");
 };
 // 导出战绩
 const handleExport1 = async () => {
@@ -1960,14 +2191,24 @@ const exportToImage = async () => {
     return;
   }
 
-  try {
-    // 保存原始样式
-    const originalHeight = exportDom.value.style.height;
-    const originalOverflow = exportDom.value.style.overflow;
+  // 获取 table-container
+  const tableContainer = exportDom.value.querySelector('.table-container');
+  // 保存滚动位置
+  const scrollTop = tableContainer ? tableContainer.scrollTop : 0;
 
+  try {
     // 临时调整表格容器高度，确保所有内容可见
     exportDom.value.style.height = "auto";
     exportDom.value.style.overflow = "visible";
+
+    if (tableContainer) {
+      // 保存原始样式
+      tableContainer.dataset.originalHeight = tableContainer.style.height;
+      tableContainer.dataset.originalOverflow = tableContainer.style.overflow;
+      
+      tableContainer.style.height = "auto";
+      tableContainer.style.overflow = "visible";
+    }
 
     // 等待DOM更新
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -1985,26 +2226,37 @@ const exportToImage = async () => {
       allowTaint: true, // 允许跨域图片污染画布
     });
 
-    // 6. Canvas转图片链接（支持PNG/JPG）
-    const imgUrl = canvas.toDataURL("image/png");
-    // 若要JPG，改为'image/jpeg'
-
-    // 7. 创建下载链接，触发浏览器下载
-    const link = document.createElement("a");
-    link.href = imgUrl;
-    link.download =
-      queryDate.value.replace("/", "年").replace("/", "月") +
-      "日盐场匹配信息.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 6. Canvas转图片链接并下载
+    const filename = queryDate.value.replace("/", "年").replace("/", "月") + "日盐场匹配信息.png";
+    downloadCanvasAsImage(canvas, filename);
   } catch (err) {
     console.error("DOM转图片失败：", err);
     alert("导出图片失败，请重试");
   } finally {
     // 恢复原始样式
-    exportDom.value.style.height = originalHeight;
-    exportDom.value.style.overflow = originalOverflow;
+    exportDom.value.style.removeProperty('height');
+    exportDom.value.style.removeProperty('overflow');
+    
+    if (tableContainer) {
+      if (tableContainer.dataset.originalHeight) {
+        tableContainer.style.height = tableContainer.dataset.originalHeight;
+      } else {
+        tableContainer.style.removeProperty('height');
+      }
+      
+      if (tableContainer.dataset.originalOverflow) {
+        tableContainer.style.overflow = tableContainer.dataset.originalOverflow;
+      } else {
+        tableContainer.style.removeProperty('overflow');
+      }
+      
+      // 清理 dataset
+      delete tableContainer.dataset.originalHeight;
+      delete tableContainer.dataset.originalOverflow;
+      
+      // 恢复滚动位置
+      tableContainer.scrollTop = scrollTop;
+    }
   }
 };
 
@@ -2867,11 +3119,11 @@ onMounted(() => {
 // 表格内容区
 .table-content {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
-  height: calc(100% - 200px);
 
   // 加载状态
   .loading-state {

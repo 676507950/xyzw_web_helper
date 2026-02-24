@@ -1,42 +1,90 @@
 <template>
-  <div>
-    <!-- Inline 模式：卡片渲染 -->
-    <div v-if="inline" class="inline-wrapper">
-      <div class="inline-header">
-        <div class="inline-title">蟠桃园战绩</div>
-        <div class="header-actions">
-          <a-date-picker v-model:value="queryDate" @change="fetchBattleRecordsByDate" valueFormat="YYYY/MM/DD" :disabled-date="disabledDate"/>
-          <n-button size="small" :disabled="loading" @click="handleRefresh">
-            <template #icon>
-              <n-icon>
-                <Refresh />
-              </n-icon>
-            </template>
-            刷新
-          </n-button>
-        </div>
-        <div class="header-actions">
-          <n-button type="primary" size="small" :disabled="!battleRecords || loading" @click="handleExport">
-            <template #icon>
-              <n-icon>
-                <Copy />
-              </n-icon>
-            </template>
-            导出
-          </n-button>
+  <div class="records-container">
+    <!-- 头部信息区 -->
+    <div class="header-section">
+      <div class="header-left">
+        <img
+          src="/icons/1733492491706152.png"
+          alt="蟠桃图标"
+          class="header-icon"
+        />
+        <div class="header-title">
+          <h2>蟠桃园战绩</h2>
+          <p>查看蟠桃园对战详细数据</p>
         </div>
       </div>
 
-      <div class="battle-records-content">
-        <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <n-spin size="large">
-            <template #description>正在加载战绩数据...</template>
-          </n-spin>
+      <!-- 数据统计区 -->
+      <div class="stats-section" v-if="battleRecords && battleRecords.ownClub">
+        <div class="stat-item">
+          <span class="stat-label">查询日期:</span>
+          <n-tag type="info">{{ queryDate }}</n-tag>
         </div>
+      </div>
+    </div>
 
-        <!-- 战绩列表 -->
-        <div v-else-if="battleRecords && battleRecords.ownClub && battleRecords.opponentClub" ref="exportDom" class="records-list">
+    <!-- 功能操作区 -->
+    <div class="function-section">
+      <div class="function-left">
+        <div class="export-options">
+          <n-radio-group v-model:value="currentStyle" size="small">
+            <n-radio-button value="default">默认</n-radio-button>
+            <n-radio-button value="style1">样式一</n-radio-button>
+            <n-radio-button value="style2">样式二</n-radio-button>
+          </n-radio-group>
+        </div>
+      </div>
+
+      <div class="function-right">
+        <a-date-picker 
+          v-model:value="queryDate" 
+          @change="fetchBattleRecordsByDate" 
+          valueFormat="YYYY/MM/DD" 
+          :disabled-date="disabledDate"
+          :defaultValue="queryDate"
+          format="YYYY/MM/DD"
+        />
+        <n-button 
+          size="small" 
+          :disabled="loading" 
+          @click="handleRefresh"
+          class="action-btn refresh-btn"
+        >
+          <template #icon>
+            <n-icon>
+              <Refresh />
+            </n-icon>
+          </template>
+          刷新
+        </n-button>
+        <n-button 
+          type="primary" 
+          size="small" 
+          :disabled="!battleRecords || loading" 
+          @click="handleExport"
+          class="action-btn export-btn"
+        >
+          <template #icon>
+            <n-icon>
+              <Copy />
+            </n-icon>
+          </template>
+          导出
+        </n-button>
+      </div>
+    </div>
+
+    <div class="battle-records-content">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-state">
+        <n-spin size="large">
+          <template #description>正在加载战绩数据...</template>
+        </n-spin>
+      </div>
+
+      <!-- 战绩列表 -->
+      <div v-else-if="battleRecords && battleRecords.ownClub && battleRecords.opponentClub" ref="exportDom" class="records-wrapper">
+        <div v-if="currentStyle === 'default'" class="style-default">
           <!-- 头部对战信息 -->
           <div class="battle-header">
             <h2>{{ queryDate }} {{ battleRecords.ownClub.name }} VS {{ battleRecords.opponentClub.name }} 蟠桃大会对战战绩</h2>
@@ -45,14 +93,14 @@
                 <img v-if="battleRecords.ownClub.logo" :src="battleRecords.ownClub.logo" :alt="battleRecords.ownClub.name" class="club-logo">
                 <div class="club-name">{{ battleRecords.ownClub.serverId }}服 {{ battleRecords.ownClub.name }}</div>
                 <div class="club-id">ID: {{ battleRecords.ownClub.id }}</div>
-                <div class="club-power">{{ battleRecords.ownClub.memberCount }}人 | {{ formatPower(battleRecords.ownClub.totalPower) }}</div>
+                <div class="club-power">{{ battleRecords.ownClub.memberCount }}人 | {{ battleRecords.ownClub.quenchNum }}红 | {{ formatPower(battleRecords.ownClub.totalPower) }}</div>
               </div>
               <div class="vs">VS</div>
               <div class="club-side opponent">
                 <img v-if="battleRecords.opponentClub.logo" :src="battleRecords.opponentClub.logo" :alt="battleRecords.opponentClub.name" class="club-logo">
                 <div class="club-name">{{ battleRecords.opponentClub.serverId }}服 {{ battleRecords.opponentClub.name }}</div>
                 <div class="club-id">ID: {{ battleRecords.opponentClub.id }}</div>
-                <div class="club-power">{{ battleRecords.opponentClub.memberCount }}人 | {{ formatPower(battleRecords.opponentClub.totalPower) }}</div>
+                <div class="club-power">{{ battleRecords.opponentClub.memberCount }}人 | {{ battleRecords.opponentClub.quenchNum }}红 | {{ formatPower(battleRecords.opponentClub.totalPower) }}</div>
               </div>
             </div>
           </div>
@@ -103,7 +151,7 @@
               <div class="ranking-content">
                 <div class="ranking-side own">
                   <div class="ranking-subtitle">我方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.ownClub.killRank" :key="index" class="ranking-item">
+                  <div v-for="(player, index) in battleRecords.ownClub.killRank.slice(0, 3)" :key="index" class="ranking-item">
                     <div class="rank-number">{{ index + 1 }}</div>
                     <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
                     <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
@@ -113,7 +161,7 @@
                 </div>
                 <div class="ranking-side opponent">
                   <div class="ranking-subtitle">敌方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.opponentClub.killRank" :key="index" class="ranking-item">
+                  <div v-for="(player, index) in battleRecords.opponentClub.killRank.slice(0, 3)" :key="index" class="ranking-item">
                     <div class="rank-number">{{ index + 1 }}</div>
                     <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
                     <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
@@ -130,7 +178,7 @@
               <div class="ranking-content">
                 <div class="ranking-side own">
                   <div class="ranking-subtitle">我方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.ownClub.kdRank" :key="index" class="ranking-item">
+                  <div v-for="(player, index) in battleRecords.ownClub.kdRank.slice(0, 3)" :key="index" class="ranking-item">
                     <div class="rank-number">{{ index + 1 }}</div>
                     <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
                     <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
@@ -140,7 +188,7 @@
                 </div>
                 <div class="ranking-side opponent">
                   <div class="ranking-subtitle">敌方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.opponentClub.kdRank" :key="index" class="ranking-item">
+                  <div v-for="(player, index) in battleRecords.opponentClub.kdRank.slice(0, 3)" :key="index" class="ranking-item">
                     <div class="rank-number">{{ index + 1 }}</div>
                     <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
                     <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
@@ -157,7 +205,7 @@
               <div class="ranking-content">
                 <div class="ranking-side own">
                   <div class="ranking-subtitle">我方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.ownClub.reviveRank" :key="index" class="ranking-item">
+                  <div v-for="(player, index) in battleRecords.ownClub.reviveRank.slice(0, 3)" :key="index" class="ranking-item">
                     <div class="rank-number">{{ index + 1 }}</div>
                     <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
                     <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
@@ -167,7 +215,7 @@
                 </div>
                 <div class="ranking-side opponent">
                   <div class="ranking-subtitle">敌方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.opponentClub.reviveRank" :key="index" class="ranking-item">
+                  <div v-for="(player, index) in battleRecords.opponentClub.reviveRank.slice(0, 3)" :key="index" class="ranking-item">
                     <div class="rank-number">{{ index + 1 }}</div>
                     <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
                     <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
@@ -237,6 +285,474 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Style 1 -->
+        <div v-if="currentStyle === 'style1'" class="style-1-wrapper">
+
+             <div class="battle-header">
+                <h2>{{ queryDate }} {{ battleRecords.ownClub.name }} VS {{ battleRecords.opponentClub.name }} 蟠桃大会对战战绩</h2>
+                <div class="club-info">
+                  <div class="club-side own">
+                    <img v-if="battleRecords.ownClub.logo" :src="battleRecords.ownClub.logo" :alt="battleRecords.ownClub.name" class="club-logo">
+                    <div class="club-name">{{ battleRecords.ownClub.serverId }}服 {{ battleRecords.ownClub.name }}</div>
+                    <div class="club-id">ID: {{ battleRecords.ownClub.id }}</div>
+                    <div class="club-power">{{ battleRecords.ownClub.memberCount }}人 | {{ battleRecords.ownClub.quenchNum }}红 | {{ formatPower(battleRecords.ownClub.totalPower) }}</div>
+                  </div>
+                  <div class="vs">VS</div>
+                  <div class="club-side opponent">
+                    <img v-if="battleRecords.opponentClub.logo" :src="battleRecords.opponentClub.logo" :alt="battleRecords.opponentClub.name" class="club-logo">
+                    <div class="club-name">{{ battleRecords.opponentClub.serverId }}服 {{ battleRecords.opponentClub.name }}</div>
+                    <div class="club-id">ID: {{ battleRecords.opponentClub.id }}</div>
+                    <div class="club-power">{{ battleRecords.opponentClub.memberCount }}人 | {{ battleRecords.opponentClub.quenchNum }}红 | {{ formatPower(battleRecords.opponentClub.totalPower) }}</div>
+                  </div>
+                </div>
+             </div>
+             <div class="comparison-container">
+               <!-- Own Club -->
+               <div class="club-column own-column">
+                 <div class="style1-header own-header">
+                    <h3>{{ battleRecords.ownClub.name }}</h3>
+                 </div>
+                 <div class="style1-content">
+                    <!-- Summary -->
+                    <div class="style1-summary-block">
+                       <div class="summary-card overall-card">
+                          <div class="summary-title">总体统计</div>
+                          <div class="overall-grid">
+                            <div class="summary-item"><span>总 K/D:</span> <span>{{ battleRecords.ownClub.totalKD }}</span></div>
+                            <div class="summary-item"><span>总击杀:</span> <span>{{ battleRecords.ownClub.totalKills }}</span></div>
+                            <div class="summary-item"><span>总复活:</span> <span>{{ battleRecords.ownClub.totalRevives }}</span></div>
+                            <div class="summary-item"><span>人均击杀:</span> <span>{{ (battleRecords.ownClub.totalKills / battleRecords.ownClub.memberCount).toFixed(1) }}</span></div>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div class="style1-summary-row">
+                       
+                       <div class="summary-card">
+                          <div class="summary-title">击杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.killRank.slice(0, 3)" :key="'kill-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.killCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">KD Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.kdRank.slice(0, 3)" :key="'kd-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.kd }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">复活 Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.reviveRank.slice(0, 3)" :key="'revive-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.reviveCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">连杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.killStreakRank.slice(0, 3)" :key="'killstreak-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.mCKCnt }}</span>
+                          </div>
+                       </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="style1-table-container">
+                      <table class="style1-table">
+                        <thead>
+                          <tr>
+                            <th class="col-rank">排名</th>
+                            <th class="col-name">成员</th>
+                            <th class="col-kill">击杀</th>
+                            <th class="col-kill-streak">连杀</th>
+                            <th class="col-car">抢船</th>
+                            <th class="col-revive">复活</th>
+                            <th class="col-kd">K/D</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(player, index) in battleRecords.ownClub.killRank" :key="index">
+                             <td class="col-rank">
+                                <div v-if="index < 3" class="rank-medal">{{ index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉' }}</div>
+                                <span v-else>{{ index + 1 }}</span>
+                             </td>
+                             <td class="col-name">
+                                <div class="player-info">
+                                   <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" class="player-avatar-small" @error="handleImageError" />
+                                   <div v-else class="player-avatar-placeholder-small">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
+                                   <span>{{ player.roleInfo.name }}</span>
+                                </div>
+                             </td>
+                             <td class="col-kill" :style="{ backgroundColor: getKillColor(player.killCnt) }">{{ player.killCnt || 0 }}</td>
+                             <td class="col-kill-streak">{{ player.mCKCnt || 0 }}</td>
+                             <td class="col-car">{{ player.carCnt || 0 }}</td>
+                             <td class="col-revive" :style="{ backgroundColor: getReviveColor(player.reviveCnt) }">{{ player.reviveCnt || 0 }}</td>
+                             <td class="col-kd">{{ player.kd }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <!-- Summary -->
+                    <!-- Removed duplicate summary -->
+                 </div>
+               </div>
+
+               <!-- Opponent Club -->
+               <div class="club-column opponent-column">
+                 <div class="style1-header opponent-header">
+                    <h3>{{ battleRecords.opponentClub.name }}</h3>
+                 </div>
+                 <div class="style1-content">
+                    <!-- Summary -->
+                    <div class="style1-summary-block">
+                       <div class="summary-card overall-card">
+                          <div class="summary-title">总体统计</div>
+                          <div class="overall-grid">
+                            <div class="summary-item"><span>总 K/D:</span> <span>{{ battleRecords.opponentClub.totalKD }}</span></div>
+                            <div class="summary-item"><span>总击杀:</span> <span>{{ battleRecords.opponentClub.totalKills }}</span></div>
+                            <div class="summary-item"><span>总复活:</span> <span>{{ battleRecords.opponentClub.totalRevives }}</span></div>
+                            <div class="summary-item"><span>人均击杀:</span> <span>{{ (battleRecords.opponentClub.totalKills / battleRecords.opponentClub.memberCount).toFixed(1) }}</span></div>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div class="style1-summary-row">
+                       
+                       <div class="summary-card">
+                          <div class="summary-title">击杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.killRank.slice(0, 3)" :key="'kill-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.killCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">KD Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.kdRank.slice(0, 3)" :key="'kd-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.kd }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">复活 Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.reviveRank.slice(0, 3)" :key="'revive-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.reviveCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">连杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.killStreakRank.slice(0, 3)" :key="'killstreak-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.mCKCnt }}</span>
+                          </div>
+                       </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="style1-table-container">
+                      <table class="style1-table">
+                        <thead>
+                          <tr>
+                            <th class="col-rank">排名</th>
+                            <th class="col-name">成员</th>
+                            <th class="col-kill">击杀</th>
+                            <th class="col-kill-streak">连杀</th>
+                            <th class="col-car">抢船</th>
+                            <th class="col-revive">复活</th>
+                            <th class="col-kd">K/D</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(player, index) in battleRecords.opponentClub.killRank" :key="index">
+                             <td class="col-rank">
+                                <div v-if="index < 3" class="rank-medal">{{ index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉' }}</div>
+                                <span v-else>{{ index + 1 }}</span>
+                             </td>
+                             <td class="col-name">
+                                <div class="player-info">
+                                   <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" class="player-avatar-small" @error="handleImageError" />
+                                   <div v-else class="player-avatar-placeholder-small">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
+                                   <span>{{ player.roleInfo.name }}</span>
+                                </div>
+                             </td>
+                             <td class="col-kill" :style="{ backgroundColor: getKillColor(player.killCnt) }">{{ player.killCnt || 0 }}</td>
+                             <td class="col-kill-streak">{{ player.mCKCnt || 0 }}</td>
+                             <td class="col-car">{{ player.carCnt || 0 }}</td>
+                             <td class="col-revive" :style="{ backgroundColor: getReviveColor(player.reviveCnt) }">{{ player.reviveCnt || 0 }}</td>
+                             <td class="col-kd">{{ player.kd }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <!-- Summary -->
+                    <!-- Removed duplicate summary -->
+                 </div>
+               </div>
+             </div>
+          </div>
+
+          <!-- Style 2 -->
+          <div v-if="currentStyle === 'style2'" class="style-2-wrapper">
+             <div class="battle-header">
+                <h2>{{ queryDate }} {{ battleRecords.ownClub.name }} VS {{ battleRecords.opponentClub.name }} 蟠桃大会对战战绩</h2>
+                <div class="club-info">
+                  <div class="club-side own">
+                    <img v-if="battleRecords.ownClub.logo" :src="battleRecords.ownClub.logo" :alt="battleRecords.ownClub.name" class="club-logo">
+                    <div class="club-name">{{ battleRecords.ownClub.serverId }}服 {{ battleRecords.ownClub.name }}</div>
+                    <div class="club-id">ID: {{ battleRecords.ownClub.id }}</div>
+                    <div class="club-power">{{ battleRecords.ownClub.memberCount }}人 | {{ battleRecords.ownClub.quenchNum }}红 | {{ formatPower(battleRecords.ownClub.totalPower) }}</div>
+                  </div>
+                  <div class="vs">VS</div>
+                  <div class="club-side opponent">
+                    <img v-if="battleRecords.opponentClub.logo" :src="battleRecords.opponentClub.logo" :alt="battleRecords.opponentClub.name" class="club-logo">
+                    <div class="club-name">{{ battleRecords.opponentClub.serverId }}服 {{ battleRecords.opponentClub.name }}</div>
+                    <div class="club-id">ID: {{ battleRecords.opponentClub.id }}</div>
+                    <div class="club-power">{{ battleRecords.opponentClub.memberCount }}人 | {{ battleRecords.opponentClub.quenchNum }}红 | {{ formatPower(battleRecords.opponentClub.totalPower) }}</div>
+                  </div>
+                </div>
+             </div>
+             <div class="comparison-container">
+               <!-- Own Club -->
+               <div class="club-column own-column style-2">
+                  <div class="style2-header">
+                    <div class="style2-title">
+                       <span class="trophy-icon">🏆</span>
+                       <div class="title-text">
+                          <h2>{{ battleRecords.ownClub.name }}</h2>
+                          <div class="date-text">我方战绩</div>
+                       </div>
+                    </div>
+                  </div>
+                  <!-- Stats -->
+                  <div class="style2-dashboard">
+                     <div class="dashboard-stats">
+                        <div class="stat-card-row">
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">总 K/D</div>
+                              <div class="stat-value-mini">{{ battleRecords.ownClub.totalKD }}</div>
+                           </div>
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">总击杀</div>
+                              <div class="stat-value-mini danger-text">{{ battleRecords.ownClub.totalKills }}</div>
+                           </div>
+                        </div>
+                        <div class="stat-card-row">
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">总复活</div>
+                              <div class="stat-value-mini warning-text">{{ battleRecords.ownClub.totalRevives }}</div>
+                           </div>
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">人均击杀</div>
+                              <div class="stat-value-mini purple-text">{{ (battleRecords.ownClub.totalKills / battleRecords.ownClub.memberCount).toFixed(1) }}</div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <!-- Rankings -->
+                  <div class="style2-rankings-row">
+                       <div class="summary-card">
+                          <div class="summary-title">击杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.killRank.slice(0, 3)" :key="'kill-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.killCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">KD Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.kdRank.slice(0, 3)" :key="'kd-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.kd }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">复活 Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.reviveRank.slice(0, 3)" :key="'revive-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.reviveCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">连杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.ownClub.killStreakRank.slice(0, 3)" :key="'killstreak-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.mCKCnt }}</span>
+                          </div>
+                       </div>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="style2-table-wrapper">
+                    <table class="style2-table">
+                       <thead>
+                          <tr>
+                             <th>排名</th>
+                             <th>成员</th>
+                             <th>击杀</th>
+                             <th>连杀</th>
+                             <th>抢船</th>
+                             <th>复活</th>
+                             <th>K/D</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          <tr v-for="(player, index) in battleRecords.ownClub.killRank" :key="index">
+                             <td>
+                                <div v-if="index < 3" class="medal-icon">{{ index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉' }}</div>
+                                <div v-else class="rank-num-plain">{{ index + 1 }}</div>
+                             </td>
+                             <td>
+                                <div class="player-cell">
+                                   <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" class="avatar-xs" />
+                                   <div v-else class="avatar-placeholder-xs">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
+                                   <span class="player-name-s2">{{ player.roleInfo.name }}</span>
+                                </div>
+                             </td>
+                             <td>
+                                <div class="bar-cell">
+                                   <div class="bar-val red">{{ player.killCnt }}</div>
+                                   <div class="progress-bg"><div class="progress-fill red" :style="{width: getPercent(player.killCnt, getMaxKills(battleRecords.ownClub)) + '%'}"></div></div>
+                                </div>
+                             </td>
+                             <td>{{ player.mCKCnt || 0 }}</td>
+                             <td>{{ player.carCnt || 0 }}</td>
+                             <td>{{ player.reviveCnt }}</td>
+                             <td class="kd-val">{{ player.kd }}</td>
+                          </tr>
+                       </tbody>
+                    </table>
+                  </div>
+               </div>
+
+               <!-- Opponent Club -->
+               <div class="club-column opponent-column style-2">
+                  <div class="style2-header">
+                    <div class="style2-title">
+                       <span class="trophy-icon">🏆</span>
+                       <div class="title-text">
+                          <h2>{{ battleRecords.opponentClub.name }}</h2>
+                          <div class="date-text">敌方战绩</div>
+                       </div>
+                    </div>
+                  </div>
+                  <!-- Stats -->
+                  <div class="style2-dashboard">
+                     <div class="dashboard-stats">
+                        <div class="stat-card-row">
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">总 K/D</div>
+                              <div class="stat-value-mini">{{ battleRecords.opponentClub.totalKD }}</div>
+                           </div>
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">总击杀</div>
+                              <div class="stat-value-mini danger-text">{{ battleRecords.opponentClub.totalKills }}</div>
+                           </div>
+                        </div>
+                        <div class="stat-card-row">
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">总复活</div>
+                              <div class="stat-value-mini warning-text">{{ battleRecords.opponentClub.totalRevives }}</div>
+                           </div>
+                           <div class="stat-card-mini">
+                              <div class="stat-label-mini">人均击杀</div>
+                              <div class="stat-value-mini purple-text">{{ (battleRecords.opponentClub.totalKills / battleRecords.opponentClub.memberCount).toFixed(1) }}</div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <!-- Rankings -->
+                  <div class="style2-rankings-row">
+                       <div class="summary-card">
+                          <div class="summary-title">击杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.killRank.slice(0, 3)" :key="'kill-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.killCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">KD Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.kdRank.slice(0, 3)" :key="'kd-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.kd }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">复活 Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.reviveRank.slice(0, 3)" :key="'revive-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.reviveCnt }}</span>
+                          </div>
+                       </div>
+
+                       <div class="summary-card">
+                          <div class="summary-title">连杀 Top3</div>
+                          <div v-for="(player, index) in battleRecords.opponentClub.killStreakRank.slice(0, 3)" :key="'killstreak-'+index" class="top3-item">
+                             <span class="top3-name">{{ player.roleInfo.name }}</span>
+                             <span class="top3-value">{{ player.mCKCnt }}</span>
+                          </div>
+                       </div>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="style2-table-wrapper">
+                    <table class="style2-table">
+                       <thead>
+                          <tr>
+                             <th>排名</th>
+                             <th>成员</th>
+                             <th>击杀</th>
+                             <th>连杀</th>
+                             <th>抢船</th>
+                             <th>复活</th>
+                             <th>K/D</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          <tr v-for="(player, index) in battleRecords.opponentClub.killRank" :key="index">
+                             <td>
+                                <div v-if="index < 3" class="medal-icon">{{ index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉' }}</div>
+                                <div v-else class="rank-num-plain">{{ index + 1 }}</div>
+                             </td>
+                             <td>
+                                <div class="player-cell">
+                                   <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" class="avatar-xs" />
+                                   <div v-else class="avatar-placeholder-xs">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
+                                   <span class="player-name-s2">{{ player.roleInfo.name }}</span>
+                                </div>
+                             </td>
+                             <td>
+                                <div class="bar-cell">
+                                   <div class="bar-val red">{{ player.killCnt }}</div>
+                                   <div class="progress-bg"><div class="progress-fill red" :style="{width: getPercent(player.killCnt, getMaxKills(battleRecords.opponentClub)) + '%'}"></div></div>
+                                </div>
+                             </td>
+                             <td>{{ player.mCKCnt || 0 }}</td>
+                             <td>{{ player.carCnt || 0 }}</td>
+                             <td>{{ player.reviveCnt }}</td>
+                             <td class="kd-val">{{ player.kd }}</td>
+                          </tr>
+                       </tbody>
+                    </table>
+                  </div>
+               </div>
+             </div>
           </div>
         </div>
 
@@ -252,265 +768,14 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal 模式 -->
-    <n-modal v-else v-model:show="showModal" preset="card" title="蟠桃园战绩" style="width: 90%; max-width: 1200px"
-      @after-leave="handleClose">
-      <template #header-extra>
-        <div class="header-actions">
-          <a-date-picker v-model:value="queryDate" @change="fetchBattleRecordsByDate" valueFormat="YYYY/MM/DD" :disabled-date="disabledDate"/>
-          <n-button size="small" :disabled="loading" @click="handleRefresh">
-            <template #icon>
-              <n-icon>
-                <Refresh />
-              </n-icon>
-            </template>
-            刷新
-          </n-button>
-          <n-button type="primary" size="small" :disabled="!battleRecords || loading" @click="handleExport">
-            <template #icon>
-              <n-icon>
-                <Copy />
-              </n-icon>
-            </template>
-            导出
-          </n-button>
-        </div>
-      </template>
-
-      <div class="battle-records-content">
-        <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <n-spin size="large">
-            <template #description>正在加载战绩数据...</template>
-          </n-spin>
-        </div>
-
-        <!-- 战绩列表 -->
-        <div v-else-if="battleRecords && battleRecords.ownClub && battleRecords.opponentClub" ref="exportDom" class="records-list">
-          <!-- 头部对战信息 -->
-          <div class="battle-header">
-            <h2>{{ queryDate }} {{ battleRecords.ownClub.name }} VS {{ battleRecords.opponentClub.name }} 蟠桃大会对战战绩</h2>
-            <div class="club-info">
-              <div class="club-side own">
-                <img v-if="battleRecords.ownClub.logo" :src="battleRecords.ownClub.logo" :alt="battleRecords.ownClub.name" class="club-logo">
-                <div class="club-name">{{ battleRecords.ownClub.serverId }}服 {{ battleRecords.ownClub.name }}</div>
-                <div class="club-id">ID: {{ battleRecords.ownClub.id }}</div>
-                <div class="club-power">{{ battleRecords.ownClub.memberCount }}人 | {{ formatPower(battleRecords.ownClub.totalPower) }}</div>
-              </div>
-              <div class="vs">VS</div>
-              <div class="club-side opponent">
-                <img v-if="battleRecords.opponentClub.logo" :src="battleRecords.opponentClub.logo" :alt="battleRecords.opponentClub.name" class="club-logo">
-                <div class="club-name">{{ battleRecords.opponentClub.serverId }}服 {{ battleRecords.opponentClub.name }}</div>
-                <div class="club-id">ID: {{ battleRecords.opponentClub.id }}</div>
-                <div class="club-power">{{ battleRecords.opponentClub.memberCount }}人 | {{ formatPower(battleRecords.opponentClub.totalPower) }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 总体数据统计 -->
-          <div class="overall-stats">
-            <div class="stats-side own">
-              <div class="stats-title">我方总体数据</div>
-              <div class="stats-grid">
-                <div class="stat-item stat-kills">
-                  <div class="stat-label">总击杀</div>
-                  <div class="stat-value">{{ battleRecords.ownClub.totalKills || 0 }}</div>
-                </div>
-                <div class="stat-item stat-revives">
-                  <div class="stat-label">总复活</div>
-                  <div class="stat-value">{{ battleRecords.ownClub.totalRevives || 0 }}</div>
-                </div>
-                <div class="stat-item stat-kd">
-                  <div class="stat-label">总K/D</div>
-                  <div class="stat-value">{{ battleRecords.ownClub.totalKD || 0 }}</div>
-                </div>
-              </div>
-            </div>
-            <div class="stats-side opponent">
-              <div class="stats-title">敌方总体数据</div>
-              <div class="stats-grid">
-                <div class="stat-item stat-kills">
-                  <div class="stat-label">总击杀</div>
-                  <div class="stat-value">{{ battleRecords.opponentClub.totalKills || 0 }}</div>
-                </div>
-                <div class="stat-item stat-revives">
-                  <div class="stat-label">总复活</div>
-                  <div class="stat-value">{{ battleRecords.opponentClub.totalRevives || 0 }}</div>
-                </div>
-                <div class="stat-item stat-kd">
-                  <div class="stat-label">总K/D</div>
-                  <div class="stat-value">{{ battleRecords.opponentClub.totalKD || 0 }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 各种榜单 -->
-          <div class="battle-rankings">
-            <!-- 击杀榜 -->
-            <div class="ranking-card">
-              <div class="ranking-title">击杀榜</div>
-              <div class="ranking-content">
-                <div class="ranking-side own">
-                  <div class="ranking-subtitle">我方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.ownClub.killRank" :key="index" class="ranking-item">
-                    <div class="rank-number">{{ index + 1 }}</div>
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                    <span class="player-name">{{ player.roleInfo.name }}</span>
-                    <span class="player-value">{{ player.killCnt || 0 }}</span>
-                  </div>
-                </div>
-                <div class="ranking-side opponent">
-                  <div class="ranking-subtitle">敌方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.opponentClub.killRank" :key="index" class="ranking-item">
-                    <div class="rank-number">{{ index + 1 }}</div>
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                    <span class="player-name">{{ player.roleInfo.name }}</span>
-                    <span class="player-value">{{ player.killCnt || 0 }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- K/D榜 -->
-            <div class="ranking-card">
-              <div class="ranking-title">K/D榜</div>
-              <div class="ranking-content">
-                <div class="ranking-side own">
-                  <div class="ranking-subtitle">我方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.ownClub.kdRank" :key="index" class="ranking-item">
-                    <div class="rank-number">{{ index + 1 }}</div>
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                    <span class="player-name">{{ player.roleInfo.name }}</span>
-                    <span class="player-value">{{ player.kd || 0 }}</span>
-                  </div>
-                </div>
-                <div class="ranking-side opponent">
-                  <div class="ranking-subtitle">敌方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.opponentClub.kdRank" :key="index" class="ranking-item">
-                    <div class="rank-number">{{ index + 1 }}</div>
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                    <span class="player-name">{{ player.roleInfo.name }}</span>
-                    <span class="player-value">{{ player.kd || 0 }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 复活榜 -->
-            <div class="ranking-card">
-              <div class="ranking-title">复活榜</div>
-              <div class="ranking-content">
-                <div class="ranking-side own">
-                  <div class="ranking-subtitle">我方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.ownClub.reviveRank" :key="index" class="ranking-item">
-                    <div class="rank-number">{{ index + 1 }}</div>
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                    <span class="player-name">{{ player.roleInfo.name }}</span>
-                    <span class="player-value">{{ player.reviveCnt || 0 }}</span>
-                  </div>
-                </div>
-                <div class="ranking-side opponent">
-                  <div class="ranking-subtitle">敌方 Top3</div>
-                  <div v-for="(player, index) in battleRecords.opponentClub.reviveRank" :key="index" class="ranking-item">
-                    <div class="rank-number">{{ index + 1 }}</div>
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                    <span class="player-name">{{ player.roleInfo.name }}</span>
-                    <span class="player-value">{{ player.reviveCnt || 0 }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 战神榜 -->
-          <div class="god-rankings">
-            <div class="god-ranking own">
-              <div class="god-ranking-title">我方战神榜</div>
-              <div class="god-ranking-content">
-                <div class="god-ranking-header">
-                  <div class="god-rank-number">排名</div>
-                  <div class="header-avatar"></div>
-                  <div class="header-player">玩家</div>
-                  <div class="header-stat">击杀</div>
-                  <div class="header-stat">连杀</div>
-                  <div class="header-stat">抢船</div>
-                  <div class="header-stat">复活</div>
-                  <div class="header-stat">K/D</div>
-                </div>
-                <div v-for="(player, index) in battleRecords.ownClub.godRank" :key="index" class="god-ranking-item">
-                  <div class="god-rank-number">{{ index + 1 }}</div>
-                  <div class="player-avatar-cell">
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                  </div>
-                  <span class="header-player">{{ player.roleInfo.name }}</span>
-                  <span class="player-stat">{{ player.killCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.mCKCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.carCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.reviveCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.kd || 0 }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="god-ranking opponent">
-              <div class="god-ranking-title">敌方战神榜</div>
-              <div class="god-ranking-content">
-                <div class="god-ranking-header">
-                  <div class="god-rank-number">排名</div>
-                  <div class="header-avatar"></div>
-                  <div class="header-player">玩家</div>
-                  <div class="header-stat">击杀</div>
-                  <div class="header-stat">连杀</div>
-                  <div class="header-stat">抢船</div>
-                  <div class="header-stat">复活</div>
-                  <div class="header-stat">K/D</div>
-                </div>
-                <div v-for="(player, index) in battleRecords.opponentClub.godRank" :key="index" class="god-ranking-item">
-                  <div class="god-rank-number">{{ index + 1 }}</div>
-                  <div class="player-avatar-cell">
-                    <img v-if="player.roleInfo.headImg" :src="player.roleInfo.headImg" :alt="player.roleInfo.name" class="player-avatar" @error="handleImageError">
-                    <div v-else class="player-avatar-placeholder">{{ player.roleInfo.name?.charAt(0) || '?' }}</div>
-                  </div>
-                  <span class="header-player">{{ player.roleInfo.name }}</span>
-                  <span class="player-stat">{{ player.killCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.mCKCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.carCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.reviveCnt || 0 }}</span>
-                  <span class="player-stat">{{ player.kd || 0 }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 空状态 -->
-        <div v-else class="empty-state">
-          <n-empty description="暂无战绩数据" size="large">
-            <template #icon>
-              <n-icon>
-                <DocumentText />
-              </n-icon>
-            </template>
-          </n-empty>
-        </div>
-      </div>
-    </n-modal>
-  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useMessage, NCheckboxGroup, NCheckbox } from 'naive-ui'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useMessage, NCheckboxGroup, NCheckbox, NRadioGroup, NRadioButton } from 'naive-ui'
 import { useTokenStore } from '@/stores/tokenStore'
 import html2canvas from 'html2canvas';
+import { downloadCanvasAsImage } from "@/utils/imageExport";
 import {
   Trophy,
   Refresh,
@@ -528,34 +793,56 @@ import {
   copyToClipboard
 } from '@/utils/clubBattleUtils'
 
-const props = defineProps({
-  visible: {
-    type: Boolean,
-    default: false
-  },
-  inline: {
-    type: Boolean,
-    default: false
+// 获取最近的周日日期
+// 如果今天是周日，返回今天的日期；否则返回上周日的日期
+const getLastSunday = () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=周日, 1=周一, ..., 6=周六
+  const hour = today.getHours();
+
+  let daysToSubtract = 0;
+  if (dayOfWeek === 0) {
+    // 今天是周日
+    if (hour < 18) {
+      // 18:00 之前，返回上周日
+      daysToSubtract = 7;
+    } else {
+      // 18:00 之后，返回今天
+      daysToSubtract = 0;
+    }
+  } else {
+    // 周一到周六，计算距离上周日的天数
+    daysToSubtract = dayOfWeek;
   }
+
+  const targetDate = new Date(today);
+  targetDate.setDate(today.getDate() - daysToSubtract);
+
+  const targetYear = targetDate.getFullYear();
+  const targetMonth = String(targetDate.getMonth() + 1).padStart(2, "0");
+  const targetDay = String(targetDate.getDate()).padStart(2, "0");
+
+  return `${targetYear}/${targetMonth}/${targetDay}`;
+};
+
+const currentStyle = ref(localStorage.getItem('peach_battle_records_style') || 'default')
+
+watch(currentStyle, (newStyle) => {
+  localStorage.setItem('peach_battle_records_style', newStyle)
 })
 
 const exportmethod = ref(['1']);
 const exportDom = ref(null);
-const emit = defineEmits(['update:visible'])
 
 const message = useMessage()
 const tokenStore = useTokenStore()
 const info = computed(() => tokenStore.gameData?.legionInfo || null);
 const club = computed(() => info.value?.info || null);
-const showModal = computed({
-  get: () => props.visible,
-  set: (val) => emit('update:visible', val)
-})
 
 const loading = ref(false)
 const battleRecords = ref(null)
 const expandedMembers = ref(new Set())
-const queryDate = ref('');
+const queryDate = ref(getLastSunday());
 
 
 const legionMatch = ref({
@@ -582,30 +869,28 @@ const formatDateToShort = (dateStr) => {
   return year.slice(2) + month + day
 }
 
-// 获取最近的周日日期
-// 如果今天是周日，返回今天的日期；否则返回上周日的日期
-const getLastSunday = () => {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=周日, 1=周一, ..., 6=周六
-  
-  let daysToSubtract = 0;
-  if (dayOfWeek === 0) {
-    // 今天是周日，返回今天
-    daysToSubtract = 0;
-  } else {
-    // 周一到周六，计算距离上周日的天数
-    daysToSubtract = dayOfWeek;
-  }
-
-  const targetDate = new Date(today);
-  targetDate.setDate(today.getDate() - daysToSubtract);
-
-  const targetYear = targetDate.getFullYear();
-  const targetMonth = String(targetDate.getMonth() + 1).padStart(2, "0");
-  const targetDay = String(targetDate.getDate()).padStart(2, "0");
-
-  return `${targetYear}/${targetMonth}/${targetDay}`;
+// 获取最大击杀数
+const getMaxKills = (clubData) => {
+  if (!clubData || !clubData.killRank) return 0;
+  return Math.max(...clubData.killRank.map(p => p.killCnt || 0), 0);
 };
+
+// 计算百分比
+const getPercent = (val, max) => {
+    if (!max) return 0
+    return Math.min(100, (val / max) * 100)
+}
+
+const getKillColor = (val) => {
+    if (val >= 50) return 'rgba(76, 175, 80, 0.3)' 
+    if (val >= 20) return 'rgba(139, 195, 74, 0.3)'
+    return 'transparent'
+}
+
+const getReviveColor = (val) => {
+    if (val >= 10) return 'rgba(200, 230, 201, 0.3)'
+    return 'transparent'
+}
 
 // 获取战斗样式类
 const getBattleClass = (battle) => {
@@ -687,7 +972,13 @@ const fetchBattleRecordsByDate = (val)=>{
         message.error("未获取到对战俱乐部");
         return;
       }
-      const secondLegionId = payloadrecord.enemyLegionMap[formatDateToShort(queryDate.value)].id
+      const shortDate = formatDateToShort(queryDate.value);
+      if (!payloadrecord.enemyLegionMap || !payloadrecord.enemyLegionMap[shortDate]) {
+         message.warning(`未找到日期 ${queryDate.value} 的对战记录`);
+         battleRecords.value = null;
+         return;
+      }
+      const secondLegionId = payloadrecord.enemyLegionMap[shortDate].id
       if (!firstLegionId || !secondLegionId) {
         message.error("未获取到对战俱乐部ID");
         return;
@@ -741,15 +1032,17 @@ const fetchBattleRecordsByDate = (val)=>{
       }))
       
       // 生成我方榜单
-      const ownKillRank = [...processedOwnRecords].sort((a, b) => (b.killCnt || 0) - (a.killCnt || 0)).slice(0, 3)
-      const ownKdRank = [...processedOwnRecords].sort((a, b) => b.kd - a.kd).slice(0, 3)
-      const ownReviveRank = [...processedOwnRecords].sort((a, b) => (b.reviveCnt || 0) - (a.reviveCnt || 0)).slice(0, 3)
+      const ownKillRank = [...processedOwnRecords].sort((a, b) => (b.killCnt || 0) - (a.killCnt || 0))
+      const ownKdRank = [...processedOwnRecords].sort((a, b) => b.kd - a.kd)
+      const ownReviveRank = [...processedOwnRecords].sort((a, b) => (b.reviveCnt || 0) - (a.reviveCnt || 0))
+      const ownKillStreakRank = [...processedOwnRecords].sort((a, b) => (b.mCKCnt || 0) - (a.mCKCnt || 0))
       const ownGodRank = [...processedOwnRecords].sort((a, b) => (b.killCnt || 0) - (a.killCnt || 0))
       
       // 生成敌方榜单
-      const opponentKillRank = [...processedOpponentRecords].sort((a, b) => (b.killCnt || 0) - (a.killCnt || 0)).slice(0, 3)
-      const opponentKdRank = [...processedOpponentRecords].sort((a, b) => b.kd - a.kd).slice(0, 3)
-      const opponentReviveRank = [...processedOpponentRecords].sort((a, b) => (b.reviveCnt || 0) - (a.reviveCnt || 0)).slice(0, 3)
+      const opponentKillRank = [...processedOpponentRecords].sort((a, b) => (b.killCnt || 0) - (a.killCnt || 0))
+      const opponentKdRank = [...processedOpponentRecords].sort((a, b) => b.kd - a.kd)
+      const opponentReviveRank = [...processedOpponentRecords].sort((a, b) => (b.reviveCnt || 0) - (a.reviveCnt || 0))
+      const opponentKillStreakRank = [...processedOpponentRecords].sort((a, b) => (b.mCKCnt || 0) - (a.mCKCnt || 0))
       const opponentGodRank = [...processedOpponentRecords].sort((a, b) => (b.killCnt || 0) - (a.killCnt || 0))
       
       // 计算我方总体数据
@@ -783,6 +1076,7 @@ const fetchBattleRecordsByDate = (val)=>{
           killRank: ownKillRank,
           kdRank: ownKdRank,
           reviveRank: ownReviveRank,
+          killStreakRank: ownKillStreakRank,
           godRank: ownGodRank
         },
         opponentClub: {
@@ -802,6 +1096,7 @@ const fetchBattleRecordsByDate = (val)=>{
           killRank: opponentKillRank,
           kdRank: opponentKdRank,
           reviveRank: opponentReviveRank,
+          killStreakRank: opponentKillStreakRank,
           godRank: opponentGodRank
         }
       }
@@ -873,16 +1168,9 @@ const exportToImage = async () => {
       element.style.overflow = overflow;
     });
 
-    // 6. Canvas转图片链接（支持PNG/JPG）
-    const imgUrl = canvas.toDataURL('image/png'); // 若要JPG，改为'image/jpeg'
-
-    // 7. 创建下载链接，触发浏览器下载
-    const link = document.createElement('a');
-    link.href = imgUrl;
-    link.download = queryDate.value.replace("/",'年').replace("/",'月')+'日蟠桃园战报.png'; // 下载文件名
-    document.body.appendChild(link);
-    link.click(); // 触发点击下载
-    document.body.removeChild(link); // 下载后清理DOM
+    // 6. Canvas转图片链接并下载
+    const filename = queryDate.value.replace("/",'年').replace("/",'月')+'日蟠桃园战报.png';
+    downloadCanvasAsImage(canvas, filename);
   } catch (err) {
     console.error('DOM转图片失败：', err);
     alert('导出图片失败，请重试');
@@ -899,41 +1187,154 @@ defineExpose({
   fetchBattleRecords
 })
 
-// Inline 模式：挂载后自动拉取
+// 挂载后自动拉取
 onMounted(() => {
-  if (props.inline) {
-    queryDate.value = getLastSunday()
-    fetchBattleRecords()
-  }
+  queryDate.value = getLastSunday()
+  fetchBattleRecords()
 })
 </script>
 
 <style scoped lang="scss">
-.inline-wrapper {
+/* Removed inline styles */
+
+.records-container {
   background: var(--bg-primary);
-  border-radius: var(--border-radius-medium);
-  border: 1px solid var(--border-light);
-  padding: var(--spacing-md);
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.inline-header {
+// 头部信息区
+.header-section {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-sm);
-  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  .header-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: var(--border-radius-md);
+    background: var(--bg-secondary);
+    padding: var(--spacing-xs);
+    box-sizing: border-box;
+  }
+
+  .header-title {
+    h2 {
+      margin: 0;
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+    }
+
+    p {
+      margin: var(--spacing-xs) 0 0 0;
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+  }
+
+  // 数据统计区
+  .stats-section {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: center;
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+
+      .stat-label {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        font-weight: var(--font-weight-medium);
+      }
+
+      :deep(.n-tag) {
+        font-size: var(--font-size-sm);
+        padding: 4px 8px;
+      }
+    }
+  }
 }
 
-.inline-title {
-  font-weight: var(--font-weight-semibold);
-}
-
-.header-actions {
+// 功能操作区
+.function-section {
   display: flex;
-  gap: var(--spacing-sm);
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+
+  .function-left {
+    .export-options {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+
+      :deep(.n-checkbox-group) {
+        display: flex;
+        gap: var(--spacing-md);
+
+        .n-checkbox {
+          font-size: var(--font-size-sm);
+          color: var(--text-primary);
+        }
+      }
+    }
+  }
+
+  .function-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+
+    :deep(.n-date-picker) {
+      font-size: var(--font-size-sm);
+      width: 200px;
+
+      .n-input-wrapper {
+        font-size: var(--font-size-sm);
+      }
+    }
+
+    .action-btn {
+      font-size: var(--font-size-sm);
+      padding: 6px 12px;
+      border-radius: var(--border-radius-sm);
+      transition: all var(--transition-fast);
+
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
 }
 
 .battle-records-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
   min-height: 200px;
 }
 
@@ -1456,5 +1857,474 @@ onMounted(() => {
     min-width: auto;
     text-align: left;
   }
+}
+
+/* Comparison Layout */
+.comparison-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.comparison-header h2 {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.comparison-container {
+  display: flex;
+  gap: 20px;
+}
+
+.club-column {
+  flex: 1;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.own-column {
+  border: 1px solid #e0e0e0;
+}
+
+.opponent-column {
+  border: 1px solid #e0e0e0;
+}
+
+/* Style 1 */
+.style-1-wrapper {
+  background: #fff;
+  padding: 20px;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+.style1-header {
+  padding: 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.own-header {
+  background: #800080;
+}
+
+.opponent-header {
+  background: #D32F2F; /* Red for opponent */
+}
+
+.style1-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.style1-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 10px;
+}
+
+.style1-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.style1-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.style1-table th {
+  background: #f0f0f0;
+  color: #333;
+  padding: 6px;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+}
+
+.own-column .style1-table th {
+  background: #aa50aa;
+  color: #fff;
+  border-bottom: none;
+}
+
+.opponent-column .style1-table th {
+  background: #e55555;
+  color: #fff;
+  border-bottom: none;
+}
+
+
+.style1-table td {
+  padding: 5px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  vertical-align: middle;
+  height: 32px;
+}
+
+.style1-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.col-rank { width: 40px; }
+.col-name { text-align: left !important; padding-left: 5px !important; }
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.player-avatar-small {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.player-avatar-placeholder-small {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+}
+
+.style1-summary-block {
+  margin-bottom: 15px;
+}
+
+.overall-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.overall-card .summary-item {
+  border-right: 1px solid #f0f0f0;
+}
+
+.overall-card .summary-item:nth-child(2n) {
+  border-right: none;
+}
+
+.style1-summary-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.summary-card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.summary-title {
+  padding: 6px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: #fff;
+}
+
+.own-column .summary-title { background: #aa50aa; }
+.opponent-column .summary-title { background: #e55555; }
+
+/* Lighter ranking titles for Style 1 */
+.own-column .style1-summary-row .summary-title { background: #aa50aa; }
+.opponent-column .style1-summary-row .summary-title { background: #e55555; }
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.top3-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.top3-name {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 5px;
+}
+
+.top3-value {
+  font-weight: bold;
+}
+
+.col-kill-streak, .col-car {
+  width: 60px;
+}
+
+.rank-medal { font-size: 16px; line-height: 1; }
+
+/* Style 1 */
+.style-1-wrapper {
+  background: #eef2f7;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border-radius: 8px;
+}
+
+.style-1-wrapper .battle-header {
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Style 2 */
+.style-2-wrapper {
+  background: #eef2f7;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border-radius: 8px;
+}
+
+.style-2-wrapper .battle-header {
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+.style2-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+  background: #fff;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.style2-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trophy-icon {
+  font-size: 24px;
+}
+
+.title-text h2 {
+  font-size: 16px;
+  color: #333;
+  margin: 0;
+  font-weight: 800;
+}
+
+.date-text {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.style2-dashboard {
+  margin-bottom: 15px;
+  padding: 0 10px;
+}
+
+.dashboard-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stat-card-row {
+  display: flex;
+  gap: 10px;
+}
+
+.stat-card-mini {
+  flex: 1;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-label-mini {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.stat-value-mini {
+  font-size: 14px;
+  font-weight: 800;
+  color: #333;
+}
+
+.warning-text { color: #ff9800; }
+.danger-text { color: #f44336; }
+.purple-text { color: #9c27b0; }
+
+.style2-table-wrapper {
+  background: #fff;
+  padding: 0;
+  overflow-x: auto;
+}
+
+.style2-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.style2-table thead {
+  background: #4285f4;
+}
+
+.opponent-column .style2-table thead {
+    background: #e53935;
+}
+
+.style2-table th {
+  color: #fff;
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.style2-table th:nth-child(2) {
+  text-align: left;
+  padding-left: 10px;
+}
+
+.style2-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid #f1f1f1;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 12px;
+  color: #444;
+}
+
+.style2-table tr:hover {
+  background: #f8fbff;
+}
+
+.medal-icon { font-size: 14px; }
+.rank-num-plain { font-weight: bold; color: #888; }
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-start;
+  padding-left: 5px;
+}
+
+.player-name-s2 {
+  font-weight: 600;
+  color: #333;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.avatar-xs {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder-xs {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+}
+
+.bar-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.bar-val {
+  width: 20px;
+  text-align: right;
+  font-weight: bold;
+  font-size: 11px;
+}
+.bar-val.red { color: #ff5252; }
+.bar-val.gray { color: #9e9e9e; }
+.bar-val.orange { color: #ffab40; }
+
+.progress-bg {
+  flex: 1;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 30px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+.progress-fill.red { background: #ff5252; }
+.progress-fill.orange { background: #ffab40; }
+.progress-fill.gray { background: #9e9e9e; }
+
+.kd-val {
+  font-weight: bold;
+  color: #4caf50;
+}
+
+@media (max-width: 768px) {
+  .comparison-container {
+    flex-direction: column;
+  }
+}
+
+.style2-rankings-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 0 10px;
+  margin-bottom: 15px;
+}
+
+/* Style 2 Color Overrides */
+.own-column.style-2 .summary-title {
+  background: #4285f4;
+}
+
+.opponent-column.style-2 .summary-title {
+  background: #e53935;
 }
 </style>

@@ -198,6 +198,22 @@ export class DailyTaskRunner {
 
     this.log("开始执行每日任务补差");
 
+    // 读取并保存当前阵容信息
+    let originalFormation = null;
+    try {
+      this.log("读取当前阵容信息...");
+      const teamInfo = await this.executeGameCommand(
+        tokenId,
+        "presetteam_getinfo",
+        {},
+        "获取当前阵容信息",
+      );
+      originalFormation = teamInfo?.presetTeamInfo?.useTeamId;
+      this.log(`当前阵容: ${originalFormation}`);
+    } catch (error) {
+      this.log(`读取当前阵容失败: ${error.message}`, "warning");
+    }
+
     const completedTasks = roleData.dailyTask?.complete ?? {};
     const isTaskCompleted = (taskId) => completedTasks[taskId] === -1;
     const statistics = roleData.statistics ?? {};
@@ -616,6 +632,19 @@ export class DailyTaskRunner {
             "genie_sweep",
             { genieId: 5, sweepCnt: 1 },
             "深海灯神",
+          ),
+      });
+    }
+
+    // 阵容还原
+    if (originalFormation) {
+      taskList.push({
+        name: "阵容还原",
+        execute: () =>
+          this.switchToFormationIfNeeded(
+            tokenId,
+            originalFormation,
+            "初始阵容",
           ),
       });
     }

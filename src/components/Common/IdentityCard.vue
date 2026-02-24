@@ -24,7 +24,21 @@
             />
           </div>
           <div class="role-info-section">
-            <div class="role-name">{{ roleInfo.name || "未知角色" }}</div>
+            <div class="role-name">
+              {{ roleInfo.name || "未知角色" }}
+              <n-tag
+                v-if="roleInfo.legacy > 0"
+                :style="{
+                  color: '#fff',
+                  backgroundColor: legacycolor[roleInfo.legacy]?.value,
+                  marginLeft: '8px',
+                }"
+                size="small"
+                :bordered="false"
+              >
+                {{ legacycolor[roleInfo.legacy]?.name || "未知" }}
+              </n-tag>
+            </div>
             <div class="role-stats">
               <span class="level-text">Lv.{{ roleInfo.level || 1 }}</span>
               <span class="power-value"
@@ -34,10 +48,6 @@
             <div class="activity-week" v-if="getCurrentActivityWeek">
               本周活动：{{ getCurrentActivityWeek }}
             </div>
-          </div>
-          <div class="rank-section">
-            <div class="rank-icon">{{ rankInfo?.icon }}</div>
-            <div class="rank-title">{{ rankInfo?.title }}</div>
           </div>
         </div>
       </div>
@@ -90,7 +100,21 @@
               />
             </div>
             <div class="role-info-section">
-              <div class="role-name">{{ roleInfo.name || "未知角色" }}</div>
+              <div class="role-name">
+                {{ roleInfo.name || "未知角色" }}
+                <n-tag
+                  v-if="roleInfo.legacy > 0"
+                  :style="{
+                    color: '#fff',
+                    backgroundColor: legacycolor[roleInfo.legacy]?.value,
+                    marginLeft: '8px',
+                  }"
+                  size="small"
+                  :bordered="false"
+                >
+                  {{ legacycolor[roleInfo.legacy]?.name || "未知" }}
+                </n-tag>
+              </div>
               <div class="role-stats">
                 <span class="level-text">Lv.{{ roleInfo.level || 1 }}</span>
                 <span class="power-value"
@@ -100,10 +124,6 @@
               <div class="activity-week" v-if="getCurrentActivityWeek">
                 本周活动：{{ getCurrentActivityWeek }}
               </div>
-            </div>
-            <div class="rank-section">
-              <div class="rank-icon">{{ rankInfo?.icon }}</div>
-              <div class="rank-title">{{ rankInfo?.title }}</div>
             </div>
           </div>
           <div class="glow-border" />
@@ -117,6 +137,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useTokenStore } from "@/stores/tokenStore";
+import { legacycolor as rawLegacyColor } from "@/utils/HeroList";
+
+const legacycolor = rawLegacyColor as any;
 
 const tokenStore = useTokenStore();
 
@@ -140,6 +163,7 @@ const roleInfo = computed(() => {
     level: role.level,
     power: role.power || role.fighting || 0,
     gold: role.gold ?? 0,
+    legacy: role.legacy?.color ?? 0,
     diamond: role.diamond ?? 0,
     fishing: role.fishing || role.fish || null,
     items:
@@ -159,84 +183,27 @@ const defaultAvatars = [
 const roleAvatar = ref("");
 const selectedDefaultAvatar = ref("");
 
-const powerRanks = [
-  {
-    min: 0,
-    max: 1_000_000,
-    title: "初出茅庐",
-    icon: "🌱",
-    class: "rank-beginner",
-  },
-  {
-    min: 1_000_000,
-    max: 10_000_000,
-    title: "小有名气",
-    icon: "⚔️",
-    class: "rank-known",
-  },
-  {
-    min: 10_000_000,
-    max: 100_000_000,
-    title: "出入江湖",
-    icon: "🗡️",
-    class: "rank-veteran",
-  },
-  {
-    min: 100_000_000,
-    max: 500_000_000,
-    title: "纵横四方",
-    icon: "🏹",
-    class: "rank-master",
-  },
-  {
-    min: 500_000_000,
-    max: 2_000_000_000,
-    title: "盖世豪杰",
-    icon: "⚡",
-    class: "rank-hero",
-  },
-  {
-    min: 2_000_000_000,
-    max: 4_000_000_000,
-    title: "一方枭雄",
-    icon: "👑",
-    class: "rank-overlord",
-  },
-  {
-    min: 4_000_000_000,
-    max: 6_000_000_000,
-    title: "睥睨江湖",
-    icon: "🔱",
-    class: "rank-supreme",
-  },
-  {
-    min: 6_000_000_000,
-    max: 9_000_000_000,
-    title: "独霸天下",
-    icon: "⚜️",
-    class: "rank-emperor",
-  },
-  {
-    min: 9_000_000_000,
-    max: 15_000_000_000,
-    title: "不世之尊",
-    icon: "💎",
-    class: "rank-legend",
-  },
-  {
-    min: 15_000_000_000,
-    max: Infinity,
-    title: "无极至尊",
-    icon: "🌟",
-    class: "rank-infinite",
-  },
-];
+const legacyConfig: Record<number, { icon: string; class: string }> = {
+  0: { icon: "🌱", class: "rank-beginner" },
+  1: { icon: "🌱", class: "rank-beginner" },
+  2: { icon: "⚔️", class: "rank-known" },
+  3: { icon: "🗡️", class: "rank-veteran" },
+  4: { icon: "🏹", class: "rank-master" },
+  5: { icon: "⚡", class: "rank-hero" },
+  6: { icon: "👑", class: "rank-overlord" },
+  7: { icon: "🔱", class: "rank-supreme" },
+};  
 
 const rankInfo = computed(() => {
-  const power = Number(roleInfo.value.power || 0);
-  return (
-    powerRanks.find((r) => power >= r.min && power < r.max) || powerRanks[0]
-  );
+  const legacyId = Number(roleInfo.value.legacy || 0);
+  const config = legacyConfig[legacyId] || legacyConfig[0];
+  const legacyData = legacycolor[legacyId] || { name: "初出茅庐" };
+
+  return {
+    title: legacyData.name,
+    icon: config.icon,
+    class: config.class,
+  };
 });
 
 const formatPower = (power: number) => {
@@ -845,6 +812,8 @@ watch(() => roleInfo.value, initializeAvatar, { deep: true });
 .role-name {
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-md);
+  display: flex;
+  align-items: center;
 }
 
 .role-stats {
@@ -861,21 +830,7 @@ watch(() => roleInfo.value, initializeAvatar, { deep: true });
   font-weight: var(--font-weight-medium);
 }
 
-.rank-section {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.rank-icon {
-  font-size: 14px;
-}
-
-.rank-title {
-  font-size: 12px;
-  font-weight: var(--font-weight-semibold);
-}
 
 @media (max-width: 768px) {
   .card-header {
@@ -901,14 +856,7 @@ watch(() => roleInfo.value, initializeAvatar, { deep: true });
     justify-content: center;
   }
 
-  .rank-section {
-    margin-left: 0;
-    margin-top: var(--spacing-xs);
-    justify-content: center;
-    width: 100%;
-    padding-top: var(--spacing-xs);
-    border-top: 1px dashed rgba(0, 0, 0, 0.1);
-  }
+
 
   .resources {
     grid-template-columns: repeat(2, 1fr); // 手机端强制两列

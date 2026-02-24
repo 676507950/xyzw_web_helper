@@ -42,3 +42,32 @@ export const transformToken = async (arrayBuffer: ArrayBuffer) => {
     isRestore: 0,
   });
 };
+
+
+export const getServerList = async (arrayBuffer: ArrayBuffer) => {
+  // 如果是data URL格式，提取base64部分
+  const res = await axios.post(
+    "https://xxz-xyzw.hortorgames.com/login/serverlist",
+    arrayBuffer,
+    {
+      params: {
+        _seq: 3,
+      },
+      headers: {
+        "Content-Type": "application/octet-stream",
+        referrerPolicy: "no-referrer",
+      },
+      responseType: "arraybuffer",
+    },
+  );
+  // console.log("res:", res);
+
+  const msg = g_utils.parse(res.data);
+  // console.log("解析结果:", msg);
+
+  const data = msg.getData();
+  console.log("数据内容:", data);
+  return JSON.stringify({
+    ...data.roles,
+  });
+};

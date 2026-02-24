@@ -7,32 +7,21 @@
         <li>点击下方按钮获取微信登录二维码</li>
         <li>使用微信扫码并确认登录</li>
         <li>
-          系统将获取<strong color="red">最近一次登录</strong>的角色Token信息
+          系统将获取<strong color="red">该微信下所有角色</strong>的Token信息
         </li>
       </ol>
     </div>
 
     <!-- 二维码显示区域 -->
     <div class="qrcode-container">
-      <div
-        v-if="!qrcodeUrl"
-        id="qr-placeholder"
-        class="qr-placeholder"
-        @click="generateQRCode"
-      >
+      <div v-if="!qrcodeUrl" id="qr-placeholder" class="qr-placeholder" @click="generateQRCode">
         <n-icon size="48" color="var(--text-tertiary)">
           <Scan />
           <!-- 使用扫码图标 -->
         </n-icon>
         <p>点击获取微信登录二维码</p>
       </div>
-      <img
-        v-else
-        id="qr-image"
-        :src="qrcodeUrl"
-        alt="微信登录二维码"
-        class="qr-image"
-      />
+      <img v-else id="qr-image" :src="qrcodeUrl" alt="微信登录二维码" class="qr-image" />
 
       <!-- 状态信息 -->
       <div id="qr-status" class="qr-status" :class="statusType">
@@ -40,35 +29,50 @@
       </div>
     </div>
 
-    <!-- 账号名称输入 -->
-    <div class="account-name-input">
-      <n-input
-        v-model:value="accountName"
-        placeholder="请输入账号名称（例如：微信账号1）"
-        :disabled="isProcessing"
-      >
-        <template #prefix>
-          <n-icon>
-            <PersonCircleOutline />
-          </n-icon>
-        </template>
-      </n-input>
-    </div>
-
     <!-- 操作按钮 -->
     <div class="form-actions">
-      <n-button
-        type="primary"
-        block
-        @click="generateQRCode"
-        :loading="isProcessing"
-      >
+      <n-button type="primary" block @click="generateQRCode" :loading="isProcessing">
         <template #icon>
           <n-icon>
             <Refresh />
           </n-icon>
         </template>
         {{ qrcodeUrl ? "刷新二维码" : "获取二维码" }}
+      </n-button>
+      </div>
+
+    <!-- 服务器角色列表 -->
+    <n-card v-if="serverListData && serverListData.length > 0" title="服务器角色列表"
+      style="margin-top: 16px; margin-bottom: 16px;">
+      <n-data-table :columns="columns" :data="serverListData" :pagination="{ pageSize: 5 }" />
+    </n-card>
+
+    <a-list>
+      <a-list-item v-for="(role, index) in roleList" :key="index">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
+          <div>
+            <strong>角色名称:</strong> {{ role.name || "未命名角色" }}<br />
+            <strong>Token:</strong>
+            <span style="word-break: break-all">{{ role.token }}</span><br />
+            <strong>服务器:</strong> {{ role.server || "未指定" }}<br />
+            <strong>角色序号:</strong> {{ role.roleIndex }}
+          </div>
+          <n-button type="error" size="small" @click="removeRole(index)">
+            删除
+          </n-button>
+        </div>
+      </a-list-item>
+    </a-list>
+
+    <!-- 操作按钮 -->
+    <div class="form-actions">
+      <n-button type="primary" size="large" block :loading="isImporting" @click="handleImport">
+        <template #icon>
+          <n-icon>
+            <CloudUpload />
+          </n-icon>
+        </template>
+        添加Token
       </n-button>
 
       <n-button block @click="$emit('cancel')" :disabled="isProcessing">
@@ -83,20 +87,20 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, onUnmounted } from "vue";
-import { Scan, PersonCircleOutline, Refresh, Close } from "@vicons/ionicons5";
-import { NIcon, useMessage } from "naive-ui";
-import { getTokenId, transformToken } from "@/utils/token";
+<script lang="ts" setup>
+import { ref, onMounted, onUnmounted, reactive, h } from "vue";
+import { Scan, Refresh, Close, CloudUpload } from "@vicons/ionicons5";
+import { NIcon, useMessage, NCard, NDataTable, NButton } from "naive-ui";
+import { getTokenId, transformToken, getServerList } from "@/utils/token";
 import useIndexedDB from "@/hooks/useIndexedDB";
+import { g_utils } from "@/utils/bonProtocol";
+import { formatPower } from "@/utils/legionWar";
 import { useTokenStore } from "@/stores/tokenStore";
-
 const tokenStore = useTokenStore();
-
 const { storeArrayBuffer } = useIndexedDB();
 
 const message = useMessage();
-
+const isImporting = ref(false);
 const importForm = reactive({
   name: "",
   server: "",
@@ -106,17 +110,198 @@ const importForm = reactive({
 // 定义事件
 const emit = defineEmits(["cancel", "ok"]);
 
+const removeRole = (index: number) => {
+  roleList.value.splice(index, 1);
+};
+
 // 响应式数据
-const qrcodeUrl = ref(null);
-const qrcodeUUID = ref(null);
+const qrcodeUrl = ref<string | null>(null);
+const qrcodeUUID = ref<string | null>(null);
 const isProcessing = ref(false);
 const statusMessage = ref("点击获取微信登录二维码");
 const statusType = ref("info");
-const accountName = ref(null);
+const accountName = ref<string | null>(null);
 const isScanning = ref(false);
-const scanInterval = ref(null);
+const scanInterval = ref<any>(null);
 const timeout = 120000; // 120秒超时
-const startTime = ref(null);
+const startTime = ref<number | null>(null);
+
+const serverListData = ref<any[]>([]);
+const currentBinData = ref<ArrayBuffer | null>(null);
+const binDecodedResult = ref("");
+const originalBinData = ref<any>(null);
+const roleList = ref<
+  Array<{
+    id: string;
+    name: string;
+    roleId: string;
+    token: string;
+    server: string;
+    roleIndex?: number;
+    wsUrl: string;
+    importMethod: string;
+  }>
+>([]);
+
+const columns = [
+  {
+    title: "区服ID",
+    key: "serverId",
+    render(row: any) {
+      let sid = Number(row.serverId);
+      if (sid >= 2000000) sid -= 2000000;
+      else if (sid >= 1000000) sid -= 1000000;
+      return sid - 27;
+    },
+  },
+  {
+    title: "角色序号",
+    key: "roleIndex",
+    render(row: any) {
+      const sid = Number(row.serverId);
+      if (sid >= 2000000) return 2;
+      if (sid >= 1000000) return 1;
+      return 0;
+    },
+  },
+  {
+    title: "角色ID",
+    key: "roleId",
+  },
+  {
+    title: "角色名称",
+    key: "name",
+  },
+  {
+    title: "战力",
+    key: "power",
+    render(row: any) {
+      return formatPower(row.power);
+    },
+    sorter: (row1: any, row2: any) => row1.power - row2.power,
+  },
+  {
+    title: "操作",
+    key: "actions",
+    render(row: any) {
+      return h(
+        "div",
+        { style: "display: flex; gap: 8px;" },
+        [
+          h(
+            NButton,
+            {
+              size: "small",
+              type: "primary",
+              onClick: () => addSelectedRole(row),
+            },
+            { default: () => "添加" },
+          ),
+          h(
+            NButton,
+            {
+              size: "small",
+              type: "info",
+              onClick: () => handleDownload(row),
+            },
+            { default: () => "下载" },
+          ),
+        ]
+      );
+    },
+  },
+];
+
+const handleDownload = (roleInfo: any) => {
+  if (!originalBinData.value) {
+    message.error("Bin数据丢失，请重新扫码");
+    return;
+  }
+  try {
+    const newData = { ...originalBinData.value };
+    newData.serverId = roleInfo.serverId; // 确保类型一致
+    const newBinBuffer = g_utils.encode(newData) as ArrayBuffer;
+    
+    // 构造文件名: bin-{server}-0-{roleId}-{name}.bin
+    let sid = Number(roleInfo.serverId);
+    let roleIndex = 0;
+    
+    if (sid >= 2000000) {
+      roleIndex = 2;
+      sid -= 2000000;
+    } else if (sid >= 1000000) {
+      roleIndex = 1;
+      sid -= 1000000;
+    }
+    
+    const serverNum = sid - 27;
+    const fileName = `bin-${serverNum}服-${roleIndex}-${roleInfo.roleId}-${roleInfo.name}.bin`;
+    
+    downloadBinFile(fileName, newBinBuffer);
+    message.success(`已开始下载: ${fileName}`);
+  } catch (e: any) {
+    console.error("下载失败", e);
+    message.error("下载失败: " + e.message);
+  }
+};
+
+const addSelectedRole = async (roleInfo: any) => {
+  if (!originalBinData.value) {
+    message.error("Bin数据丢失，请重新上传");
+    return;
+  }
+
+  try {
+    const newData = { ...originalBinData.value };
+    newData.serverId = roleInfo.serverId; // 确保类型一致
+    const newBinBuffer = g_utils.encode(newData) as ArrayBuffer;
+    const tokenId = getTokenId(newBinBuffer);
+    const roleToken = await transformToken(newBinBuffer);
+    const roleName = roleInfo.name || `角色_${roleInfo.roleId}`;
+
+    // 刷新indexDB数据库token数据 (保存原始bin)
+    storeArrayBuffer(tokenId, newBinBuffer);
+
+    let sid = Number(roleInfo.serverId);
+    let roleIndex = 0;
+    if (sid >= 2000000) {
+      roleIndex = 2;
+      sid -= 2000000;
+    } else if (sid >= 1000000) {
+      roleIndex = 1;
+      sid -= 1000000;
+    }
+    const serverNum = sid - 27;
+
+    // 检查是否已存在相同配置 (根据角色名称和roleId)
+    const exists = roleList.value.some(
+      (r) => r.roleId === roleInfo.roleId && r.name === roleName + `_${roleInfo.roleId}`
+    );
+
+    if (exists) {
+      message.warning(`角色 ${roleName}_${roleInfo.roleId}(${serverNum}服) 已在待添加列表中`);
+      return;
+    }
+
+    roleList.value.push({
+      id: tokenId,
+      roleId: roleInfo.roleId,
+      token: roleToken,
+      name: roleName + `_${roleInfo.roleId}`,
+      server: String(serverNum) + "服",
+      roleIndex: roleIndex,
+      wsUrl: importForm.wsUrl || "",
+      importMethod: "wxQrcode",
+    });
+
+    message.success(`已添加角色: ${roleName}`);
+
+  } catch (e: any) {
+    console.error("添加角色失败", e);
+    message.error("添加角色失败: " + e.message);
+  }
+};
+
 
 /**
  * 生成微信登录二维码
@@ -310,16 +495,16 @@ const stopScanMonitoring = () => {
 /**
  * 处理扫码成功
  */
-const handleScanSuccess = async (code, nickname = "") => {
+const handleScanSuccess = async (code: string, nickname = "") => {
   try {
     isProcessing.value = true;
 
     // 获取加密数据
     const encrypted = await getEncryptedData(code);
     if (encrypted) {
-      await saveAccount(encrypted, nickname);
+      await saveAccount(encrypted.buffer, nickname);
     }
-  } catch (err) {
+  } catch (err: any) {
     updateStatus("处理失败：" + err.message, "error");
     console.error("扫码处理失败:", err);
   } finally {
@@ -356,7 +541,7 @@ const getEncryptedData = async (code) => {
   try {
     console.log("加密后的登录 JSON:", encoded);
     console.log("解密:", decodePayload(encoded));
-  } catch (err) {}
+  } catch (err) { }
 
   const loginUrl =
     "/api/hortor/comb-login-server/api/v1/login" +
@@ -398,7 +583,7 @@ const getEncryptedData = async (code) => {
 
   // 这里简化处理，实际应该调用游戏加密模块生成bin
   // 由于是前端环境，我们模拟生成一个token
-  const dm = window.__require?.("13");
+  const dm = (window as any).__require?.("13");
   if (!dm?.encMsg || !dm?.lz4XorEncode)
     throw new Error("游戏加密模块未加载，不能生成 bin");
 
@@ -516,57 +701,73 @@ const dealWithString = (src, key, shift) => {
 /**
  * 保存账号
  */
-const saveAccount = async (arrBuf, nickname = "") => {
+const saveAccount = async (arrBuf: ArrayBuffer, nickname = "") => {
   let name = accountName.value?.trim();
 
   console.log("name:", name);
 
   const bin = new Uint8Array(arrBuf);
   // console.log("bin:", bin);
-  const tokenId = getTokenId(bin);
-  const roleToken = await transformToken(bin.buffer);
-  const roleTokenJson = JSON.parse(roleToken);
-  console.log("roleTokenJson.roleId:", roleTokenJson.roleId);
-  // 如果没有输入账号名称，使用nickname作为默认值
-  if (!name) {
-    name = nickname || "微信账号_" + new Date().getTime();
-    name += "-" + roleTokenJson.roleId;
-  }
-  const roleName = name;
-  const role = {
-    id: tokenId,
-    name: roleName,
-    token: roleToken,
-    server: "",
-    wsUrl: importForm.wsUrl || "",
-    importMethod: "wxQrcode",
-  };
-  // 刷新indexDB数据库token数据
-  storeArrayBuffer(tokenId, bin);
+  currentBinData.value = bin.buffer;
 
-  const gameToken = tokenStore.gameTokens.find((t) => t.id === tokenId);
-  if (gameToken) {
-    console.log("移除同名token:", gameToken);
-    tokenStore.updateToken(gameToken.id, {
-      ...role,
-    });
-  } else {
-    tokenStore.addToken({
-      ...role,
-    });
+  try {
+    const listStr = await getServerList(bin.buffer);
+    const parsedList = JSON.parse(listStr);
+    // 转换为数组并排序
+    if (parsedList && typeof parsedList === 'object') {
+      serverListData.value = Object.values(parsedList).sort((a: any, b: any) => b.power - a.power);
+    } else {
+      serverListData.value = [];
+    }
+    console.log("Server List:", parsedList);
+    message.success("获取服务器角色列表成功，请选择角色添加");
+  } catch (err) {
+    console.error("Failed to get server list", err);
+    message.warning("获取服务器角色列表失败");
+    serverListData.value = [];
   }
-  downloadBinFile(name + ".bin", bin);
+  // 尝试解析 bin 文件内容
+  try {
+    const binMsg = g_utils.parse(bin.buffer);
+    let binData = binMsg.getData();
+    if (!binData && (binMsg as any)._raw) {
+      console.log("Bin文件 getData() 为空，尝试使用 _raw");
+      binData = { ...(binMsg as any)._raw };
+    }
 
-  // 保存成功后关闭弹窗
-  emit("ok");
+    console.log("Bin文件解析:", binData);
+    binDecodedResult.value = JSON.stringify(binData, null, 2);
+    originalBinData.value = binData;
+  } catch (err: any) {
+    console.error("Bin文件解析失败", err);
+    binDecodedResult.value = "Bin文件解析失败: " + (err.message || err);
+  }
 };
 
-const convertBin = (hex) => {
-  const bytes = [];
-  for (let i = 0; i < hex.length; i += 2)
-    bytes.push(parseInt(hex.substr(i, 2), 16));
-
-  return new Uint8Array(bytes);
+const handleImport = async () => {
+  if (roleList.value.length === 0) {
+    message.error("请先上传bin文件！");
+    return;
+  }
+  roleList.value.forEach((role) => {
+    // tokenStore.gameTokens中发现已存在的重复名称，则移出token后重新添加
+    const gameToken = tokenStore.gameTokens.find((t) => t.id === role.id);
+    if (gameToken) {
+      console.log("移除同名token:", gameToken);
+      // tokenStore.removeToken(gameToken.id);
+      tokenStore.updateToken(gameToken.id, {
+        ...role,
+      });
+    } else {
+      tokenStore.addToken({
+        ...role,
+      });
+    }
+  });
+  console.log("当前Token列表:", tokenStore.gameTokens);
+  message.success("Token添加成功");
+  roleList.value = [];
+  emit("ok");
 };
 
 const downloadBinFile = (fileName, bin) => {
@@ -579,37 +780,11 @@ const downloadBinFile = (fileName, bin) => {
   const link = document.createElement("a");
   link.href = url;
   link.download = fileName;
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
-};
-
-/**
- * 将字符串转换为 Uint8Array（UTF-8 编码）
- * @param {string} str - 输入字符串
- * @returns {Uint8Array} 字节数组
- */
-const stringToUint8Array = (str) => {
-  // 使用 TextEncoder 按 UTF-8 编码转换字符串为字节数组
-  const encoder = new TextEncoder();
-  return encoder.encode(str);
-};
-
-/**
- * 将 Uint8Array 字节数组转换为十六进制字符串
- * @param {Uint8Array} uint8Array - 输入的字节数组
- * @param {boolean} [uppercase=true] - 是否返回大写的十六进制字符串，默认 true
- * @returns {string} 十六进制字符串
- */
-const convertUint8ArrayToHex = (uint8Array, uppercase = true) => {
-  if (!(uint8Array instanceof Uint8Array)) {
-    throw new Error("输入必须是 Uint8Array 类型的字节数组");
-  }
-  const hexStrings = Array.from(uint8Array).map((byte) => {
-    let hex = byte.toString(16).padStart(2, "0");
-    return uppercase ? hex.toUpperCase() : hex.toLowerCase();
-  });
-  return hexStrings.join("");
 };
 
 /**

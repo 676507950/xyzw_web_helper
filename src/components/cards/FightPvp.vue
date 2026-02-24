@@ -548,6 +548,7 @@ import {
   legacycolor,
 } from "@/utils/HeroList";
 import html2canvas from "html2canvas";
+import { downloadCanvasAsImage } from "@/utils/imageExport";
 
 // 确保legacycolor在模板中可用
 const legacyColorMap = legacycolor;
@@ -996,14 +997,7 @@ const handleExport1 = async () => {
       resultList.style.paddingRight = originalPaddingRight;
     }
 
-    const imgUrl = canvas.toDataURL("image/png");
-
-    const link = document.createElement("a");
-    link.href = imgUrl;
-    link.download = "切磋结果.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCanvasAsImage(canvas, "切磋结果.png");
   } catch (err) {
     console.error("导出图片失败:", err);
     alert("导出图片失败，请重试");

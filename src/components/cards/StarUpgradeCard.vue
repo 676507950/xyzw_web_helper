@@ -76,6 +76,7 @@ import { ref, computed } from "vue";
 import { useMessage } from "naive-ui";
 import { useTokenStore } from "@/stores/tokenStore";
 import MyCard from "../Common/MyCard.vue";
+import { HERO_DICT } from "@/utils/HeroList";
 
 const tokenStore = useTokenStore();
 const message = useMessage();
@@ -91,11 +92,7 @@ const state = ref({
   done: 0,
 });
 
-const heroIds = computed(() => [
-  ...Array.from({ length: 20 }, (_, i) => 101 + i),
-  ...Array.from({ length: 28 }, (_, i) => 201 + i),
-  ...Array.from({ length: 14 }, (_, i) => 301 + i),
-]);
+const heroIds = computed(() => Object.keys(HERO_DICT).map(Number));
 
 const percent = computed(() =>
   state.value.total > 0
