@@ -100,6 +100,75 @@ export function isNowInLegionWarTime(){
   return false;
 }
 
+/**
+ * 判断当前是否允许使用盐场功能
+ * 规则：
+ * 1. 每月前四周周六
+ * 2. 每月第四周周日
+ * 3. 特殊修正：2026年3月1日
+ */
+export function isLegionWarAccessible() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0-11
+  const date = today.getDate();
+  const dayOfWeek = today.getDay(); // 0-6, 0 is Sunday
+  
+  const hours = today.getHours();
+  const minutes = today.getMinutes();
+  const minutesCount = hours * 60 + minutes;
+
+  // 辅助函数：检查时间是否在允许范围内
+  // 周六: 19:55 - 21:00 (1195 - 1260)
+  // 周日: 19:55 - 21:30 (1195 - 1290)
+  const isTimeAllowed = (isSunday) => {
+    const start = 1195; // 19:55
+    const end = isSunday ? 1290 : 1260; // 21:30 or 21:00
+    return minutesCount >= start && minutesCount <= end;
+  };
+
+  // 特殊修正：2026年3月特殊日期
+  // 1, 6, 9, 11, 13, 17, 19, 21, 24, 26, 29
+  if (year === 2026 && month === 2) {
+    const specialDates = [1, 6, 9, 11, 13, 17, 19, 21, 24, 26, 29];
+    if (specialDates.includes(date)) {
+      return isTimeAllowed(dayOfWeek === 0);
+    }
+  }
+
+  // 辅助函数：获取某个月的所有特定星期几的日期列表
+  const getDaysOfMonth = (y, m, targetDayOfWeek) => {
+    const days = [];
+    const d = new Date(y, m, 1);
+    while (d.getMonth() === m) {
+      if (d.getDay() === targetDayOfWeek) {
+        days.push(d.getDate());
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return days;
+  };
+
+  if (dayOfWeek === 6) {
+    // 周六
+    const saturdays = getDaysOfMonth(year, month, 6);
+    // 判断是否是前四个周六 (index 0, 1, 2, 3)
+    const index = saturdays.indexOf(date);
+    if (index >= 0 && index < 4) {
+      return isTimeAllowed(false);
+    }
+  } else if (dayOfWeek === 0) {
+    // 周日
+    const sundays = getDaysOfMonth(year, month, 0);
+    // 判断是否是第四个周日 (index 3)
+    if (sundays.length >= 4 && sundays[3] === date) {
+      return isTimeAllowed(true);
+    }
+  }
+
+  return false;
+}
+
 export function formatTimestamp1(timestamp) {
   const date = new Date(timestamp);
   const year = date.getFullYear();
