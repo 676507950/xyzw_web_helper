@@ -179,8 +179,15 @@ export const shouldSendCar = (car, tickets, minColor = 4, customConditions = {},
     if (color < minColor) {
       return false;
     }
-    // 2. 必须满足自定义条件
-    return customConditionsMet;
+    // 2. 如果设置了自定义条件，必须满足
+    const hasConditions = (customConditions.gold > 0 || customConditions.recruit > 0 || customConditions.jade > 0 || customConditions.ticket > 0);
+    
+    if (hasConditions) {
+      return customConditionsMet;
+    }
+    
+    // 如果没有设置自定义条件，只要颜色满足即可
+    return true;
   }
 
   // 非严格模式：只要满足自定义条件，直接发车（视作大奖）
