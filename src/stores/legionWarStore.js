@@ -65,9 +65,18 @@ export const useLegionWarStore = defineStore('legionWar', () => {
       // 1. 获取战场信息
       // 如果已经有 battlefieldId 且 token 没变，是否需要重新获取？
       // 为了安全起见，每次连接前重新获取 sid 和 battlefieldId
+      const now = new Date();
+      const specialDates = [1, 6, 9, 11, 13, 17, 19, 21, 24, 26, 29];
+      const battlefieldCmd =
+        now.getFullYear() === 2026 &&
+        now.getMonth() === 2 &&
+        specialDates.includes(now.getDate())
+          ? 'league_getbattlefield'
+          : 'legion_getbattlefield';
+
       const getbattlefield = await tokenStore.sendMessageWithPromise(
         tokenId, 
-        'legion_getbattlefield', 
+        battlefieldCmd, 
         {}, 
         10000
       );

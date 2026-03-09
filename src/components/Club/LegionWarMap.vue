@@ -618,31 +618,50 @@ const refreshData = () => {
   }
 };
 
-// 生命周期钩子
-onMounted(() => {
+const initializeCanvas = async () => {
+  await nextTick();
   const canvas = legionWarMapDom.value;
-  ctx = canvas.getContext('2d');
-  
-  resizeHandler = () => resizeAndRedraw();
-  window.addEventListener('resize', resizeHandler);
-  
-  // 初始化 Canvas 大小
+  if (!canvas) return false;
+
+  const context = canvas.getContext("2d");
+  if (!context) return false;
+  ctx = context;
+
+  if (!resizeHandler) {
+    resizeHandler = () => resizeAndRedraw();
+    window.addEventListener("resize", resizeHandler);
+  }
+
   resizeAndRedraw();
-  
-  // 组件加载时尝试连接
-  // 注意：这里自动连接，如果已经在其他地方连接了，store会处理引用计数
+  return true;
+};
+
+// 生命周期钩子
+onMounted(async () => {
+  await initializeCanvas();
+
   try {
     legionWarStore.connect().catch(e => {
         console.error("Auto connect failed", e);
     });
   } catch (e) {
-      // ignore
   }
 });
 
+watch(
+  isAccessible,
+  async (accessible) => {
+    if (accessible) {
+      await initializeCanvas();
+    }
+  }
+);
+
 onUnmounted(() => {
-  window.removeEventListener('resize', resizeHandler);
-  // 组件卸载时断开连接（减少引用计数）
+  if (resizeHandler) {
+    window.removeEventListener("resize", resizeHandler);
+    resizeHandler = null;
+  }
   legionWarStore.disconnect();
 });
 </script>

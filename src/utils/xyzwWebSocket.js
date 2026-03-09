@@ -209,6 +209,8 @@ export function registerDefaultCommands(reg) {
     .register("legion_claimpayloadtaskprogress")
     .register("saltroad_getwartype")
     .register("saltroad_getsaltroadwargrouprank")
+    .register("league_getbattlefield")
+    .register("league_getgroupopponent")
 
     // 邮件
     .register("mail_getlist", { category: [0, 4, 5], lastId: 0, size: 60 })
@@ -1070,6 +1072,8 @@ export class XyzwWebSocketClient {
       warguess_getrankresp: "warguess_getrank",
       warguess_startguessresp: "warguess_startguess",
       warguess_getguesscoinrewardresp: "warguess_getguesscoinreward",
+      league_getbattlefieldresp: "league_getbattlefield",
+      league_getgroupopponentresp: "league_getgroupopponent",
       // 咸王宝库
       matchteam_getroleteaminforesp: "matchteam_getroleteaminfo",
       bosstower_getinforesp: "bosstower_getinfo",

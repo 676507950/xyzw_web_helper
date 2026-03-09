@@ -16,6 +16,23 @@ export function getLastSaturday() {
   const year = today.getFullYear();
   const month = today.getMonth();
 
+  if (year === 2026 && month === 2) {
+    const specialDates = [1, 6, 9, 11, 13, 17, 19, 21, 24, 26, 29];
+    if (specialDates.includes(todayDate)) {
+      const targetMonth = String(month + 1).padStart(2, "0");
+      const targetDay = String(todayDate).padStart(2, "0");
+      return `${year}/${targetMonth}/${targetDay}`;
+    }
+
+    const nearestBeforeOrToday = [...specialDates]
+      .reverse()
+      .find((date) => date < todayDate);
+    const nearestDate = nearestBeforeOrToday ?? specialDates[0];
+    const targetMonth = String(month + 1).padStart(2, "0");
+    const targetDay = String(nearestDate).padStart(2, "0");
+    return `${year}/${targetMonth}/${targetDay}`;
+  }
+
   let daysToSubtract = 0;
   if (dayOfWeek === 6) {
     // 今天是周六
@@ -132,7 +149,7 @@ export function isLegionWarAccessible() {
   if (year === 2026 && month === 2) {
     const specialDates = [1, 6, 9, 11, 13, 17, 19, 21, 24, 26, 29];
     if (specialDates.includes(date)) {
-      return isTimeAllowed(dayOfWeek === 0);
+      return true;
     }
   }
 
