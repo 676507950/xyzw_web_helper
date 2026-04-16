@@ -11,8 +11,6 @@
                 欢迎回来，{{ tokenStore.selectedToken?.name || "游戏玩家" }}！
               </h1>
               <p>今天是 {{ currentDate }}，继续您的游戏管理之旅吧</p>
-              <p>反馈微信：LoveBian_04，添加备注脚本，朋友圈会发布更新通知</p>
-              <p>十级炉子代抽也可以联系</p>
             </div>
             <div class="welcome-actions">
               <n-button
@@ -26,6 +24,19 @@
                 管理Token
               </n-button>
             </div>
+          </div>
+        </section>
+
+        <!-- 公告区 -->
+        <section class="notice-section">
+          <h2 class="section-title">公告</h2>
+          <div class="notice-card">
+            <p>
+              反馈微信：<strong>FieYangu</strong>（添加时请备注“脚本反馈”）。
+            </p>
+            <p>
+              朋友圈会同步发布更新通知；仅接受功能建议与问题反馈，暂不提供教学服务。
+            </p>
           </div>
         </section>
 
@@ -321,6 +332,34 @@ onMounted(async () => {
 // 快速操作区域
 .quick-actions-section {
   margin-bottom: var(--spacing-xl);
+}
+
+.notice-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.notice-card {
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-light);
+  border-left: 4px solid var(--primary-color);
+
+  p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    margin: 0;
+  }
+
+  p + p {
+    margin-top: var(--spacing-sm);
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
+  }
 }
 
 .section-title {
