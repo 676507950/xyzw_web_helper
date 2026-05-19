@@ -239,6 +239,7 @@ import { getCurrentTimeByFormat } from "@/utils/DateTimeUtils";
 import { isLegionWarAccessible } from "@/utils/clubBattleUtils";
 import { storeToRefs } from "pinia";
 import html2canvas from "html2canvas";
+import { downloadCanvasAsImage } from "@/utils/imageExport";
 import * as XLSX from "xlsx";
 import { 
   LogInOutline, 
@@ -359,11 +360,11 @@ const exportImage = async () => {
       backgroundColor: "#ffffff",
     });
 
-    const link = document.createElement("a");
     const modeName = viewMode.value === "legion" ? "俱乐部战况" : (viewMode.value === "individual" ? "个人战况" : "全部战况");
-    link.download = `盐场${modeName}_${getCurrentTimeByFormat("yyyyMMdd_HHmmss")}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    downloadCanvasAsImage(
+      canvas,
+      `盐场${modeName}_${getCurrentTimeByFormat("yyyyMMdd_HHmmss")}.png`,
+    );
     message.success("导出成功");
   } catch (error) {
     console.error("导出失败:", error);
