@@ -23,3 +23,5 @@ export { createTasksDungeon } from './tasksDungeon.js';
 export { createTasksArena } from './tasksArena.js';
 export { createTasksStore } from './tasksStore.js';
 export { createTasksLegacy } from './tasksLegacy.js';
+export { createTasksFootball } from './tasksFootball.js';
+export { createTasksApex } from './tasksApex.js';
